@@ -1,0 +1,19 @@
+<!doctype html>
+<html lang="es">
+<head><meta name="viewport" content="width=device-width, initial-scale=1"><script>document.documentElement.setAttribute("data-theme", location.hash === "#dark" ? "dark" : "light");</script><link rel="stylesheet" href="../tokens.css"><link rel="stylesheet" href="../components/bundle.css"><script src="https://cdn.jsdelivr.net/npm/react@18.3.1/umd/react.production.min.js"></script><script src="https://cdn.jsdelivr.net/npm/react-dom@18.3.1/umd/react-dom.production.min.js"></script><script src="../components/bundle.js"></script><meta charset="utf-8"><title>VoiceTag</title>
+<style>
+  .tags { display: flex; flex-wrap: wrap; gap: var(--space-3) var(--space-4); padding: var(--space-6); align-items: center; }
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script>
+  var G = window.Guates, h = React.createElement;
+  var tilts = [-2, 1.5, -1, 2, -2.5, 1];
+  ReactDOM.createRoot(document.getElementById('root')).render(
+    h('div', { className: 'tags' }, G.voice.map(function (v, i) {
+      return h(G.VoiceTag, { key: v.word, tone: v.tone, tilt: tilts[i], size: 'lg' }, v.word);
+    })));
+</script>
+</body>
+</html>

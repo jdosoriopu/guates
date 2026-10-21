@@ -1,0 +1,18 @@
+<!doctype html>
+<html lang="es">
+<head><meta name="viewport" content="width=device-width, initial-scale=1"><script>document.documentElement.setAttribute("data-theme", location.hash === "#dark" ? "dark" : "light");</script><link rel="stylesheet" href="../tokens.css"><link rel="stylesheet" href="../components/bundle.css"><script src="https://cdn.jsdelivr.net/npm/react@18.3.1/umd/react.production.min.js"></script><script src="https://cdn.jsdelivr.net/npm/react-dom@18.3.1/umd/react-dom.production.min.js"></script><script src="../components/bundle.js"></script><meta charset="utf-8"><title>RoastScale</title>
+<style>
+  .item { display: flex; align-items: center; gap: var(--space-3); font: 600 16px/22px var(--font-slab); }
+</style>
+</head>
+<body>
+<div id="root" class="g-row"></div>
+<script>
+  var G = window.Guates, h = React.createElement;
+  ReactDOM.createRoot(document.getElementById('root')).render(h(React.Fragment, null,
+    h('span', { className: 'item' }, 'Tipo de tostión:', h(G.RoastScale, null)),
+    h('span', { className: 'item' }, 'Media', h(G.RoastScale, { level: 3 })),
+    h('span', { className: 'item' }, 'Clara', h(G.RoastScale, { level: 1, color: 'accent' }))));
+</script>
+</body>
+</html>

@@ -1,0 +1,19 @@
+<!-- @dsCard group="Packaging" height=96 subtitle="Five roast beans; level dims the rest" -->
+<!doctype html>
+<html lang="es">
+<head><meta charset="utf-8"><title>RoastScale</title>
+<style>
+  .item { display: flex; align-items: center; gap: var(--space-3); font: 600 16px/22px var(--font-slab); }
+</style>
+</head>
+<body>
+<div id="root" class="g-row"></div>
+<script>
+  var G = window.Guates, h = React.createElement;
+  ReactDOM.createRoot(document.getElementById('root')).render(h(React.Fragment, null,
+    h('span', { className: 'item' }, 'Tipo de tostión:', h(G.RoastScale, null)),
+    h('span', { className: 'item' }, 'Media', h(G.RoastScale, { level: 3 })),
+    h('span', { className: 'item' }, 'Clara', h(G.RoastScale, { level: 1, color: 'accent' }))));
+</script>
+</body>
+</html>

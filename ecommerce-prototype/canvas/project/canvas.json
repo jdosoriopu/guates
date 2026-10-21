@@ -1,0 +1,126 @@
+{
+  "v": 3,
+  "createdOnFiles": {
+    "v": 1,
+    "at": "2026-10-19T21:40:00Z"
+  },
+  "title": "Guates tienda: el recorrido de tu taza",
+  "launch": {
+    "view": "canvas"
+  },
+  "pages": [],
+  "boards": {
+    "Main.dc.html": {
+      "x": 0,
+      "y": 0,
+      "w": 1440,
+      "h": 3000,
+      "title": "Prototipo · tienda Guates",
+      "expand": "fill",
+      "is_interactive": true
+    },
+    "Movil.dc.html": {
+      "x": 1520,
+      "y": 0,
+      "w": 390,
+      "h": 844,
+      "title": "Prototipo · móvil (ficha de producto)",
+      "is_interactive": true
+    },
+    "Propuesta.dc.html": {
+      "x": 0,
+      "y": 3500,
+      "w": 1440,
+      "h": 2600,
+      "title": "Propuesta · tres direcciones de Astra",
+      "expand": "fill"
+    },
+    "Recorrido.dc.html": {
+      "x": 1520,
+      "y": 3500,
+      "w": 1440,
+      "h": 1900,
+      "title": "Recorrido · nueve etapas y sus datos",
+      "expand": "fill"
+    },
+    "Moderna.dc.html": {
+      "x": 2040,
+      "y": 0,
+      "w": 1440,
+      "h": 3400,
+      "title": "Versión moderna · inicio y ficha",
+      "expand": "fill",
+      "is_interactive": true
+    },
+    "ModernaMovil.dc.html": {
+      "x": 3560,
+      "y": 0,
+      "w": 390,
+      "h": 844,
+      "title": "Versión moderna · móvil",
+      "is_interactive": true
+    },
+    "Bolsa.dc.html": {
+      "x": 3560,
+      "y": 964,
+      "w": 420,
+      "h": 600,
+      "title": "Componente · bolsa"
+    }
+  },
+  "order": [
+    "Main.dc.html",
+    "Movil.dc.html",
+    "Propuesta.dc.html",
+    "Recorrido.dc.html",
+    "Moderna.dc.html",
+    "ModernaMovil.dc.html",
+    "Bolsa.dc.html"
+  ],
+  "notes": {
+    "t1": {
+      "x": 0,
+      "y": -300,
+      "text": "Guates · el recorrido de tu taza (prototipo interactivo)",
+      "kind": "title1",
+      "maxW": 1910
+    },
+    "s1": {
+      "x": 1520,
+      "y": 920,
+      "w": 390,
+      "text": "Pulsa Play en el prototipo. Cambia la ciudad arriba a la derecha: el mapa, el último tramo, el envío, la receta y la temperatura a la que hierve el agua cambian con ella. Todos los precios, altitudes, coordenadas, fechas y kilómetros son datos de muestra.",
+      "fill": "orange"
+    },
+    "t2": {
+      "x": 0,
+      "y": 3200,
+      "text": "Propuesta · direcciones y recorrido",
+      "kind": "title1",
+      "maxW": 2960
+    },
+    "t3": {
+      "x": 2040,
+      "y": -300,
+      "text": "Versión moderna (para comparar)",
+      "kind": "title1",
+      "maxW": 1940
+    },
+    "s2": {
+      "x": 3560,
+      "y": 1660,
+      "w": 420,
+      "text": "Versión moderna: más aire, líneas finas en vez de cajas, titulares grandes, un solo color por café, la bolsa como imagen principal y espacios marcados para fotografía real. En la ficha, el mapa queda fijo mientras bajas por las nueve etapas.",
+      "fill": "teal"
+    }
+  },
+  "designSystems": [
+    {
+      "title": "Guates",
+      "namespace": "guates",
+      "artifact": "https://claude.ai/artifact/8REPfDhw3MjLMWvVbhDrdZ",
+      "version": "1792455446-81b0",
+      "copiedAt": "2026-10-20T00:20:00Z"
+    }
+  ]
+}

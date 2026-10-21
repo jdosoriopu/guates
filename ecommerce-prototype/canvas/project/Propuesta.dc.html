@@ -1,0 +1,189 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>Propuesta Otro mapa del café</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="ds/guates/components/bundle.css">
+<script src="ds/guates/components/bundle.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Caveat+Brush&amp;family=Roboto:wght@300;400;500;700&amp;family=Roboto+Slab:wght@200..900&amp;display=swap">
+<style>
+:root{--surface:#f6f3ed;--ink:#624532;--accent:#81164b;--on-accent:#f6f3ed;--space-1:4px;--space-2:8px;--space-3:12px;--space-4:16px;--space-6:24px;--space-8:32px;--radius-none:0px;--radius-sm:8px;--radius-md:16px;--radius-lg:24px;--radius-pill:9999px;--radius-circle:50%;--font-slab:"Roboto Slab",Georgia,serif;--font-sans:Roboto,Arial,sans-serif;--font-brush:"Caveat Brush",cursive}
+body{margin:0;background:#f6f3ed}
+</style>
+</helmet>
+<div style="background: #F6F3ED; color: #624532; font-family: Roboto, 'Helvetica Neue', Arial, sans-serif; font-size: 16px; line-height: 24px; border-radius: 24px">
+<div style="max-width: 1280px; margin: 0 auto; padding: 72px clamp(16px, 4vw, 64px); display: flex; flex-direction: column; gap: 56px">
+
+<header style="display: flex; flex-wrap: wrap; justify-content: space-between; align-items: flex-start; gap: 32px">
+<div style="flex: 1 1 520px; display: flex; flex-direction: column; gap: 16px; max-width: 820px">
+<p style="margin: 0; font-size: 14px; line-height: 18px; font-weight: 500; letter-spacing: 0.08em; text-transform: uppercase; color: #7A6555">Propuesta · tienda en línea Guates</p>
+<h1 style="margin: 0; font-family: 'Roboto Slab', Georgia, serif; font-size: clamp(44px, 6vw, 72px); line-height: 1.02; font-weight: 300; letter-spacing: -0.01em">Otro mapa del café</h1>
+<p style="margin: 0; font-size: 18px; line-height: 28px; font-weight: 300; color: #000">Una tienda donde cada bolsa se puede seguir desde la finca hasta la taza: el lugar, la altura, el proceso y los kilómetros, contados con la voz de Guates. Comprar toma segundos; explorar, lo que cada quien quiera.</p>
+</div>
+<x-import component-from-global-scope="Guates.Logo" version="principal" color="cereza-profunda" height="{{sz.logo}}"></x-import>
+</header>
+
+<section style="display: flex; flex-wrap: wrap; align-items: center; gap: 32px; padding: 40px; background: #F5E380">
+<div style="flex: 1 1 560px; display: flex; flex-direction: column; gap: 12px">
+<p style="margin: 0; font-size: 12px; line-height: 16px; font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase; color: #624532">La idea del cliente</p>
+<blockquote style="margin: 0; font-family: 'Caveat Brush', cursive; font-size: clamp(28px, 3vw, 38px); line-height: 1.2; color: #81164B">«Todo el tema del origen, proceso, altimetría, coordenadas… que el usuario pueda ver todo el recorrido que tuvo que hacer para tener esa taza de café. Cosas de ese tipo.»</blockquote>
+</div>
+<x-import component-from-global-scope="Guates.Illustration" name="pajaro" color="cereza-profunda" size="{{sz.quoteArt}}"></x-import>
+</section>
+
+<section style="display: flex; flex-direction: column; gap: 24px">
+<div style="display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 8px 24px">
+<h2 style="margin: 0; font-family: 'Roboto Slab', Georgia, serif; font-size: 28px; line-height: 34px; font-weight: 400; letter-spacing: 0.01em; text-transform: uppercase">Tres direcciones</h2>
+<p style="margin: 0; font-size: 14px; line-height: 20px; color: #7A6555">Propuestas por Astra (Codex) y llevadas al sistema de diseño Guates</p>
+</div>
+<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 24px">
+
+<article style="display: flex; flex-direction: column; border: 3px solid #4E71F0; border-radius: 24px; overflow: hidden">
+<div style="position: relative; padding: 28px 24px; background: #4E71F0; color: #F6F3ED; display: flex; flex-direction: column; gap: 8px; min-height: 150px">
+<span style="font-family: 'Roboto Slab', Georgia, serif; font-size: 56px; line-height: 56px; font-weight: 300">A</span>
+<span style="font-family: 'Roboto Slab', Georgia, serif; font-size: 30px; line-height: 34px; font-weight: 600">Otro mapa del café</span>
+<div style="position: absolute; top: 20px; right: 16px"><x-import component-from-global-scope="Guates.VoiceTag" tone="sol-de-sabana" ink="cafe-de-origen" tilt="{{sz.tiltA}}">Recomendada</x-import></div>
+</div>
+<div style="padding: 24px; display: flex; flex-direction: column; gap: 14px; flex-grow: 1">
+<p style="margin: 0; font-family: 'Roboto Slab', Georgia, serif; font-size: 20px; line-height: 26px; font-weight: 500">Elige una sensación y sigue el camino que la trajo hasta tu taza.</p>
+<dl style="margin: 0; display: flex; flex-direction: column; gap: 12px">
+<div><dt style="font-size: 12px; line-height: 16px; font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase; color: #7A6555">Cómo se cuenta</dt><dd style="margin: 4px 0 0; color: #000">La tienda es un mapa editorial: cinco cafés, cinco entradas al recorrido. Al avanzar, el relieve se vuelve ruta, fruto, grano y taza.</dd></div>
+<div><dt style="font-size: 12px; line-height: 16px; font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase; color: #7A6555">Interacción distintiva</dt><dd style="margin: 4px 0 0; color: #000">Un selector de etapas mueve a la vez el mapa 3D, el grano y los datos. Puedes saltar a «Tu taza» y volver a la finca sin perder el carrito.</dd></div>
+<div><dt style="font-size: 12px; line-height: 16px; font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase; color: #7A6555">Por qué es Guates</dt><dd style="margin: 4px 0 0; color: #000">Convierte la curiosidad del guate, el que llega de otro lugar, en una invitación. Los Llanos son desde donde se cuenta la historia.</dd></div>
+<div><dt style="font-size: 12px; line-height: 16px; font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase; color: #7A6555">Riesgo</dt><dd style="margin: 4px 0 0; color: #000">Que el mapa tape la compra. Por eso la ficha de compra siempre está arriba y el recorrido nunca es obligatorio.</dd></div>
+</dl>
+</div>
+</article>
+
+<article style="display: flex; flex-direction: column; border: 3px solid #CD591C; border-radius: 24px; overflow: hidden">
+<div style="padding: 28px 24px; background: #CD591C; color: #F6F3ED; display: flex; flex-direction: column; gap: 8px; min-height: 150px">
+<span style="font-family: 'Roboto Slab', Georgia, serif; font-size: 56px; line-height: 56px; font-weight: 300">B</span>
+<span style="font-family: 'Roboto Slab', Georgia, serif; font-size: 30px; line-height: 34px; font-weight: 600">El taller de una taza</span>
+</div>
+<div style="padding: 24px; display: flex; flex-direction: column; gap: 14px; flex-grow: 1">
+<p style="margin: 0; font-family: 'Roboto Slab', Georgia, serif; font-size: 20px; line-height: 26px; font-weight: 500">Toca cada transformación y descubre qué cambia en tu café.</p>
+<dl style="margin: 0; display: flex; flex-direction: column; gap: 12px">
+<div><dt style="font-size: 12px; line-height: 16px; font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase; color: #7A6555">Cómo se cuenta</dt><dd style="margin: 4px 0 0; color: #000">Una mesa de trabajo con un fruto en el centro. Arrastras una tarjeta de proceso hacia el grano y ves qué se quita y qué se queda.</dd></div>
+<div><dt style="font-size: 12px; line-height: 16px; font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase; color: #7A6555">Interacción distintiva</dt><dd style="margin: 4px 0 0; color: #000">Abrir la cereza, quitar el pergamino y comparar lavado, natural y honey en tres bandejas.</dd></div>
+<div><dt style="font-size: 12px; line-height: 16px; font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase; color: #7A6555">Por qué es Guates</dt><dd style="margin: 4px 0 0; color: #000">Generoso y explicativo: enseña sin convertir el conocimiento en una prueba para poder comprar.</dd></div>
+<div><dt style="font-size: 12px; line-height: 16px; font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase; color: #7A6555">Riesgo</dt><dd style="margin: 4px 0 0; color: #000">Que la gente juegue y olvide a los productores y el origen.</dd></div>
+</dl>
+</div>
+</article>
+
+<article style="display: flex; flex-direction: column; border: 3px solid #81164B; border-radius: 24px; overflow: hidden">
+<div style="padding: 28px 24px; background: #81164B; color: #F6F3ED; display: flex; flex-direction: column; gap: 8px; min-height: 150px">
+<span style="font-family: 'Roboto Slab', Georgia, serif; font-size: 56px; line-height: 56px; font-weight: 300">C</span>
+<span style="font-family: 'Roboto Slab', Georgia, serif; font-size: 30px; line-height: 34px; font-weight: 600">Pasaporte de curiosidades</span>
+</div>
+<div style="padding: 24px; display: flex; flex-direction: column; gap: 14px; flex-grow: 1">
+<p style="margin: 0; font-family: 'Roboto Slab', Georgia, serif; font-size: 20px; line-height: 26px; font-weight: 500">Cada bolsa abre una nueva página de tu recorrido.</p>
+<dl style="margin: 0; display: flex; flex-direction: column; gap: 12px">
+<div><dt style="font-size: 12px; line-height: 16px; font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase; color: #7A6555">Cómo se cuenta</dt><dd style="margin: 4px 0 0; color: #000">Una libreta de viaje: cada origen es una doble página con productor, territorio, animal ilustrado y receta.</dd></div>
+<div><dt style="font-size: 12px; line-height: 16px; font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase; color: #7A6555">Interacción distintiva</dt><dd style="margin: 4px 0 0; color: #000">Estampas un origen cuando marcas «Ya lo probé». Comprar no demuestra haber probado: son dos acciones separadas.</dd></div>
+<div><dt style="font-size: 12px; line-height: 16px; font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase; color: #7A6555">Por qué es Guates</dt><dd style="margin: 4px 0 0; color: #000">Recoge el significado de guate: alguien curioso que llega, aprende y comparte. Favorece el regreso y la suscripción.</dd></div>
+<div><dt style="font-size: 12px; line-height: 16px; font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase; color: #7A6555">Riesgo</dt><dd style="margin: 4px 0 0; color: #000">Pedir una cuenta demasiado pronto o volver la experiencia una competencia.</dd></div>
+</dl>
+</div>
+</article>
+</div>
+</section>
+
+<section style="display: flex; flex-wrap: wrap; gap: 32px 48px; padding: 48px; background: #364831; color: #F6F3ED">
+<div style="flex: 1 1 420px; display: flex; flex-direction: column; gap: 12px">
+<p style="margin: 0; font-family: 'Caveat Brush', cursive; font-size: 44px; line-height: 48px; color: #F5E380">Recomendación</p>
+<p style="margin: 0; font-size: 18px; line-height: 28px; font-weight: 300">Desarrollar <strong style="font-weight: 600">Otro mapa del café</strong>. Responde directo a «ver todo el recorrido» y sirve tanto a quien quiere comprar en segundos como a quien quiere explorar. El mapa da el contexto, el grano explica los cambios y la ficha de compra siempre está a la mano.</p>
+</div>
+<div style="flex: 1 1 420px; display: flex; flex-direction: column; gap: 12px">
+<p style="margin: 0; font-family: 'Roboto Slab', Georgia, serif; font-size: 20px; line-height: 26px; font-weight: 500">Lo que toma de las otras dos</p>
+<ul style="margin: 0; padding-left: 20px; display: flex; flex-direction: column; gap: 8px; font-size: 16px; line-height: 24px">
+<li>Del Taller: la cereza que se abre, el pergamino que cae y el grano que cambia de color al tostarse.</li>
+<li>Del Pasaporte: un registro voluntario después de la compra, con «Ya lo probé» separado de «Ya lo compré».</li>
+<li>Sin mezclar las tres metáforas en la navegación principal.</li>
+<li>Contada hacia atrás: primero la idea, la escena, la personalidad y la emoción de la taza; después rebobinamos hasta la finca, que llega al final como el origen.</li>
+</ul>
+</div>
+</section>
+
+<section style="display: flex; flex-direction: column; gap: 20px">
+<h2 style="margin: 0; font-family: 'Roboto Slab', Georgia, serif; font-size: 28px; line-height: 34px; font-weight: 400; letter-spacing: 0.01em; text-transform: uppercase">Flujo de compra</h2>
+<div style="display: flex; flex-wrap: wrap; align-items: stretch; gap: 8px">
+<div style="flex: 1 1 140px; padding: 16px; border: 2px solid #624532; display: flex; flex-direction: column; gap: 4px; border-radius: 24px"><span style="font-family: 'Roboto Slab', Georgia, serif; font-size: 18px; line-height: 24px; font-weight: 600">Inicio</span><span style="font-size: 14px; line-height: 20px; color: #000">Mapa de las fincas y «¿Cómo lo tomas?»</span></div>
+<div aria-hidden="true" style="align-self: center; font-size: 24px">→</div>
+<div style="flex: 1 1 140px; padding: 16px; border: 2px solid #624532; display: flex; flex-direction: column; gap: 4px; border-radius: 24px"><span style="font-family: 'Roboto Slab', Georgia, serif; font-size: 18px; line-height: 24px; font-weight: 600">Catálogo</span><span style="font-size: 14px; line-height: 20px; color: #000">Filtros por proceso, orden por altura</span></div>
+<div aria-hidden="true" style="align-self: center; font-size: 24px">→</div>
+<div style="flex: 1.4 1 180px; padding: 16px; border: 3px solid #81164B; background: #F5E380; display: flex; flex-direction: column; gap: 4px; border-radius: 24px"><span style="font-family: 'Roboto Slab', Georgia, serif; font-size: 18px; line-height: 24px; font-weight: 600">Ficha y recorrido</span><span style="font-size: 14px; line-height: 20px; color: #000">La idea, tu taza y nueve pasos hacia atrás hasta la finca</span></div>
+<div aria-hidden="true" style="align-self: center; font-size: 24px">→</div>
+<div style="flex: 1 1 140px; padding: 16px; border: 2px solid #624532; display: flex; flex-direction: column; gap: 4px; border-radius: 24px"><span style="font-family: 'Roboto Slab', Georgia, serif; font-size: 18px; line-height: 24px; font-weight: 600">Carrito</span><span style="font-size: 14px; line-height: 20px; color: #000">El viaje de tu pedido en el mapa</span></div>
+<div aria-hidden="true" style="align-self: center; font-size: 24px">→</div>
+<div style="flex: 1 1 140px; padding: 16px; border: 2px solid #624532; display: flex; flex-direction: column; gap: 4px; border-radius: 24px"><span style="font-family: 'Roboto Slab', Georgia, serif; font-size: 18px; line-height: 24px; font-weight: 600">Entrega y pago</span><span style="font-size: 14px; line-height: 20px; color: #000">Como invitado, solo lo necesario</span></div>
+<div aria-hidden="true" style="align-self: center; font-size: 24px">→</div>
+<div style="flex: 1 1 160px; padding: 16px; border: 2px solid #624532; display: flex; flex-direction: column; gap: 4px; border-radius: 24px"><span style="font-family: 'Roboto Slab', Georgia, serif; font-size: 18px; line-height: 24px; font-weight: 600">Confirmación</span><span style="font-size: 14px; line-height: 20px; color: #000">Ruta hasta tu ciudad, pasaporte y receta</span></div>
+</div>
+<p style="margin: 0; font-size: 14px; line-height: 20px; color: #000">La suscripción se arma desde el inicio o desde cualquier ficha: café fijo o explorador, cada 2 o 4 semanas, y entra al mismo carrito. La ciudad elegida arriba cambia el mapa, el último tramo, el envío, la receta y la temperatura a la que hierve el agua.</p>
+</section>
+
+<section style="display: flex; flex-wrap: wrap; gap: 32px">
+<div style="flex: 1 1 460px; display: flex; flex-direction: column; gap: 16px">
+<h2 style="margin: 0; font-family: 'Roboto Slab', Georgia, serif; font-size: 28px; line-height: 34px; font-weight: 400; letter-spacing: 0.01em; text-transform: uppercase">Qué es real y qué es muestra</h2>
+<table style="width: 100%; border-collapse: collapse; font-size: 15px; line-height: 22px">
+<thead>
+<tr><th scope="col" style="text-align: left; padding: 10px 12px; border-bottom: 2px solid #624532; font-family: 'Roboto Slab', Georgia, serif">Dato</th><th scope="col" style="text-align: left; padding: 10px 12px; border-bottom: 2px solid #624532; font-family: 'Roboto Slab', Georgia, serif">Fuente</th></tr>
+</thead>
+<tbody>
+<tr><td style="padding: 10px 12px; border-bottom: 1px solid #62453240">Productor, finca, lugar, variedad y proceso</td><td style="padding: 10px 12px; border-bottom: 1px solid #62453240">Etiquetas de 250 g</td></tr>
+<tr><td style="padding: 10px 12px; border-bottom: 1px solid #62453240">Tostión en Villavicencio</td><td style="padding: 10px 12px; border-bottom: 1px solid #62453240">Supuesto, por confirmar</td></tr>
+<tr><td style="padding: 10px 12px; border-bottom: 1px solid #62453240">Altitud, coordenadas, cosecha y notas</td><td style="padding: 10px 12px; border-bottom: 1px solid #62453240">Dato de muestra</td></tr>
+<tr><td style="padding: 10px 12px; border-bottom: 1px solid #62453240">Tiempos de proceso, trillas y kilómetros</td><td style="padding: 10px 12px; border-bottom: 1px solid #62453240">Dato de muestra</td></tr>
+<tr><td style="padding: 10px 12px; border-bottom: 1px solid #62453240">Precios, envíos y fechas</td><td style="padding: 10px 12px; border-bottom: 1px solid #62453240">Dato de muestra</td></tr>
+<tr><td style="padding: 10px 12px; border-bottom: 1px solid #62453240">Relieve y mapa</td><td style="padding: 10px 12px; border-bottom: 1px solid #62453240">Ilustración, no un modelo de elevación ni rutas viales</td></tr>
+</tbody>
+</table>
+<p style="margin: 0; font-size: 14px; line-height: 20px; color: #000">En producción cada bolsa trae su registro por lote, con fuente y fecha de actualización. Si falta un dato, la tienda dice «Por confirmar».</p>
+</div>
+<div style="flex: 1 1 460px; display: flex; flex-direction: column; gap: 16px">
+<h2 style="margin: 0; font-family: 'Roboto Slab', Georgia, serif; font-size: 28px; line-height: 34px; font-weight: 400; letter-spacing: 0.01em; text-transform: uppercase">Cuatro animaciones dibujadas</h2>
+<div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 2px; background: #624532; border: 2px solid #624532; border-radius: 24px">
+<div style="padding: 16px; background: #F6F3ED; display: flex; flex-direction: column; gap: 4px; border-radius: 16px"><span style="font-family: 'Roboto Slab', Georgia, serif; font-size: 18px; line-height: 24px; font-weight: 600">Altimetría</span><span style="font-size: 14px; line-height: 20px; color: #000">La montaña vista de lado con una regla de alturas: un punto sube desde el mar hasta la finca y tu ciudad aparece para comparar.</span></div>
+<div style="padding: 16px; background: #F6F3ED; display: flex; flex-direction: column; gap: 4px; border-radius: 16px"><span style="font-family: 'Roboto Slab', Georgia, serif; font-size: 18px; line-height: 24px; font-weight: 600">El recorrido</span><span style="font-size: 14px; line-height: 20px; color: #000">Colombia dibujada con montañas, palmas de moriche y paradas numeradas: un camión lleva el café de la finca a la trilla, la tostión y tu ciudad.</span></div>
+<div style="padding: 16px; background: #F6F3ED; display: flex; flex-direction: column; gap: 4px; border-radius: 16px"><span style="font-family: 'Roboto Slab', Georgia, serif; font-size: 18px; line-height: 24px; font-weight: 600">De cereza a taza</span><span style="font-size: 14px; line-height: 20px; color: #000">La cereza se abre, cae el pergamino y el grano verde se tuesta. Natural y honey tienen su propia versión.</span></div>
+<div style="padding: 16px; background: #F6F3ED; display: flex; flex-direction: column; gap: 4px; border-radius: 16px"><span style="font-family: 'Roboto Slab', Georgia, serif; font-size: 18px; line-height: 24px; font-weight: 600">Tu taza</span><span style="font-size: 14px; line-height: 20px; color: #000">La última parada: la taza servida con su vapor, en el color de la tostión elegida.</span></div>
+</div>
+<p style="margin: 0; font-size: 14px; line-height: 20px; color: #000">Dibujos planos con los colores de la paleta y línea café, como las ilustraciones de la marca: íconos que se entienden sin leer y etiquetas grandes. Pesan 27 KB, se detienen fuera de pantalla y respetan el movimiento reducido.</p>
+</div>
+</section>
+
+<section style="display: flex; flex-wrap: wrap; gap: 32px; padding-top: 32px; border-top: 2px solid #624532">
+<div style="flex: 2 1 520px; display: flex; flex-direction: column; gap: 12px">
+<p style="margin: 0; font-family: 'Roboto Slab', Georgia, serif; font-size: 20px; line-height: 26px; font-weight: 500">Para pasar del prototipo a la tienda</p>
+<ol style="margin: 0; padding-left: 20px; display: flex; flex-direction: column; gap: 6px; font-size: 16px; line-height: 24px; color: #000">
+<li>Confirmar con cada productor la altitud, las coordenadas y las fechas por lote.</li>
+<li>Fotografía documental de las tres fincas y la tostión.</li>
+<li>Nivel de tostión real de cada café y un tono de paleta para la tostión más oscura.</li>
+<li>Operador logístico, pasarela de pago y reglas de envío por ciudad.</li>
+<li>Cuenta opcional para guardar el pasaporte y gestionar la suscripción.</li>
+</ol>
+</div>
+<div style="flex: 1 1 280px; display: flex; flex-direction: column; gap: 12px; align-items: flex-start">
+<x-import component-from-global-scope="Guates.Seal" size="{{sz.seal}}"></x-import>
+<p style="margin: 0; font-size: 14px; line-height: 20px; color: #7A6555">Direcciones, datos de muestra y escenas 3D base: Astra (Codex). Prototipo y sistema visual: sistema de diseño Guates.</p>
+</div>
+</section>
+
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":2600}}'>
+class Component extends DCLogic {
+  renderVals() {
+    return { sz: { logo: 120, quoteArt: 160, tiltA: 3, seal: 96 } };
+  }
+}
+</script>
+</body>
+</html>

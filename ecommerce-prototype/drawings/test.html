@@ -1,0 +1,27 @@
+<!doctype html><html><head><meta charset="utf-8">
+<link href="https://fonts.googleapis.com/css2?family=Caveat+Brush&family=Roboto:wght@300;400;500;600;700&family=Roboto+Slab:wght@300;600;700&display=swap" rel="stylesheet">
+<style>body{margin:0;background:#F6F3ED;font:14px Roboto}.g{display:grid;grid-template-columns:repeat(4,400px);gap:8px;padding:8px}.c{position:relative;height:300px;background:#F6F3ED;outline:1px solid #ccc}.c canvas{display:block;width:100%;height:100%}#err{color:#81164B;white-space:pre}</style>
+<script src="guates-illus.js"></script></head><body><div id="err"></div>
+<div class="g">
+<div class="c" style="grid-column:span 2;height:520px"><canvas id="ov"></canvas></div>
+<div class="c" style="grid-column:span 2;height:520px"><canvas id="t"></canvas></div>
+<div class="c" style="grid-column:span 2;height:460px"><canvas id="r0"></canvas></div>
+<div class="c" style="grid-column:span 2;height:460px"><canvas id="r2"></canvas></div>
+<div class="c"><canvas id="b0"></canvas></div><div class="c"><canvas id="b1"></canvas></div><div class="c"><canvas id="b2"></canvas></div><div class="c"><canvas id="b3"></canvas></div>
+<div class="c"><canvas id="bh"></canvas></div><div class="c"><canvas id="bd"></canvas></div><div class="c"><canvas id="bm"></canvas></div><div class="c"><canvas id="cu"></canvas></div>
+</div>
+<script>
+window.onerror=(m,s,l,c)=>{document.getElementById('err').textContent+=m+' @'+l+':'+c+'\n'};
+setTimeout(()=>{try{
+const S=window.GuatesScenes, T=1.3, $=(i)=>document.getElementById(i);
+const farms=[{id:'palma',name:'Palma Roja',place:'China Alta, Tolima',lat:4.58,lng:-75.16,color:'#81164B'},{id:'llano',name:'Llanogrande',place:'Cubarral, Meta',lat:3.86,lng:-73.98,color:'#624532'},{id:'ren',name:'Rengijo',place:'Pitalito, Huila',lat:1.86,lng:-76.07,color:'#F2D139'}];
+S.route($('ov'),{mode:'overview',farms,hub:{name:'Tostión · Villavicencio',lat:4.142,lng:-73.627},city:{name:'Bogotá',lat:4.711,lng:-74.0721},highlight:['palma'],debugTime:T});
+S.terrain($('t'),{seed:23,farmAltitude:1850,accent:'#4E71F0',farmName:'Finca Palma Roja',city:{name:'Bogotá',alt:2640},debugTime:T});
+const stops=[{name:'Finca Palma Roja',kind:'finca',lat:4.58,lng:-75.16},{name:'Trilla · Ibagué',kind:'trilla',lat:4.4389,lng:-75.2322},{name:'Tostión · Villavicencio',kind:'tostion',lat:4.142,lng:-73.627},{name:'Tu taza · Bogotá',kind:'ciudad',lat:4.711,lng:-74.0721}];
+S.route($('r0'),{mode:'journey',stops,stage:0,debugTime:T});
+S.route($('r2'),{mode:'journey',stops,stage:1.5,debugTime:T});
+S.bean($('b0'),{stage:0,debugTime:T});S.bean($('b1'),{stage:0.5,debugTime:T});S.bean($('b2'),{stage:1,debugTime:T});S.bean($('b3'),{stage:2,debugTime:T});
+S.bean($('bh'),{stage:1.6,honey:true,debugTime:T});S.bean($('bd'),{stage:0,dried:true,debugTime:T});S.bean($('bm'),{stage:3,roast:3,debugTime:T});
+S.cup($('cu'),{roast:3,debugTime:T});
+}catch(e){document.getElementById('err').textContent+=e.stack}},1500);
+</script></body></html>

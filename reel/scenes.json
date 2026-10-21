@@ -1,0 +1,75 @@
+{
+  "v": 1,
+  "stage": "final",
+  "look": "Del grano al código: Pantallas, terminal y brandbook apilados como tarjetas que caen sobre la mesa de tueste. Reel vertical que genera expectativa por la nueva tienda en línea de Guates: acompáñame a ver cómo la hacemos, con código, Claude trabajando, el brandbook y pantallazos. Contenido clave en la zona segura (x 60-920, y 280-1470); franjas tono sobre tono llenan los bordes que tapa Instagram. Cada escena va más lenta: render escala t por (dur original / dur nueva).",
+  "palettes": [
+    [
+      "#624532",
+      "#cd591c",
+      "#f6f3ed",
+      "#f2d139"
+    ]
+  ],
+  "theirs": 1,
+  "width": 1080,
+  "height": 1920,
+  "fps": 60,
+  "background": "#624532",
+  "fonts": {
+    "display": {
+      "family": "Roboto Slab",
+      "or": "fraunces-display",
+      "weights": [
+        400,
+        700
+      ]
+    },
+    "sans": {
+      "family": "Roboto",
+      "or": "manrope"
+    },
+    "serif": {
+      "family": "Caveat Brush",
+      "or": "fraunces",
+      "weights": [
+        400
+      ]
+    },
+    "mono": {
+      "family": "Roboto Mono",
+      "or": "dm-mono"
+    }
+  },
+  "scenes": [
+    {
+      "id": "hook",
+      "name": "Acompáñame",
+      "dur": 3.6,
+      "desc": "Tu próximo café empieza aquí: un recorte grande de la ficha del Honey y la invitación a acompañarnos."
+    },
+    {
+      "id": "brandbook",
+      "name": "Nuestra marca",
+      "dur": 5,
+      "desc": "Los cinco animales de los cafés, cada uno en su color; después, color y tipografía."
+    },
+    {
+      "id": "claude",
+      "name": "Claude trabaja",
+      "dur": 4.6,
+      "desc": "Una terminal donde Claude escribe el código de la tienda línea a línea."
+    },
+    {
+      "id": "screens",
+      "name": "Pantallazos",
+      "dur": 5.4,
+      "desc": "Una pantalla grande de la tienda pasa de la portada a la ficha del Honey, y el Honey llega al carrito."
+    },
+    {
+      "id": "soon",
+      "name": "Muy pronto",
+      "dur": 4.5,
+      "desc": "Logo, algo bueno se está tostando, la tienda muy pronto y la invitación a seguirnos."
+    }
+  ]
+}

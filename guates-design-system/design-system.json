@@ -1,0 +1,264 @@
+{
+  "v": 3,
+  "layout": "files",
+  "createdOnFiles": {
+    "v": 1,
+    "at": "2026-10-19T20:09:47Z"
+  },
+  "title": "Guates",
+  "namespace": "Guates",
+  "libraries": [
+    {
+      "name": "react",
+      "version": "18.3.1"
+    },
+    {
+      "name": "react-dom",
+      "version": "18.3.1"
+    }
+  ],
+  "sections": {},
+  "groups": [
+    "Logos",
+    "Illustrations",
+    "Patterns",
+    "Ornaments",
+    "Packaging",
+    "Reference"
+  ],
+  "assetGroups": {
+    "Logos": {
+      "name": "Logos",
+      "tile": "l",
+      "order": [
+        "guates-logo-principal.svg",
+        "guates-logo-secundario.svg",
+        "guates-logo-alternativo.svg"
+      ],
+      "files": {
+        "guates-logo-principal.svg": {
+          "name": "guates-logo-principal.svg",
+          "blob": "0085f8979b699cad702ba998607e2b37",
+          "size": 125142,
+          "type": "image/svg+xml"
+        },
+        "guates-logo-secundario.svg": {
+          "name": "guates-logo-secundario.svg",
+          "blob": "bc42668b8dd04d789c2ffb0477cbea88",
+          "size": 126172,
+          "type": "image/svg+xml"
+        },
+        "guates-logo-alternativo.svg": {
+          "name": "guates-logo-alternativo.svg",
+          "blob": "2ec970e92bd3e4595b69ac4aff2b88de",
+          "size": 110988,
+          "type": "image/svg+xml"
+        }
+      }
+    },
+    "Illustrations": {
+      "name": "Illustrations",
+      "tile": "m",
+      "order": [
+        "ilustracion-chiguiro.svg",
+        "ilustracion-mono.svg",
+        "ilustracion-perezoso.svg",
+        "ilustracion-colibri.svg",
+        "ilustracion-erizo.svg",
+        "ilustracion-garza.svg",
+        "ilustracion-nutria.svg",
+        "ilustracion-pajaro.svg",
+        "ilustracion-cafetera.svg",
+        "ilustracion-granos.svg"
+      ],
+      "files": {
+        "ilustracion-chiguiro.svg": {
+          "name": "ilustracion-chiguiro.svg",
+          "blob": "29d70bef6f3d6392f193c576941a1e9d",
+          "size": 57883,
+          "type": "image/svg+xml"
+        },
+        "ilustracion-mono.svg": {
+          "name": "ilustracion-mono.svg",
+          "blob": "fd9164201599e9d0730ea3287a869390",
+          "size": 55114,
+          "type": "image/svg+xml"
+        },
+        "ilustracion-perezoso.svg": {
+          "name": "ilustracion-perezoso.svg",
+          "blob": "ffea23b4b4b13b190a515c95bc7a1adc",
+          "size": 58866,
+          "type": "image/svg+xml"
+        },
+        "ilustracion-colibri.svg": {
+          "name": "ilustracion-colibri.svg",
+          "blob": "f3b57d29d4f065ca96ed6a736f12c2e2",
+          "size": 49506,
+          "type": "image/svg+xml"
+        },
+        "ilustracion-erizo.svg": {
+          "name": "ilustracion-erizo.svg",
+          "blob": "784950f953e9aad5b12e5a1259aa52d3",
+          "size": 80749,
+          "type": "image/svg+xml"
+        },
+        "ilustracion-garza.svg": {
+          "name": "ilustracion-garza.svg",
+          "blob": "7f18e41d65b3ffb3723983f8382bc71e",
+          "size": 41241,
+          "type": "image/svg+xml"
+        },
+        "ilustracion-nutria.svg": {
+          "name": "ilustracion-nutria.svg",
+          "blob": "a26b1f1a5083a62644915f2a8dcfb125",
+          "size": 51388,
+          "type": "image/svg+xml"
+        },
+        "ilustracion-pajaro.svg": {
+          "name": "ilustracion-pajaro.svg",
+          "blob": "4b95ffcf93034359cdf054145ebe988b",
+          "size": 58818,
+          "type": "image/svg+xml"
+        },
+        "ilustracion-cafetera.svg": {
+          "name": "ilustracion-cafetera.svg",
+          "blob": "97ec54b931959514f1a7de4ab6d5f079",
+          "size": 83346,
+          "type": "image/svg+xml"
+        },
+        "ilustracion-granos.svg": {
+          "name": "ilustracion-granos.svg",
+          "blob": "9b38cb266fed2cf548af628ec5b3624a",
+          "size": 29623,
+          "type": "image/svg+xml"
+        }
+      }
+    },
+    "Patterns": {
+      "name": "Patterns",
+      "tile": "l",
+      "order": [
+        "patron-cruces.svg",
+        "patron-formas.svg",
+        "patron-franjas.svg"
+      ],
+      "files": {
+        "patron-cruces.svg": {
+          "name": "patron-cruces.svg",
+          "blob": "8146febdf168d72fb1323f7ef1265281",
+          "size": 2143,
+          "type": "image/svg+xml"
+        },
+        "patron-formas.svg": {
+          "name": "patron-formas.svg",
+          "blob": "8a5983857fe5b199384191afe6a8be14",
+          "size": 1266,
+          "type": "image/svg+xml"
+        },
+        "patron-franjas.svg": {
+          "name": "patron-franjas.svg",
+          "blob": "67b4c8c6a4c3562fb823cdb74c3ecca9",
+          "size": 7224,
+          "type": "image/svg+xml"
+        }
+      }
+    },
+    "Ornaments": {
+      "name": "Ornaments",
+      "tile": "s",
+      "order": [
+        "estrella.svg",
+        "grano-tostion.svg",
+        "sello-hecho-en-colombia.svg"
+      ],
+      "files": {
+        "estrella.svg": {
+          "name": "estrella.svg",
+          "blob": "5a69c47cd009fb7bfb5c54e90e9de513",
+          "size": 2991,
+          "type": "image/svg+xml"
+        },
+        "grano-tostion.svg": {
+          "name": "grano-tostion.svg",
+          "blob": "aaa2d2835295822d71432c65ed6b20c7",
+          "size": 19200,
+          "type": "image/svg+xml"
+        },
+        "sello-hecho-en-colombia.svg": {
+          "name": "sello-hecho-en-colombia.svg",
+          "blob": "296602aa4630daae1e73617c808b6ed2",
+          "size": 53831,
+          "type": "image/svg+xml"
+        }
+      }
+    },
+    "Packaging": {
+      "name": "Packaging",
+      "tile": "s",
+      "order": [
+        "bolsa-250g.pdf",
+        "bolsa-500g.pdf",
+        "stickers-250g.pdf",
+        "stickers-500g.pdf",
+        "sticker-1kg.pdf"
+      ],
+      "files": {
+        "bolsa-250g.pdf": {
+          "name": "bolsa-250g.pdf",
+          "blob": "fdf10937d54ec79233bff7c6e8cc7e85",
+          "size": 4204027,
+          "type": "application/pdf"
+        },
+        "bolsa-500g.pdf": {
+          "name": "bolsa-500g.pdf",
+          "blob": "c8cd05633b25cb8f7c09b57ff4b2376e",
+          "size": 1120778,
+          "type": "application/pdf"
+        },
+        "stickers-250g.pdf": {
+          "name": "stickers-250g.pdf",
+          "blob": "c871e35566fc7347d1f9f8a5cbe77ed4",
+          "size": 2982576,
+          "type": "application/pdf"
+        },
+        "stickers-500g.pdf": {
+          "name": "stickers-500g.pdf",
+          "blob": "053e9b11e73ec3f3039a8d8abb785733",
+          "size": 779740,
+          "type": "application/pdf"
+        },
+        "sticker-1kg.pdf": {
+          "name": "sticker-1kg.pdf",
+          "blob": "f5369c47db7f1f41fde912e6eae28e22",
+          "size": 1090823,
+          "type": "application/pdf"
+        }
+      }
+    },
+    "Reference": {
+      "name": "Reference",
+      "tile": "s",
+      "order": [
+        "brandbook-guates.pdf"
+      ],
+      "files": {
+        "brandbook-guates.pdf": {
+          "name": "brandbook-guates.pdf",
+          "blob": "0ef0c4c8a45775c25610fd8538dbf530",
+          "size": 9269546,
+          "type": "application/pdf"
+        }
+      }
+    }
+  },
+  "blobs": {},
+  "docs": {
+    "sections": []
+  },
+  "lastChange": {
+    "by": "Claude",
+    "via": "Claude Code",
+    "at": "2026-10-19T20:47:49Z",
+    "note": "Review fixes: Curioso ink and VoiceTag size rule, OriginLabel screen variant, unspecified roast no longer announced as 5 de 5, cover uses the Logo component."
+  }
+}

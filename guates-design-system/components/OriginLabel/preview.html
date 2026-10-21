@@ -1,0 +1,19 @@
+<!-- @dsCard group="Packaging" height=640 subtitle="The ficha de origen from the 250 g labels; Lavado shown in its screen treatment" -->
+<!doctype html>
+<html lang="es">
+<head><meta charset="utf-8"><title>OriginLabel</title>
+<style>
+  .row { display: flex; flex-wrap: wrap; gap: var(--space-6); padding: var(--space-6); align-items: flex-start; }
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script>
+  var G = window.Guates, h = React.createElement;
+  ReactDOM.createRoot(document.getElementById('root')).render(
+    h('div', { className: 'row' },
+      h(G.OriginLabel, { product: 'regional', roast: 3, grind: 'media' }),
+      h(G.OriginLabel, { product: 'lavado', roast: 2 })));
+</script>
+</body>
+</html>

@@ -1,0 +1,81 @@
+/* Guates tokens, generated from tokens.json. Edit tokens.json, not this block. */
+@font-face { font-family: 'Roboto'; src: url('fonts/Roboto-VariableFont.ttf') format('truetype'); font-weight: 100 900; font-style: normal; font-display: swap; }
+@font-face { font-family: 'Roboto'; src: url('fonts/Roboto-Italic-VariableFont.ttf') format('truetype'); font-weight: 100 900; font-style: italic; font-display: swap; }
+:root, [data-theme="light"] {
+  --naranja-tostion: #cd591c;
+  --cafe-de-origen: #624532;
+  --sol-de-sabana: #f2d139;
+  --verde-moriche: #364831;
+  --azul-exploracion: #4e71f0;
+  --cereza-profunda: #81164b;
+  --atardecer-llanero: #d6855a;
+  --crema-de-papel: #f6f3ed;
+  --luz-de-manana: #f5e380;
+  --verde-brote: #91ad80;
+  --cielo-abierto: #9db5ec;
+  --rosa-floracion: #db92ba;
+  --negro: #000000;
+  --blanco: #ffffff;
+  --surface: var(--crema-de-papel);
+  --ink: var(--cafe-de-origen);
+  --ink-body: #000000;
+  --ink-muted: #7a6555;
+  --line: #62453240;
+  --accent: var(--cereza-profunda);
+  --accent-hover: #6a1240;
+  --on-accent: var(--crema-de-papel);
+  --link: var(--accent);
+  --focus: var(--azul-exploracion);
+  --focus-ring: 0 0 0 2px #f6f3ed, 0 0 0 4px #4e71f0;
+}
+[data-theme="dark"] {
+  color-scheme: dark;
+  --surface: var(--cafe-de-origen);
+  --ink: var(--crema-de-papel);
+  --ink-body: var(--crema-de-papel);
+  --ink-muted: #d9cbbb;
+  --line: #f6f3ed59;
+  --accent: var(--luz-de-manana);
+  --accent-hover: var(--sol-de-sabana);
+  --on-accent: var(--cafe-de-origen);
+  --focus: var(--luz-de-manana);
+  --focus-ring: 0 0 0 2px #624532, 0 0 0 4px #f5e380;
+}
+:root {
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-6: 24px;
+  --space-8: 32px;
+  --space-12: 48px;
+  --space-16: 64px;
+  --radius-none: 0px;
+  --radius-sm: 8px;
+  --radius-md: 16px;
+  --radius-lg: 24px;
+  --radius-pill: 9999px;
+  --radius-circle: 50%;
+  --font-slab: "Roboto Slab", Rockwell, "Courier New", Georgia, serif;
+  --font-sans: Roboto, "Helvetica Neue", Arial, system-ui, sans-serif;
+  --font-brush: "Caveat Brush", "Bradley Hand", "Segoe Print", cursive;
+}
+/* A themed container re-applies its ink, so text follows the theme it sits in. */
+[data-theme] { color: var(--ink); }
+.slab-display { font-family: var(--font-slab); font-size: 64px; line-height: 68px; font-weight: 300; letter-spacing: -0.01em; }
+.slab-headline { font-family: var(--font-slab); font-size: 40px; line-height: 46px; font-weight: 400; }
+.slab-product { font-family: var(--font-slab); font-size: 48px; line-height: 52px; font-weight: 600; }
+.slab-title { font-family: var(--font-slab); font-size: 28px; line-height: 34px; font-weight: 400; letter-spacing: 0.01em; text-transform: uppercase; }
+.slab-subtitle { font-family: var(--font-slab); font-size: 20px; line-height: 26px; font-weight: 500; }
+.slab-label { font-family: var(--font-slab); font-size: 16px; line-height: 22px; font-weight: 600; }
+.body-lg { font-family: var(--font-sans); font-size: 18px; line-height: 28px; font-weight: 300; }
+.body { font-family: var(--font-sans); font-size: 16px; line-height: 24px; font-weight: 400; }
+.body-sm { font-family: var(--font-sans); font-size: 14px; line-height: 20px; font-weight: 400; }
+.data { font-family: var(--font-sans); font-size: 16px; line-height: 22px; font-weight: 300; }
+.overline { font-family: var(--font-sans); font-size: 14px; line-height: 18px; font-weight: 500; letter-spacing: 0.08em; text-transform: uppercase; }
+.button-label { font-family: var(--font-sans); font-size: 16px; line-height: 20px; font-weight: 700; }
+.caption { font-family: var(--font-sans); font-size: 12px; line-height: 16px; font-weight: 700; letter-spacing: 0.04em; }
+.brush-display { font-family: var(--font-brush); font-size: 96px; line-height: 92px; font-weight: 400; }
+.brush-title { font-family: var(--font-brush); font-size: 40px; line-height: 44px; font-weight: 400; }
+.brush-tag { font-family: var(--font-brush); font-size: 24px; line-height: 28px; font-weight: 400; }
+.brush-note { font-family: var(--font-brush); font-size: 20px; line-height: 24px; font-weight: 400; }

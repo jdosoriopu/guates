@@ -1,0 +1,1549 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>Guates tienda prototipo</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="ds/guates/components/bundle.css">
+<script src="ds/guates/components/bundle.js"></script>
+<script src="/_blob/e70c4327e7796a073094a6659ef263c6"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Caveat+Brush&amp;family=Roboto:ital,wght@0,300;0,400;0,500;0,700;0,900;1,400&amp;family=Roboto+Slab:wght@200..900&amp;display=swap">
+<style>
+:root{--naranja-tostion:#cd591c;--cafe-de-origen:#624532;--sol-de-sabana:#f2d139;--verde-moriche:#364831;--azul-exploracion:#4e71f0;--cereza-profunda:#81164b;--atardecer-llanero:#d6855a;--crema-de-papel:#f6f3ed;--luz-de-manana:#f5e380;--verde-brote:#91ad80;--cielo-abierto:#9db5ec;--rosa-floracion:#db92ba;--surface:#f6f3ed;--ink:#624532;--ink-body:#000;--ink-muted:#7a6555;--line:#62453240;--accent:#81164b;--accent-hover:#6a1240;--on-accent:#f6f3ed;--link:#81164b;--focus:#4e71f0;--focus-ring:0 0 0 2px #f6f3ed,0 0 0 4px #4e71f0;--space-1:4px;--space-2:8px;--space-3:12px;--space-4:16px;--space-6:24px;--space-8:32px;--space-12:48px;--space-16:64px;--radius-none:0px;--radius-sm:8px;--radius-md:16px;--radius-lg:24px;--radius-pill:9999px;--radius-circle:50%;--font-slab:"Roboto Slab",Rockwell,Georgia,serif;--font-sans:Roboto,"Helvetica Neue",Arial,sans-serif;--font-brush:"Caveat Brush","Bradley Hand",cursive}
+[data-theme="dark"]{--surface:#624532;--ink:#f6f3ed;--ink-body:#f6f3ed;--ink-muted:#d9cbbb;--line:#f6f3ed59;--accent:#f5e380;--accent-hover:#f2d139;--on-accent:#624532;--link:#f5e380;--focus:#f5e380;--focus-ring:0 0 0 2px #364831,0 0 0 4px #f5e380}
+body{margin:0;background:#f6f3ed}
+a{color:#81164b}a:hover{color:#6a1240}
+.gq button,.gq input,.gq select,.gq textarea{font-family:inherit}
+.gq button:focus-visible,.gq input:focus-visible,.gq select:focus-visible,.gq textarea:focus-visible,.gq a:focus-visible{outline:2px solid transparent;box-shadow:var(--focus-ring)}
+.gq .gq-pill{transition:background-color 120ms,color 120ms}
+.gq .gq-pill:hover{background:#624532 !important;color:#f6f3ed !important}
+.gq .gq-dark .gq-pill:hover{background:#f5e380 !important;color:#624532 !important}
+.gq .gq-link:hover{text-decoration:underline}
+.gq input[type=range]{accent-color:#81164b}
+.gq .gq-trail-line{stroke-dasharray:1;stroke-dashoffset:1}
+.gq .gq-trail.is-on .gq-trail-line{animation:gqTrace 3.2s ease-in-out forwards}
+.gq .gq-trail-pt{opacity:0;transform:scale(.4)}
+.gq .gq-trail.is-on .gq-trail-pt{animation:gqPop 360ms ease-out forwards}
+@keyframes gqTrace{to{stroke-dashoffset:0}}
+@keyframes gqPop{to{opacity:1;transform:scale(1)}}
+@media (prefers-reduced-motion: reduce){.gq .gq-trail-line{stroke-dashoffset:0;animation:none !important}.gq .gq-trail-pt{opacity:1;transform:none;animation:none !important}}
+@media (prefers-reduced-motion: reduce){.gq *{transition:none !important;scroll-behavior:auto !important}}
+</style>
+</helmet>
+<div class="gq" ref="{{refs.top}}" style="min-height: 100vh; background: #F6F3ED; color: #624532; font-family: Roboto, 'Helvetica Neue', Arial, sans-serif; font-size: 16px; line-height: 24px">
+
+<div style="background: #364831; color: #F6F3ED; padding: 8px 16px; text-align: center; font-size: 14px; line-height: 20px">Prototipo de tienda: precios, altitudes, coordenadas, fechas y kilómetros son datos de muestra. Ningún pedido es real.</div>
+
+<header style="border-bottom: 1px solid #62453240; background: #F6F3ED">
+<div style="max-width: 1280px; margin: 0 auto; padding: 12px clamp(16px, 4vw, 48px); display: flex; flex-wrap: wrap; align-items: center; gap: 12px 32px">
+<button type="button" onClick="{{goHome}}" aria-label="Guates, ir al inicio" style="display: flex; align-items: center; padding: 6px; border: 0; background: transparent; cursor: pointer; line-height: 0">
+<x-import component-from-global-scope="Guates.Logo" version="alternativo" color="cereza-profunda" height="{{sz.logo}}"></x-import>
+</button>
+<nav aria-label="Principal" style="display: flex; flex-wrap: wrap; gap: 4px 24px; flex-grow: 1">
+<sc-for list="{{nav}}" as="n" hint-placeholder-count="3">
+<button type="button" onClick="{{n.go}}" aria-current="{{n.current}}" style="min-height: 44px; padding: 10px 2px; border: 0; background: transparent; color: #624532; font-size: 16px; font-weight: 500; cursor: pointer; border-bottom: 3px solid {{n.line}}">{{n.label}}</button>
+</sc-for>
+</nav>
+<div style="display: flex; flex-wrap: wrap; align-items: center; gap: 12px">
+<label style="display: flex; align-items: center; gap: 8px; font-size: 14px; line-height: 20px; color: #7A6555">
+<span>Tu taza está en</span>
+<select value="{{city.key}}" onChange="{{onCity}}" style="height: 34px; padding: 4px 8px; border: 1px solid #624532; border-radius: 8px; background: #F6F3ED; color: #624532; font-size: 14px; font-weight: 500; cursor: pointer">
+<sc-for list="{{cities}}" as="c" hint-placeholder-count="6"><option value="{{c.key}}">{{c.name}}</option></sc-for>
+</select>
+</label>
+<button type="button" class="gq-pill" onClick="{{goCart}}" aria-label="{{cartAria}}" style="display: inline-flex; align-items: center; gap: 8px; min-height: 44px; padding: 8px 16px; border: 2px solid #624532; border-radius: 9999px; background: transparent; color: #624532; font-size: 15px; font-weight: 700; cursor: pointer">
+<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 8h14l-1.2 11.2a2 2 0 0 1-2 1.8H8.2a2 2 0 0 1-2-1.8z"></path><path d="M9 8V6.5a3 3 0 0 1 6 0V8"></path></svg>
+<span>Carrito</span>
+<span style="min-width: 22px; height: 22px; padding: 0 4px; box-sizing: border-box; border-radius: 9999px; background: #81164B; color: #F6F3ED; font-size: 12px; line-height: 22px; text-align: center">{{cartCount}}</span>
+</button>
+</div>
+</div>
+</header>
+
+<sc-if value="{{hasToast}}" hint-placeholder-val="{{ false }}">
+<div role="status" style="position: sticky; top: 0; z-index: 5; background: #624532; color: #F6F3ED">
+<div style="max-width: 1280px; margin: 0 auto; padding: 12px clamp(16px, 4vw, 48px); display: flex; flex-wrap: wrap; align-items: center; gap: 8px 24px">
+<span style="flex-grow: 1">{{toast}}</span>
+<button type="button" onClick="{{goCart}}" style="min-height: 44px; padding: 8px 18px; border: 2px solid #F5E380; border-radius: 9999px; background: #F5E380; color: #624532; font-weight: 700; cursor: pointer">Ver carrito</button>
+</div>
+</div>
+</sc-if>
+
+<main>
+
+<sc-if value="{{is.home}}" hint-placeholder-val="{{ true }}">
+<section style="max-width: 1280px; margin: 0 auto; padding: clamp(40px, 6vw, 88px) clamp(16px, 4vw, 48px); display: flex; flex-wrap: wrap; gap: 48px; align-items: stretch">
+<div style="flex: 1 1 420px; min-width: 0; display: flex; flex-direction: column; justify-content: center; gap: 20px">
+<p style="margin: 0; font-size: 14px; line-height: 18px; font-weight: 500; letter-spacing: 0.08em; text-transform: uppercase; color: #7A6555">La idea</p>
+<h1 style="margin: 0; font-family: 'Roboto Slab', Georgia, serif; font-weight: 300; font-size: clamp(40px, 5.6vw, 72px); line-height: 1.05; letter-spacing: -0.01em; color: #624532">Donde empieza otro mapa del café</h1>
+<p style="margin: 0; font-size: 18px; line-height: 28px; font-weight: 300; color: #000; max-width: 34em">En los Llanos, a quien llega de otra parte le dicen guate. Así nos acercamos al café: miramos de cerca, preguntamos y probamos hasta encontrar lo que aún no conocíamos. Después te lo contamos claro, para que elijas con gusto.</p>
+<p style="margin: 0; font-family: 'Caveat Brush', cursive; font-size: 28px; line-height: 32px; color: #81164B">Descubrimiento, cercanía y disfrute.</p>
+<div style="display: flex; flex-wrap: wrap; gap: 12px">
+<x-import component-from-global-scope="Guates.Button" variant="primary" size="lg" on-click="{{goCatalog}}">Explora los cafés</x-import>
+<x-import component-from-global-scope="Guates.Button" variant="secondary" size="lg" on-click="{{followCup}}">Sigue una taza</x-import>
+</div>
+</div>
+<div role="region" aria-roledescription="carrusel" aria-label="La personalidad de cada café" style="flex: 1 1 440px; min-width: 0; display: flex; flex-direction: column; border: 2px solid #624532; background: #F6F3ED; border-radius: 24px">
+<div style="position: relative; height: 280px; display: flex; align-items: center; justify-content: center; background: {{car.bag}}; transition: background-color 120ms; overflow: hidden">
+<div style="position: absolute; top: 16px; left: 16px">
+<x-import component-from-global-scope="Guates.VoiceTag" tone="crema-de-papel" ink="cafe-de-origen" tilt="{{sz.tilt}}">{{car.persona}}</x-import>
+</div>
+<span style="position: absolute; top: 16px; right: 16px; padding: 4px 10px; background: #F6F3ED; color: #624532; font-size: 13px; line-height: 18px; font-weight: 700; border-radius: 12px">{{car.count}}</span>
+<x-import component-from-global-scope="Guates.Illustration" name="{{car.art}}" color="{{car.artToken}}" size="{{sz.heroArt}}"></x-import>
+</div>
+<div aria-live="polite" style="padding: 24px 24px 8px; display: flex; flex-direction: column; gap: 8px">
+<p style="margin: 0; font-size: 12px; line-height: 16px; font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase; color: #7A6555">La personalidad de cada café · {{car.animal}}</p>
+<div style="display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 12px">
+<p style="margin: 0; font-family: 'Roboto Slab', Georgia, serif; font-size: 36px; line-height: 40px; font-weight: 600">{{car.name}}</p>
+<p style="margin: 0; font-family: 'Caveat Brush', cursive; font-size: 26px; line-height: 30px; color: #81164B">{{car.persona}}</p>
+</div>
+<p style="margin: 0; font-size: 16px; line-height: 24px; color: #000">{{car.line}}</p>
+<div style="display: flex; flex-wrap: wrap; align-items: center; gap: 6px">
+<span style="font-size: 14px; line-height: 20px; color: #7A6555">Sabe a</span>
+<sc-for list="{{car.notes}}" as="n" hint-placeholder-count="3">
+<span style="padding: 2px 8px; border: 1px solid #624532; font-size: 13px; line-height: 20px; border-radius: 8px">{{n}}</span>
+</sc-for>
+</div>
+</div>
+<div style="margin-top: auto; padding: 12px 16px 16px 24px; display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px">
+<x-import component-from-global-scope="Guates.Button" variant="primary" on-click="{{car.open}}">Conoce a {{car.name}}</x-import>
+<div style="display: flex; align-items: center; gap: 4px">
+<button type="button" class="gq-pill" onClick="{{car.prev}}" aria-label="Café anterior" style="width: 44px; height: 44px; padding: 0; border: 2px solid #624532; border-radius: 9999px; background: transparent; color: #624532; cursor: pointer; display: flex; align-items: center; justify-content: center">
+<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 6l-6 6 6 6"></path></svg>
+</button>
+<sc-for list="{{car.dots}}" as="d" hint-placeholder-count="5">
+<button type="button" onClick="{{d.pick}}" aria-label="{{d.label}}" aria-current="{{d.current}}" style="width: 28px; height: 44px; padding: 0; border: 0; background: transparent; cursor: pointer; display: flex; align-items: center; justify-content: center">
+<span style="display: block; width: 10px; height: 10px; border: 2px solid #624532; border-radius: 50%; background: {{d.bg}}"></span>
+</button>
+</sc-for>
+<button type="button" class="gq-pill" onClick="{{car.next}}" aria-label="Café siguiente" style="width: 44px; height: 44px; padding: 0; border: 2px solid #624532; border-radius: 9999px; background: transparent; color: #624532; cursor: pointer; display: flex; align-items: center; justify-content: center">
+<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 6l6 6-6 6"></path></svg>
+</button>
+</div>
+</div>
+</div>
+</section>
+
+<div aria-hidden="true" style="line-height: 0; background: #F6F3ED; border-radius: 16px"><svg viewBox="0 0 1440 48" preserveAspectRatio="none" style="display: block; width: 100%; height: 40px"><path d="M0 48 L0 30 C 180 6 360 6 540 22 C 720 38 900 40 1080 24 C 1240 10 1340 8 1440 18 L1440 48 Z" fill="{{emo.band}}"></path></svg></div>
+<section style="background: {{emo.band}}; transition: background-color 300ms ease">
+<div style="max-width: 1280px; margin: 0 auto; padding: 64px clamp(16px, 4vw, 48px) 72px; display: flex; flex-direction: column; gap: 32px">
+<div style="display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: 20px 40px">
+<div style="flex: 1 1 420px; min-width: 0; max-width: 640px; display: flex; flex-direction: column; gap: 10px">
+<p style="margin: 0; font-size: 13px; line-height: 18px; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; color: #000">La emoción</p>
+<h2 style="margin: 0; font-family: 'Caveat Brush', cursive; font-weight: 400; font-size: clamp(44px, 5vw, 64px); line-height: 1; color: #81164B">¿Qué te provoca hoy?</h2>
+<p style="margin: 0; font-size: 18px; line-height: 28px; font-weight: 300; color: #000">Elige por tu ánimo o por tu costumbre. Te mostramos el café que va contigo y te contamos quién es.</p>
+</div>
+<div role="tablist" aria-label="Elegir tu café por" style="display: flex; gap: 4px; padding: 4px; border: 2px solid #624532; border-radius: 9999px; background: #F6F3ED">
+<sc-for list="{{emo.modes}}" as="m" hint-placeholder-count="2">
+<button type="button" role="tab" aria-selected="{{m.sel}}" onClick="{{m.pick}}" style="min-height: 44px; padding: 8px 22px; border: 0; border-radius: 9999px; background: {{m.bg}}; color: {{m.fg}}; font-size: 15px; font-weight: 700; cursor: pointer; transition: background-color 160ms ease, color 160ms ease">{{m.label}}</button>
+</sc-for>
+</div>
+</div>
+<div style="border: 2px solid #624532; border-radius: 24px; overflow: hidden; background: #F6F3ED">
+<div role="tablist" aria-label="{{emo.groupLabel}}" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 6px; padding: 8px; border-bottom: 1px solid #62453240; background: #F6F3ED; border-radius: 16px">
+<sc-for list="{{emo.options}}" as="o" hint-placeholder-count="5">
+<button type="button" role="tab" aria-selected="{{o.sel}}" aria-controls="gq-mood-panel" onClick="{{o.pick}}" style="min-height: 72px; padding: 12px 16px; border: 0; border-radius: 16px; background: {{o.bg}}; color: {{o.fg}}; cursor: pointer; text-align: left; display: flex; flex-direction: column; justify-content: center; gap: 4px; transition: background-color 160ms ease, color 160ms ease">
+<span style="font-size: 16px; line-height: 20px; font-weight: 700">{{o.label}}</span>
+<span style="display: inline-flex; align-items: center; gap: 6px; font-size: 13px; line-height: 18px; font-weight: 500"><span aria-hidden="true" style="width: 10px; height: 10px; border-radius: 50%; border: 1px solid {{o.fg}}; background: {{o.dot}}"></span>{{o.coffee}}</span>
+</button>
+</sc-for>
+</div>
+<article id="gq-mood-panel" role="tabpanel" aria-live="polite" style="display: flex; flex-wrap: wrap; background: #F6F3ED">
+<div style="flex: 1 1 280px; max-width: 360px; min-height: 380px; box-sizing: border-box; padding: 28px; display: flex; flex-direction: column; justify-content: space-between; align-items: flex-start; gap: 16px; background: {{emo.bag}}; border-right: 1px solid #62453240">
+<x-import component-from-global-scope="Guates.VoiceTag" tone="crema-de-papel" ink="cafe-de-origen" tilt="{{sz.tilt}}">{{emo.persona}}</x-import>
+<div style="align-self: center; line-height: 0">
+<x-import component-from-global-scope="Guates.Illustration" name="{{emo.art}}" color="{{emo.artToken}}" sticker="crema-de-papel" size="{{sz.moodArt2}}" title="{{emo.animal}}"></x-import>
+</div>
+<p style="margin: 0; font-size: 14px; line-height: 20px; font-weight: 600; color: #000">Su animal: {{emo.animal}}</p>
+</div>
+<div style="flex: 999 1 480px; min-width: 0; padding: 32px; box-sizing: border-box; display: flex; flex-direction: column; gap: 24px">
+<div style="display: flex; flex-direction: column; gap: 8px">
+<p style="margin: 0; font-size: 12px; line-height: 16px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: #7A6555">{{emo.over}}</p>
+<h3 style="margin: 0; font-family: 'Roboto Slab', Georgia, serif; font-size: clamp(40px, 4.4vw, 56px); line-height: 1; font-weight: 600; color: #624532">{{emo.name}}</h3>
+<p style="margin: 0; font-family: 'Roboto Slab', Georgia, serif; font-size: 22px; line-height: 28px; font-weight: 300; color: #624532">{{emo.idea}}</p>
+</div>
+<p style="margin: 0; max-width: 38em; font-size: 19px; line-height: 30px; font-weight: 300; color: #000">{{emo.why}}</p>
+<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 28px; padding-top: 24px; border-top: 1px solid #62453240">
+<div style="display: flex; flex-direction: column; gap: 12px">
+<p style="margin: 0; font-size: 12px; line-height: 16px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: #7A6555">Así sabe</p>
+<ul style="margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: 6px">
+<sc-for list="{{emo.notes}}" as="n" hint-placeholder-count="3">
+<li style="display: flex; align-items: center; gap: 10px; font-family: 'Roboto Slab', Georgia, serif; font-size: 22px; line-height: 28px; font-weight: 400; color: #624532"><span aria-hidden="true" style="width: 10px; height: 10px; flex: none; border-radius: 50%; background: {{n.dot}}; border: 1px solid #624532"></span>{{n.n}}</li>
+</sc-for>
+</ul>
+<p style="margin: 0; font-size: 15px; line-height: 22px; color: #000">{{emo.feel}}</p>
+</div>
+<div style="display: flex; flex-direction: column; gap: 12px">
+<p style="margin: 0; font-size: 12px; line-height: 16px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: #7A6555">Su personalidad</p>
+<p style="margin: 0; font-family: 'Caveat Brush', cursive; font-size: 26px; line-height: 30px; color: #81164B">{{emo.personality}}</p>
+<p style="margin: 0; font-size: 15px; line-height: 22px; color: #000">{{emo.line}}</p>
+<div style="display: flex; flex-wrap: wrap; gap: 8px">
+<sc-for list="{{emo.traits}}" as="t" hint-placeholder-count="3">
+<x-import component-from-global-scope="Guates.VoiceTag" tone="{{t.tone}}" ink="{{t.ink}}" tilt="{{t.tilt}}">{{t.label}}</x-import>
+</sc-for>
+</div>
+</div>
+<div style="display: flex; flex-direction: column; gap: 12px">
+<p style="margin: 0; font-size: 12px; line-height: 16px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: #7A6555">Los datos</p>
+<dl style="margin: 0; display: flex; flex-direction: column; border-top: 1px solid #624532">
+<sc-for list="{{emo.facts}}" as="f" hint-placeholder-count="7">
+<div style="display: flex; justify-content: space-between; gap: 12px; padding: 7px 0; border-bottom: 1px solid #62453240">
+<dt style="font-size: 14px; line-height: 20px; color: #7A6555">{{f.k}}</dt>
+<dd style="margin: 0; font-size: 14px; line-height: 20px; font-weight: 600; text-align: right; color: #624532">{{f.v}}</dd>
+</div>
+</sc-for>
+</dl>
+</div>
+</div>
+<p style="margin: 0; padding: 14px 18px; background: #F5E380; border-radius: 14px; font-size: 15px; line-height: 22px; color: #000"><strong style="font-weight: 700">Dato curioso.</strong> {{emo.curious}}</p>
+<div style="display: flex; flex-wrap: wrap; align-items: center; gap: 12px 16px">
+<x-import component-from-global-scope="Guates.Button" variant="primary" on-click="{{emo.open}}">Ver su recorrido</x-import>
+<x-import component-from-global-scope="Guates.Button" variant="secondary" on-click="{{emo.quick}}">Agregar 250 g · {{emo.price}}</x-import>
+<span style="margin-left: auto; font-size: 12px; line-height: 16px; color: #7A6555">Altitud, cosecha y precio de muestra.</span>
+</div>
+</div>
+</article>
+</div>
+</div>
+</section>
+
+<section class="gq-dark" data-theme="dark" style="background: #364831; color: #F6F3ED">
+<div style="max-width: 1280px; margin: 0 auto; padding: 64px clamp(16px, 4vw, 48px) 32px; display: flex; flex-direction: column; gap: 16px">
+<p style="margin: 0; font-size: 14px; line-height: 18px; font-weight: 500; letter-spacing: 0.08em; text-transform: uppercase; color: #F5E380">De tu taza a la finca</p>
+<p style="margin: 0; font-family: 'Caveat Brush', cursive; font-size: 40px; line-height: 44px; color: #F5E380">Ahora, el camino de vuelta</p>
+<p style="margin: 0; font-size: 18px; line-height: 28px; font-weight: 300; max-width: 46em">Antes de llegar a tu taza, este café pasó por nueve pasos. Recórrelos al revés: el envío, el empaque y la tostión, hasta la cosecha en la finca. En cada ficha los ves con el mapa, la altura y el grano cambiando frente a ti.</p>
+<div style="display: flex; flex-wrap: wrap; gap: 12px">
+<x-import component-from-global-scope="Guates.Button" variant="primary" size="lg" on-click="{{followCup}}">Sigue el recorrido del Lavado</x-import>
+</div>
+</div>
+<div ref="{{refs.trail}}" style="position: relative; width: 100%; height: clamp(380px, 34vw, 540px); background: #F6F3ED">
+<canvas ref="{{refs.trailCanvas}}" role="img" aria-label="Línea dibujada de tu taza a la finca, que sube hasta la montaña, con nueve paradas ilustradas. Pasa el cursor por un punto o usa los botones numerados para ver el detalle." style="display: block; width: 100%; height: 100%; touch-action: pan-y"></canvas>
+</div>
+<div style="max-width: 1280px; margin: 0 auto; padding: 24px clamp(16px, 4vw, 48px) 64px; display: flex; flex-direction: column; gap: 16px">
+<div role="group" aria-label="Los nueve pasos, de tu taza a la finca" style="display: flex; flex-wrap: wrap; gap: 6px">
+<sc-for list="{{trailPts}}" as="t" hint-placeholder-count="9">
+<button type="button" onClick="{{t.show}}" onFocus="{{t.show}}" aria-label="{{t.aria}}" aria-current="{{t.current}}" style="min-width: 44px; height: 36px; padding: 0 10px; border: 1px solid #F6F3ED; border-radius: 8px; background: {{t.btnBg}}; color: {{t.btnFg}}; font-size: 13px; font-weight: 700; cursor: pointer">{{t.num}}</button>
+</sc-for>
+</div>
+<div aria-live="polite" style="background: #F6F3ED; color: #624532; padding: 20px 24px; display: flex; flex-wrap: wrap; gap: 12px 32px; align-items: flex-start; border-radius: 16px">
+<div style="flex: 1 1 260px; min-width: 0; display: flex; flex-direction: column; gap: 6px">
+<p style="margin: 0; font-size: 12px; line-height: 16px; font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase; color: #7A6555">Paso {{trailSel.num}} de 09 · {{trailSel.day}}</p>
+<p style="margin: 0; font-family: 'Roboto Slab', Georgia, serif; font-size: 28px; line-height: 32px; font-weight: 600">{{trailSel.title}}</p>
+<p style="margin: 0; font-size: 16px; line-height: 24px; color: #000">{{trailSel.text}}</p>
+</div>
+<dl style="flex: 1 1 200px; min-width: 0; margin: 0; display: flex; flex-direction: column; border-top: 1px solid #624532">
+<sc-for list="{{trailSel.facts}}" as="f" hint-placeholder-count="2">
+<div style="display: flex; justify-content: space-between; gap: 12px; padding: 8px 0; border-bottom: 1px solid #624532">
+<dt style="font-family: 'Roboto Slab', Georgia, serif; font-size: 14px; line-height: 20px; font-weight: 600">{{f.k}}</dt>
+<dd style="margin: 0; font-size: 15px; line-height: 20px; font-weight: 300; text-align: right">{{f.v}}</dd>
+</div>
+</sc-for>
+</dl>
+</div>
+<div style="display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px">
+<span style="font-size: 13px; line-height: 18px; color: #D9CBBB">Pasa el cursor o toca un punto para ver el detalle. Fechas y datos de muestra.</span>
+<button type="button" class="gq-pill" onClick="{{replayTrail}}" style="min-height: 44px; padding: 8px 18px; border: 2px solid #F6F3ED; border-radius: 9999px; background: transparent; color: #F6F3ED; font-size: 15px; font-weight: 700; cursor: pointer">Volver a trazar</button>
+</div>
+</div>
+</section>
+
+<section style="max-width: 1280px; margin: 0 auto; padding: 64px clamp(16px, 4vw, 48px); display: flex; flex-direction: column; gap: 24px">
+<div style="display: flex; flex-wrap: wrap; gap: 8px 32px; align-items: flex-end; justify-content: space-between">
+<div style="display: flex; flex-direction: column; gap: 8px; max-width: 640px">
+<p style="margin: 0; font-size: 14px; line-height: 18px; font-weight: 500; letter-spacing: 0.08em; text-transform: uppercase; color: #7A6555">Las montañas</p>
+<h2 style="margin: 0; font-family: 'Roboto Slab', Georgia, serif; font-size: clamp(28px, 3.4vw, 40px); line-height: 1.15; font-weight: 400">Nuestros cafés, de la montaña más baja a la más alta</h2>
+<p style="margin: 0; font-size: 16px; line-height: 24px; color: #000">{{profile.cityLine}}</p>
+</div>
+<x-import component-from-global-scope="Guates.Button" variant="secondary" on-click="{{goCatalog}}">Ver todos los cafés</x-import>
+</div>
+<div style="position: relative; height: 340px; border-bottom: 2px solid #624532">
+<sc-for list="{{profile.guides}}" as="g" hint-placeholder-count="4">
+<div style="position: absolute; left: 0; right: 0; bottom: {{g.bottom}}; border-top: 1px dashed #62453240">
+<span style="position: absolute; left: 0; top: -20px; font-size: 12px; line-height: 16px; font-weight: 700; color: #7A6555">{{g.label}}</span>
+</div>
+</sc-for>
+<div style="position: absolute; left: 0; right: 0; bottom: {{profile.cityBottom}}; border-top: 2px solid #4E71F0">
+<span style="position: absolute; right: 0; top: -24px; padding: 2px 8px; background: #4E71F0; color: #F6F3ED; font-size: 12px; line-height: 16px; font-weight: 700">{{profile.cityTag}}</span>
+</div>
+<div style="position: absolute; left: 56px; right: 0; bottom: 0; top: 0; display: flex; align-items: flex-end; gap: 0">
+<sc-for list="{{profile.items}}" as="m" hint-placeholder-count="5">
+<button type="button" onClick="{{m.open}}" aria-label="{{m.aria}}" style="flex: 1 1 0; min-width: 0; height: 100%; margin: 0 -2%; padding: 0; border: 0; background: transparent; cursor: pointer; display: flex; flex-direction: column; justify-content: flex-end; align-items: center">
+<span style="font-family: 'Roboto Slab', Georgia, serif; font-size: 16px; line-height: 20px; font-weight: 600; color: #624532">{{m.name}}</span>
+<span style="font-size: 12px; line-height: 16px; font-weight: 700; color: #7A6555; margin-bottom: 6px">{{m.alt}}</span>
+<span style="display: block; width: 100%; height: {{m.height}}; background: {{m.color}}; clip-path: polygon(50% 0, 64% 18%, 72% 14%, 100% 100%, 0 100%, 30% 30%, 40% 22%)"></span>
+</button>
+</sc-for>
+</div>
+</div>
+<p style="margin: 0; font-size: 12px; line-height: 16px; color: #7A6555">Altitudes de muestra en metros sobre el nivel del mar. Las alturas de las ciudades son aproximadas.</p>
+</section>
+
+<section style="border-top: 1px solid #62453240">
+<div style="max-width: 1280px; margin: 0 auto; padding: 64px clamp(16px, 4vw, 48px); display: flex; flex-wrap: wrap; gap: 40px; align-items: center">
+<div style="flex: 1 1 400px; min-width: 0; display: flex; flex-direction: column; gap: 20px">
+<p style="margin: 0; font-size: 14px; line-height: 18px; font-weight: 500; letter-spacing: 0.08em; text-transform: uppercase; color: #7A6555">El origen</p>
+<h2 style="margin: 0; font-family: 'Roboto Slab', Georgia, serif; font-size: clamp(28px, 3.4vw, 40px); line-height: 1.15; font-weight: 400">Y aquí empieza todo: tres fincas</h2>
+<p style="margin: 0; font-size: 18px; line-height: 28px; font-weight: 300; color: #000; max-width: 34em">Cada bolsa trae un lugar, una altura y unas manos. Todo el café llega a la tostión en Villavicencio y de ahí sale hacia {{city.name}}.</p>
+<div style="display: flex; flex-wrap: wrap; gap: 24px; padding-top: 16px; border-top: 1px solid #62453240">
+<div><div style="font-family: 'Roboto Slab', Georgia, serif; font-size: 32px; line-height: 36px; font-weight: 600">3</div><div style="font-size: 14px; line-height: 20px; color: #7A6555">fincas</div></div>
+<div><div style="font-family: 'Roboto Slab', Georgia, serif; font-size: 32px; line-height: 36px; font-weight: 600">5</div><div style="font-size: 14px; line-height: 20px; color: #7A6555">cafés</div></div>
+<div><div style="font-family: 'Roboto Slab', Georgia, serif; font-size: 32px; line-height: 36px; font-weight: 600">{{heroKm}}</div><div style="font-size: 14px; line-height: 20px; color: #7A6555">km hasta {{city.name}}, en línea recta desde la tostión</div></div>
+</div>
+<div style="background: #F6F3ED; border: 2px solid #624532; padding: 16px; box-sizing: border-box; display: flex; flex-direction: column; gap: 8px; border-radius: 24px">
+<sc-if value="{{heroFarm.has}}" hint-placeholder-val="{{ false }}">
+<p style="margin: 0; font-size: 12px; line-height: 16px; font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase; color: #7A6555">Finca · {{heroFarm.place}}</p>
+<p style="margin: 0; font-family: 'Roboto Slab', Georgia, serif; font-size: 24px; line-height: 28px; font-weight: 600">{{heroFarm.name}}</p>
+<p style="margin: 0; font-size: 14px; line-height: 20px; color: #000">{{heroFarm.line}}</p>
+<div style="display: flex; flex-wrap: wrap; gap: 8px">
+<sc-for list="{{heroFarm.coffees}}" as="c" hint-placeholder-count="2">
+<button type="button" class="gq-pill" onClick="{{c.open}}" style="min-height: 44px; padding: 8px 16px; border: 2px solid #624532; border-radius: 9999px; background: transparent; color: #624532; font-size: 15px; font-weight: 700; cursor: pointer">{{c.name}}</button>
+</sc-for>
+</div>
+</sc-if>
+<sc-if value="{{heroFarm.none}}" hint-placeholder-val="{{ true }}">
+<p style="margin: 0; font-family: 'Roboto Slab', Georgia, serif; font-size: 20px; line-height: 26px; font-weight: 500">Tres fincas, un mismo destino</p>
+<p style="margin: 0; font-size: 14px; line-height: 20px; color: #000">Todo el café llega a la tostión en Villavicencio y de ahí sale hacia {{city.name}}. Toca una finca para ver sus cafés.</p>
+</sc-if>
+</div>
+</div>
+<div style="flex: 1.3 1 520px; min-width: 0; display: flex; flex-direction: column; gap: 12px">
+<div style="position: relative; height: clamp(380px, 46vw, 580px); background: #9DB5EC; overflow: hidden; border-radius: 24px">
+<canvas ref="{{refs.hero}}" role="img" aria-label="Mapa ilustrado de Colombia con las tres fincas, la tostión en Villavicencio y tu ciudad. Toca una finca para ver sus cafés." style="display: block; width: 100%; height: 100%; touch-action: pan-y"></canvas>
+<div style="position: absolute; top: 16px; left: 16px">
+<x-import component-from-global-scope="Guates.VoiceTag" tone="luz-de-manana" ink="cafe-de-origen" tilt="{{sz.tilt}}">Toca una finca</x-import>
+</div>
+</div>
+<div style="display: flex; flex-wrap: wrap; align-items: center; gap: 8px">
+<span style="font-size: 14px; line-height: 20px; color: #7A6555">Fincas:</span>
+<sc-for list="{{farms}}" as="f" hint-placeholder-count="3">
+<button type="button" class="gq-pill" onClick="{{f.pick}}" aria-pressed="{{f.on}}" style="min-height: 44px; padding: 8px 16px; border: 2px solid #624532; border-radius: 9999px; background: {{f.bg}}; color: {{f.fg}}; font-size: 15px; font-weight: 500; cursor: pointer">{{f.name}}</button>
+</sc-for>
+<span style="font-size: 12px; line-height: 16px; color: #7A6555">Mapa ilustrado, no a escala. Ubicaciones de muestra.</span>
+</div>
+</div>
+</div>
+</section>
+
+<section class="gq-dark" data-theme="dark" style="background: #81164B; color: #F6F3ED">
+<div style="max-width: 1280px; margin: 0 auto; padding: 56px clamp(16px, 4vw, 48px); display: flex; flex-wrap: wrap; gap: 24px 48px; align-items: center">
+<p style="margin: 0; flex: 1 1 360px; font-family: 'Caveat Brush', cursive; font-size: clamp(44px, 6vw, 80px); line-height: 1; color: #F5E380">Algo bueno se está tostando</p>
+<div style="flex: 1 1 360px; display: flex; flex-direction: column; gap: 16px">
+<p style="margin: 0; font-size: 18px; line-height: 28px; font-weight: 300">Recibe café recién tostado cada 2 o 4 semanas. Eliges un café fijo o nos dejas llevarte a un origen distinto en cada envío.</p>
+<div><x-import component-from-global-scope="Guates.Button" variant="primary" on-click="{{goSub}}">Arma tu suscripción</x-import></div>
+</div>
+</div>
+</section>
+</sc-if>
+
+<sc-if value="{{is.catalogo}}" hint-placeholder-val="{{ false }}">
+<section style="max-width: 1280px; margin: 0 auto; padding: 48px clamp(16px, 4vw, 48px) 64px; display: flex; flex-direction: column; gap: 24px">
+<div style="display: flex; flex-direction: column; gap: 8px">
+<p style="margin: 0; font-size: 14px; line-height: 18px; font-weight: 500; letter-spacing: 0.08em; text-transform: uppercase; color: #7A6555">Tienda</p>
+<h1 style="margin: 0; font-family: 'Roboto Slab', Georgia, serif; font-size: clamp(32px, 4vw, 48px); line-height: 1.1; font-weight: 400">Nuestros cafés</h1>
+<p style="margin: 0; font-size: 18px; line-height: 28px; font-weight: 300; color: #000; max-width: 40em">Cinco cafés de tres fincas colombianas, tostados en Villavicencio. Empieza por lo que te gusta sentir; el dato técnico viene después.</p>
+</div>
+<div style="display: flex; flex-wrap: wrap; gap: 16px 32px; align-items: center; padding: 16px 0; border-top: 1px solid #62453240; border-bottom: 1px solid #62453240">
+<div role="group" aria-label="Filtrar por proceso" style="display: flex; flex-wrap: wrap; align-items: center; gap: 8px">
+<span style="font-size: 14px; line-height: 20px; font-weight: 500">Proceso</span>
+<sc-for list="{{filters}}" as="f" hint-placeholder-count="4">
+<button type="button" class="gq-pill" onClick="{{f.pick}}" aria-pressed="{{f.on}}" style="min-height: 44px; padding: 8px 16px; border: 2px solid #624532; border-radius: 9999px; background: {{f.bg}}; color: {{f.fg}}; font-size: 15px; font-weight: 500; cursor: pointer">{{f.label}}</button>
+</sc-for>
+</div>
+<div role="group" aria-label="Ordenar" style="display: flex; flex-wrap: wrap; align-items: center; gap: 8px">
+<span style="font-size: 14px; line-height: 20px; font-weight: 500">Ordenar por</span>
+<sc-for list="{{sorts}}" as="f" hint-placeholder-count="2">
+<button type="button" class="gq-pill" onClick="{{f.pick}}" aria-pressed="{{f.on}}" style="min-height: 44px; padding: 8px 16px; border: 2px solid #624532; border-radius: 9999px; background: {{f.bg}}; color: {{f.fg}}; font-size: 15px; font-weight: 500; cursor: pointer">{{f.label}}</button>
+</sc-for>
+</div>
+<p role="status" style="margin: 0 0 0 auto; font-size: 14px; line-height: 20px; color: #7A6555">{{cardsCount}}</p>
+</div>
+<p style="margin: 0; font-size: 14px; line-height: 20px; color: #000; max-width: 52em">{{filterHelp}}</p>
+<div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 24px">
+<sc-for list="{{cards}}" as="c" hint-placeholder-count="5">
+<article style="display: flex; flex-direction: column; border: 2px solid #624532; background: #F6F3ED; border-radius: 24px; overflow: hidden">
+<div style="position: relative; height: 210px; display: flex; align-items: center; justify-content: center; background: {{c.bag}}; overflow: hidden">
+<span style="position: absolute; top: 12px; left: 12px; padding: 4px 8px; background: #F6F3ED; color: #624532; font-size: 12px; line-height: 16px; font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase; border-radius: 12px">{{c.process}}</span>
+<x-import component-from-global-scope="Guates.Illustration" name="{{c.bagArt}}" color="{{c.artToken}}" size="{{sz.cardArt}}"></x-import>
+</div>
+<div style="display: flex; flex-direction: column; gap: 8px; padding: 20px; flex-grow: 1">
+<h2 style="margin: 0; font-family: 'Roboto Slab', Georgia, serif; font-size: 32px; line-height: 36px; font-weight: 600">{{c.name}}</h2>
+<p style="margin: 0; font-family: 'Caveat Brush', cursive; font-size: 20px; line-height: 24px">Productor: {{c.producer}}</p>
+<p style="margin: 0; font-size: 14px; line-height: 20px; color: #7A6555">{{c.place}} · {{c.altLabel}}</p>
+<p style="margin: 0; font-size: 16px; line-height: 24px; color: #000">{{c.feel}}</p>
+<div style="display: flex; flex-wrap: wrap; gap: 6px">
+<sc-for list="{{c.notes}}" as="n" hint-placeholder-count="3">
+<span style="padding: 2px 8px; border: 1px solid #624532; font-size: 13px; line-height: 20px; border-radius: 8px">{{n}}</span>
+</sc-for>
+</div>
+<div style="margin-top: auto; padding-top: 12px; border-top: 1px solid #62453240; display: flex; align-items: baseline; justify-content: space-between; gap: 8px">
+<span style="font-size: 14px; line-height: 20px; color: #7A6555">250 g · precio de muestra</span>
+<span style="font-family: 'Roboto Slab', Georgia, serif; font-size: 22px; line-height: 28px; font-weight: 600">{{c.price}}</span>
+</div>
+<div style="display: flex; flex-wrap: wrap; gap: 8px">
+<x-import component-from-global-scope="Guates.Button" variant="primary" on-click="{{c.open}}">Ver su recorrido</x-import>
+<x-import component-from-global-scope="Guates.Button" variant="secondary" on-click="{{c.quick}}" aria-label="{{c.quickAria}}">Agregar</x-import>
+</div>
+</div>
+</article>
+</sc-for>
+</div>
+<sc-if value="{{cardsEmpty}}" hint-placeholder-val="{{ false }}">
+<p style="margin: 0; padding: 32px; border: 2px dashed #624532; font-size: 16px; line-height: 24px; border-radius: 16px">No hay cafés con ese proceso por ahora. Prueba con otro filtro.</p>
+</sc-if>
+</section>
+</sc-if>
+
+<sc-if value="{{is.producto}}" hint-placeholder-val="{{ false }}">
+<section style="max-width: 1280px; margin: 0 auto; padding: 24px clamp(16px, 4vw, 48px) 56px; display: flex; flex-direction: column; gap: 24px">
+<nav aria-label="Ruta de navegación" style="display: flex; flex-wrap: wrap; gap: 8px; font-size: 14px; line-height: 20px; color: #7A6555">
+<button type="button" class="gq-link" onClick="{{goCatalog}}" style="min-height: 44px; padding: 0; border: 0; background: transparent; color: #81164B; font-size: 14px; cursor: pointer">Cafés</button>
+<span aria-hidden="true" style="align-self: center">/</span>
+<span aria-current="page" style="align-self: center">{{p.name}}</span>
+</nav>
+<div style="display: flex; flex-wrap: wrap; gap: 40px; align-items: flex-start">
+<div style="flex: 1 1 440px; min-width: 0; min-height: 560px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 28px; padding: 48px 24px; box-sizing: border-box; background: {{p.bag}}; border-radius: 24px">
+<x-import component-from-global-scope="Guates.Illustration" name="{{p.bagArt}}" color="{{p.artToken}}" sticker="crema-de-papel" size="{{sz.portrait}}" title="{{p.personality}}"></x-import>
+<div style="display: flex; flex-wrap: wrap; justify-content: center; gap: 10px">
+<sc-for list="{{p.traits}}" as="t" hint-placeholder-count="3">
+<x-import component-from-global-scope="Guates.VoiceTag" tone="{{t.tone}}" ink="{{t.ink}}" tilt="{{t.tilt}}">{{t.label}}</x-import>
+</sc-for>
+</div>
+</div>
+<div style="flex: 1 1 420px; min-width: 0; display: flex; flex-direction: column; gap: 16px">
+<p style="margin: 0; font-size: 14px; line-height: 18px; font-weight: 500; letter-spacing: 0.08em; text-transform: uppercase; color: #7A6555">{{p.overline}}</p>
+<h1 style="margin: 0; font-family: 'Roboto Slab', Georgia, serif; font-size: clamp(44px, 5vw, 64px); line-height: 1; font-weight: 600">{{p.name}}</h1>
+<p style="margin: 0; font-family: 'Caveat Brush', cursive; font-size: 24px; line-height: 28px; color: #81164B">{{p.personality}}</p>
+<p style="margin: 0; font-size: 18px; line-height: 28px; font-weight: 300; color: #000">{{p.feel}}</p>
+<div style="display: flex; flex-wrap: wrap; align-items: center; gap: 6px">
+<span style="font-size: 14px; line-height: 20px; color: #7A6555">Notas de muestra:</span>
+<sc-for list="{{p.notes}}" as="n" hint-placeholder-count="3">
+<span style="padding: 2px 8px; border: 1px solid #624532; font-size: 13px; line-height: 20px; border-radius: 8px">{{n}}</span>
+</sc-for>
+</div>
+<p style="margin: 0; padding: 12px 16px; border-left: 0; background: #F5E380; font-size: 14px; line-height: 20px; color: #000; border-radius: 14px">{{p.processHelp}}</p>
+<div role="group" aria-label="Presentación" style="display: flex; flex-direction: column; gap: 8px">
+<span style="font-family: 'Roboto Slab', Georgia, serif; font-size: 16px; line-height: 22px; font-weight: 600">Presentación</span>
+<div style="display: flex; flex-wrap: wrap; gap: 8px">
+<sc-for list="{{sizes}}" as="o" hint-placeholder-count="3">
+<button type="button" class="gq-pill" onClick="{{o.pick}}" aria-pressed="{{o.on}}" style="min-height: 44px; padding: 6px 18px; border: 2px solid #624532; border-radius: 9999px; background: {{o.bg}}; color: {{o.fg}}; cursor: pointer; display: flex; flex-direction: column; align-items: center; line-height: 18px">
+<span style="font-size: 15px; font-weight: 700">{{o.label}}</span>
+<span style="font-size: 13px; font-weight: 400">{{o.price}}</span>
+</button>
+</sc-for>
+</div>
+</div>
+<div role="group" aria-label="Molienda" style="display: flex; flex-direction: column; gap: 8px">
+<span style="font-family: 'Roboto Slab', Georgia, serif; font-size: 16px; line-height: 22px; font-weight: 600">Molienda</span>
+<div style="display: flex; flex-wrap: wrap; gap: 8px">
+<sc-for list="{{grinds}}" as="o" hint-placeholder-count="4">
+<button type="button" class="gq-pill" onClick="{{o.pick}}" aria-pressed="{{o.on}}" style="min-height: 44px; padding: 6px 16px; border: 2px solid #624532; border-radius: 9999px; background: {{o.bg}}; color: {{o.fg}}; cursor: pointer; display: flex; flex-direction: column; align-items: center; line-height: 18px">
+<span style="font-size: 15px; font-weight: 700">{{o.label}}</span>
+<span style="font-size: 13px; font-weight: 400">{{o.hint}}</span>
+</button>
+</sc-for>
+</div>
+</div>
+<div style="display: flex; flex-wrap: wrap; align-items: center; gap: 16px">
+<div role="group" aria-label="Cantidad" style="display: flex; align-items: center; border: 2px solid #624532; border-radius: 9999px">
+<button type="button" onClick="{{qtyDown}}" aria-label="Quitar una bolsa" style="width: 44px; height: 44px; border: 0; border-radius: 9999px; background: transparent; color: #624532; font-size: 22px; cursor: pointer">−</button>
+<span aria-live="polite" style="min-width: 32px; text-align: center; font-weight: 700">{{qty}}</span>
+<button type="button" onClick="{{qtyUp}}" aria-label="Agregar una bolsa" style="width: 44px; height: 44px; border: 0; border-radius: 9999px; background: transparent; color: #624532; font-size: 22px; cursor: pointer">+</button>
+</div>
+<x-import component-from-global-scope="Guates.Button" variant="primary" size="lg" on-click="{{addCurrent}}">Agregar al carrito · {{lineTotal}}</x-import>
+</div>
+<button type="button" class="gq-link" onClick="{{subThis}}" style="align-self: flex-start; min-height: 44px; padding: 0; border: 0; background: transparent; color: #81164B; font-size: 16px; font-weight: 500; cursor: pointer">O recíbelo cada 2 o 4 semanas con una suscripción</button>
+<button type="button" class="gq-link" onClick="{{toJourney}}" style="align-self: flex-start; min-height: 44px; padding: 0; border: 0; background: transparent; color: #624532; font-size: 16px; font-weight: 700; cursor: pointer">Rebobina este café hasta la finca ↓</button>
+</div>
+</div>
+</section>
+
+<section style="border-top: 1px solid #62453240">
+<div style="max-width: 1280px; margin: 0 auto; padding: 56px clamp(16px, 4vw, 48px); display: flex; flex-wrap: wrap; gap: 40px; align-items: center">
+<div style="flex: 1.2 1 420px; min-width: 0; display: flex; flex-direction: column; gap: 20px">
+<p style="margin: 0; font-size: 14px; line-height: 18px; font-weight: 500; letter-spacing: 0.08em; text-transform: uppercase; color: #7A6555">01 · La idea</p>
+<h2 style="margin: 0; font-family: 'Roboto Slab', Georgia, serif; font-size: clamp(32px, 4vw, 52px); line-height: 1.08; font-weight: 300">{{p.idea}}</h2>
+<p style="margin: 0; font-family: 'Caveat Brush', cursive; font-size: clamp(26px, 2.6vw, 34px); line-height: 1.15; color: #81164B">«{{p.scene}}»</p>
+<dl style="margin: 0; display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 16px; padding-top: 16px; border-top: 1px solid #62453240">
+<div><dt style="font-size: 12px; line-height: 16px; font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase; color: #7A6555">La escena</dt><dd style="margin: 6px 0 0; font-family: 'Roboto Slab', Georgia, serif; font-size: 19px; line-height: 25px; font-weight: 400">{{p.sceneShort}}</dd></div>
+<div><dt style="font-size: 12px; line-height: 16px; font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase; color: #7A6555">La personalidad</dt><dd style="margin: 6px 0 0; font-family: 'Roboto Slab', Georgia, serif; font-size: 19px; line-height: 25px; font-weight: 400">{{p.personality}}</dd></div>
+<div><dt style="font-size: 12px; line-height: 16px; font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase; color: #7A6555">La emoción</dt><dd style="margin: 6px 0 0; font-family: 'Roboto Slab', Georgia, serif; font-size: 19px; line-height: 25px; font-weight: 400">{{p.emotion}}</dd></div>
+</dl>
+</div>
+<div style="flex: 1 1 360px; min-width: 0; display: flex; flex-direction: column; gap: 8px">
+<div style="position: relative; height: 320px; background: {{p.bag}}; border-radius: 24px; overflow: hidden">
+<canvas ref="{{refs.cupIdea}}" role="img" aria-label="{{p.cupAria}}" style="display: block; width: 100%; height: 100%; touch-action: pan-y"></canvas>
+</div>
+<p style="margin: 0; font-size: 12px; line-height: 16px; color: #7A6555">Así empieza: con tu taza. Más abajo vamos hacia atrás, hasta la finca.</p>
+</div>
+</div>
+</section>
+
+<section style="border-top: 1px solid #62453240">
+<div style="max-width: 1280px; margin: 0 auto; padding: 56px clamp(16px, 4vw, 48px); display: flex; flex-wrap: wrap; gap: 40px; align-items: flex-start">
+<div style="flex: 1 1 360px; min-width: 0; display: flex; flex-direction: column; gap: 16px">
+<p style="margin: 0; font-size: 14px; line-height: 18px; font-weight: 500; letter-spacing: 0.08em; text-transform: uppercase; color: #7A6555">02 · Prepáralo</p>
+<h2 style="margin: 0; font-family: 'Roboto Slab', Georgia, serif; font-size: clamp(28px, 3.2vw, 40px); line-height: 1.15; font-weight: 400">Una receta para empezar</h2>
+<p style="margin: 0; font-size: 16px; line-height: 24px; color: #000">Es un punto de partida, no una regla. Pruébala y ajusta: si sabe amargo, muele más grueso; si sabe ácido o aguado, más fino.</p>
+<div role="group" aria-label="Método" style="display: flex; flex-wrap: wrap; gap: 8px">
+<sc-for list="{{methods}}" as="m" hint-placeholder-count="3">
+<button type="button" class="gq-pill" onClick="{{m.pick}}" aria-pressed="{{m.on}}" style="min-height: 44px; padding: 8px 16px; border: 2px solid #624532; border-radius: 9999px; background: {{m.bg}}; color: {{m.fg}}; font-size: 15px; font-weight: 500; cursor: pointer">{{m.label}}</button>
+</sc-for>
+</div>
+<div role="group" aria-label="Tazas" style="display: flex; flex-wrap: wrap; gap: 8px">
+<sc-for list="{{cupsOpts}}" as="m" hint-placeholder-count="2">
+<button type="button" class="gq-pill" onClick="{{m.pick}}" aria-pressed="{{m.on}}" style="min-height: 44px; padding: 8px 16px; border: 2px solid #624532; border-radius: 9999px; background: {{m.bg}}; color: {{m.fg}}; font-size: 15px; font-weight: 500; cursor: pointer">{{m.label}}</button>
+</sc-for>
+</div>
+</div>
+<div style="flex: 1.4 1 480px; min-width: 0; display: flex; flex-wrap: wrap; border: 2px solid #624532; border-radius: 24px; overflow: hidden">
+<div style="flex: 1 1 260px; padding: 24px; display: flex; flex-direction: column; gap: 12px">
+<p style="margin: 0; font-family: 'Roboto Slab', Georgia, serif; font-size: 24px; line-height: 28px; font-weight: 600">{{recipe.title}}</p>
+<dl style="margin: 0; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px 16px">
+<sc-for list="{{recipe.facts}}" as="f" hint-placeholder-count="5">
+<div>
+<dt style="font-size: 12px; line-height: 16px; font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase; color: #7A6555">{{f.k}}</dt>
+<dd style="margin: 0; font-family: 'Roboto Slab', Georgia, serif; font-size: 20px; line-height: 26px; font-weight: 500">{{f.v}}</dd>
+</div>
+</sc-for>
+</dl>
+<ol style="margin: 0; padding-left: 20px; display: flex; flex-direction: column; gap: 6px; font-size: 15px; line-height: 22px; color: #000">
+<sc-for list="{{recipe.steps}}" as="x" hint-placeholder-count="3"><li>{{x}}</li></sc-for>
+</ol>
+<p style="margin: 0; font-size: 14px; line-height: 20px; color: #000">{{recipe.water}}</p>
+</div>
+<div style="flex: 0 1 220px; min-height: 200px; display: flex; align-items: center; justify-content: center; background: {{p.bag}}">
+<x-import component-from-global-scope="Guates.Illustration" name="cafetera" color="{{p.artToken}}" size="{{sz.recArt}}"></x-import>
+</div>
+</div>
+</div>
+</section>
+
+<section class="gq-dark" data-theme="dark" ref="{{refs.journey}}" style="background: #364831; color: #F6F3ED">
+<div style="max-width: 1280px; margin: 0 auto; padding: 56px clamp(16px, 4vw, 48px); display: flex; flex-direction: column; gap: 24px">
+<div style="display: flex; flex-wrap: wrap; gap: 24px 48px; align-items: flex-end">
+<x-import component-from-global-scope="Guates.SectionMarker" family="sol-de-sabana" number="03" title="Hacia atrás" align="start" size="{{sz.marker}}"></x-import>
+<div style="flex: 1 1 360px; display: flex; flex-direction: column; gap: 8px">
+<h2 style="margin: 0; font-family: 'Roboto Slab', Georgia, serif; font-size: clamp(28px, 3.2vw, 40px); line-height: 1.15; font-weight: 400">Todo lo que pasó antes de tu taza</h2>
+<p style="margin: 0; font-size: 18px; line-height: 28px; font-weight: 300">{{journeyIntro}}</p>
+</div>
+</div>
+<ol aria-label="Etapas del recorrido" style="margin: 0; padding: 0 0 4px; list-style: none; display: flex; gap: 6px; overflow-x: auto">
+<sc-for list="{{stages}}" as="s" hint-placeholder-count="9">
+<li style="flex: 1 0 auto">
+<button type="button" onClick="{{s.pick}}" aria-current="{{s.current}}" style="width: 100%; min-height: 56px; padding: 8px 14px; border: 2px solid #F6F3ED; border-radius: 14px; background: {{s.bg}}; color: {{s.fg}}; cursor: pointer; display: flex; flex-direction: column; align-items: flex-start; text-align: left">
+<span style="font-family: 'Roboto Slab', Georgia, serif; font-size: 13px; line-height: 16px; font-weight: 600">{{s.num}}</span>
+<span style="font-size: 15px; line-height: 20px; font-weight: 500; white-space: nowrap">{{s.title}}</span>
+</button>
+</li>
+</sc-for>
+</ol>
+<div style="display: flex; flex-wrap: wrap; gap: 24px; align-items: stretch">
+<div style="flex: 2 1 540px; min-width: 0; display: flex; flex-direction: column; gap: 8px">
+<div style="position: relative; height: clamp(380px, 46vw, 600px); background: #9DB5EC; overflow: hidden; border-radius: 24px">
+<canvas ref="{{refs.route}}" role="img" aria-label="{{routeAria}}" style="display: block; width: 100%; height: 100%; touch-action: pan-y"></canvas>
+<div style="position: absolute; top: 12px; left: 12px; right: 12px; display: flex; flex-wrap: wrap; gap: 6px">
+<sc-for list="{{stopChips}}" as="c" hint-placeholder-count="4">
+<span style="padding: 4px 10px; border: 2px solid #624532; background: {{c.bg}}; color: {{c.fg}}; font-size: 13px; line-height: 18px; font-weight: 700; border-radius: 8px">{{c.label}}</span>
+</sc-for>
+</div>
+<div style="position: absolute; right: 12px; bottom: 12px; padding: 12px 16px; background: #624532; color: #F6F3ED; text-align: right; border-radius: 12px">
+<div style="font-family: 'Roboto Slab', Georgia, serif; font-size: 36px; line-height: 40px; font-weight: 300; color: #F5E380">{{st.km}}</div>
+<div style="font-size: 13px; line-height: 18px">km de vuelta hacia la finca</div>
+</div>
+</div>
+<p style="margin: 0; font-size: 12px; line-height: 16px; color: #D9CBBB">Ruta ilustrada, no vial. Los tramos hasta la tostión son estimaciones de muestra; el último se calcula en línea recta hasta tu ciudad.</p>
+</div>
+<div style="flex: 1 1 340px; min-width: 0; display: flex; flex-direction: column; gap: 16px">
+<div aria-live="polite" style="display: flex; flex-direction: column; gap: 10px">
+<p style="margin: 0; font-size: 14px; line-height: 18px; font-weight: 500; letter-spacing: 0.08em; text-transform: uppercase; color: #F5E380">{{st.over}}</p>
+<h3 style="margin: 0; font-family: 'Roboto Slab', Georgia, serif; font-size: 32px; line-height: 36px; font-weight: 600">{{st.title}}</h3>
+<p style="margin: 0; font-size: 16px; line-height: 24px">{{st.text}}</p>
+</div>
+<dl style="margin: 0; display: flex; flex-direction: column; border-top: 1px solid #F6F3ED59">
+<sc-for list="{{st.facts}}" as="f" hint-placeholder-count="3">
+<div style="display: flex; justify-content: space-between; gap: 16px; padding: 8px 0; border-bottom: 1px solid #F6F3ED59">
+<dt style="font-family: 'Roboto Slab', Georgia, serif; font-size: 14px; line-height: 20px; font-weight: 600">{{f.k}}</dt>
+<dd style="margin: 0; font-size: 15px; line-height: 20px; font-weight: 300; text-align: right">{{f.v}}</dd>
+</div>
+</sc-for>
+</dl>
+<div style="background: #F6F3ED; color: #624532; display: flex; flex-direction: column; border-radius: 16px">
+<div style="position: relative; height: 240px">
+<sc-if value="{{st.isCup}}" hint-placeholder-val="{{ false }}">
+<canvas ref="{{refs.cup}}" role="img" aria-label="Tu taza servida, vista desde arriba" style="display: block; width: 100%; height: 100%; touch-action: pan-y"></canvas>
+</sc-if>
+<sc-if value="{{st.isBean}}" hint-placeholder-val="{{ true }}">
+<canvas ref="{{refs.bean}}" role="img" aria-label="{{st.beanCaption}}" style="display: block; width: 100%; height: 100%; touch-action: pan-y"></canvas>
+</sc-if>
+</div>
+<div style="padding: 12px 16px; border-top: 1px solid #62453240; display: flex; flex-direction: column; gap: 8px">
+<span style="font-size: 14px; line-height: 20px; font-weight: 500">{{st.beanCaption}}</span>
+<sc-if value="{{st.isRoast}}" hint-placeholder-val="{{ false }}">
+<label style="display: flex; flex-wrap: wrap; align-items: center; gap: 12px; font-size: 14px; line-height: 20px">
+<span>Mueve la tostión</span>
+<input type="range" min="1" max="5" step="1" value="{{roast}}" onChange="{{onRoast}}" aria-valuetext="{{roastText}}" style="flex: 1 1 120px; min-height: 44px">
+<x-import component-from-global-scope="Guates.RoastScale" level="{{roast}}" color="cafe-de-origen" size="{{sz.bean}}"></x-import>
+</label>
+<span style="font-size: 12px; line-height: 16px; color: #7A6555">{{roastText}}. Color ilustrativo: no cambia tu pedido.</span>
+</sc-if>
+</div>
+</div>
+<div style="display: flex; flex-wrap: wrap; gap: 8px">
+<button type="button" class="gq-pill" onClick="{{prevStage}}" disabled="{{st.first}}" style="min-height: 48px; padding: 10px 20px; border: 2px solid #F6F3ED; border-radius: 9999px; background: transparent; color: #F6F3ED; font-size: 16px; font-weight: 700; cursor: pointer">Anterior</button>
+<button type="button" class="gq-pill" onClick="{{nextStage}}" disabled="{{st.last}}" style="min-height: 48px; padding: 10px 20px; border: 2px solid #F5E380; border-radius: 9999px; background: #F5E380; color: #624532; font-size: 16px; font-weight: 700; cursor: pointer">Siguiente</button>
+<button type="button" class="gq-pill" onClick="{{togglePlay}}" aria-pressed="{{playing}}" style="min-height: 48px; padding: 10px 20px; border: 2px solid #F6F3ED; border-radius: 9999px; background: transparent; color: #F6F3ED; font-size: 16px; font-weight: 700; cursor: pointer">{{playLabel}}</button>
+</div>
+</div>
+</div>
+</div>
+</section>
+
+<section style="border-top: 1px solid #62453240">
+<div style="max-width: 1280px; margin: 0 auto; padding: 56px clamp(16px, 4vw, 48px); display: flex; flex-wrap: wrap; gap: 40px; align-items: stretch">
+<div style="flex: 1 1 320px; min-width: 0; display: flex; flex-direction: column; gap: 16px">
+<p style="margin: 0; font-size: 14px; line-height: 18px; font-weight: 500; letter-spacing: 0.08em; text-transform: uppercase; color: #7A6555">04 · El lugar</p>
+<h2 style="margin: 0; font-family: 'Roboto Slab', Georgia, serif; font-size: clamp(28px, 3.2vw, 40px); line-height: 1.15; font-weight: 400">{{p.farmTitle}}</h2>
+<p style="margin: 0; font-size: 16px; line-height: 24px; color: #000">En general, a más altura la cereza madura más despacio y tiene más tiempo para acumular azúcares. Por eso muchos cafés de montaña se sienten más dulces y brillantes.</p>
+<dl style="margin: 0; display: flex; flex-direction: column; border-top: 1px solid #624532">
+<sc-for list="{{p.altFacts}}" as="f" hint-placeholder-count="4">
+<div style="display: flex; justify-content: space-between; gap: 16px; padding: 10px 0; border-bottom: 1px solid #624532">
+<dt style="font-family: 'Roboto Slab', Georgia, serif; font-size: 15px; line-height: 22px; font-weight: 600">{{f.k}}</dt>
+<dd style="margin: 0; font-size: 16px; line-height: 22px; font-weight: 300; text-align: right">{{f.v}}</dd>
+</div>
+</sc-for>
+</dl>
+<div aria-live="polite" style="padding: 16px; background: #624532; color: #F6F3ED; display: flex; flex-direction: column; gap: 2px; border-radius: 16px">
+<span style="font-size: 12px; line-height: 16px; font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase; color: #F5E380">Bajo tu cursor</span>
+<span style="font-family: 'Roboto Slab', Georgia, serif; font-size: 28px; line-height: 34px; font-weight: 300">{{hoverLine}}</span>
+<span style="font-size: 14px; line-height: 20px">{{hoverHint}}</span>
+</div>
+<button type="button" class="gq-pill" onClick="{{toggleBand}}" aria-pressed="{{highlight}}" style="align-self: flex-start; min-height: 44px; padding: 8px 18px; border: 2px solid #624532; border-radius: 9999px; background: transparent; color: #624532; font-size: 15px; font-weight: 500; cursor: pointer">{{bandLabel}}</button>
+</div>
+<div style="flex: 2 1 560px; min-width: 0; display: flex; flex-direction: column; gap: 8px">
+<div style="position: relative; height: clamp(380px, 44vw, 560px); background: #F6F3ED; border: 2px solid #624532; overflow: hidden; border-radius: 24px">
+<canvas ref="{{refs.terrain}}" role="img" aria-label="{{p.terrainAria}}" style="display: block; width: 100%; height: 100%; touch-action: pan-y; cursor: crosshair"></canvas>
+</div>
+<div style="display: flex; flex-wrap: wrap; gap: 6px">
+<sc-for list="{{legend}}" as="l" hint-placeholder-count="5">
+<span style="display: inline-flex; align-items: center; gap: 6px; padding: 4px 8px; background: #F6F3ED; border: 1px solid #624532; font-size: 12px; line-height: 16px; font-weight: 700; border-radius: 8px">
+<span style="width: 12px; height: 12px; background: {{l.color}}; border: 1px solid #624532; border-radius: 50%"></span>{{l.label}}</span>
+</sc-for>
+</div>
+<p style="margin: 0; font-size: 12px; line-height: 16px; color: #7A6555">Pasa el cursor o toca el dibujo para medir la altura. Dibujo ilustrativo con alturas de muestra; la altura de tu ciudad es aproximada.</p>
+</div>
+</div>
+</section>
+
+<section style="background: {{p.bag}}">
+<div style="max-width: 1280px; margin: 0 auto; padding: 56px clamp(16px, 4vw, 48px); display: flex; flex-wrap: wrap; gap: 32px; align-items: center">
+<div style="flex: 0 1 380px; min-width: 0; display: flex; justify-content: center">
+<x-import component-from-global-scope="Guates.OriginLabel" product="{{p.key}}" grind="{{p.labelGrind}}" width="{{sz.label}}"></x-import>
+</div>
+<div style="flex: 1 1 360px; min-width: 0; display: flex; flex-direction: column; gap: 12px; background: #F6F3ED; padding: 24px; border: 2px solid #624532; border-radius: 24px">
+<p style="margin: 0; font-size: 14px; line-height: 18px; font-weight: 500; letter-spacing: 0.08em; text-transform: uppercase; color: #7A6555">05 · Donde empezó</p>
+<p style="margin: 0; font-family: 'Caveat Brush', cursive; font-size: 40px; line-height: 44px">Productor: {{p.producer}}</p>
+<p style="margin: 0; font-size: 16px; line-height: 24px; color: #000">[Historia de {{p.producer}} y la finca {{p.farm}}: por confirmar con Guates. Aquí van sus palabras, una foto de la finca y cuánto tiempo llevan trabajando juntos.]</p>
+<dl style="margin: 0; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1px; background: #62453240; border: 1px solid #62453240; border-radius: 16px">
+<sc-for list="{{p.facts}}" as="f" hint-placeholder-count="4">
+<div style="background: #F6F3ED; padding: 12px 16px; border-radius: 16px">
+<dt style="font-family: 'Roboto Slab', Georgia, serif; font-size: 14px; line-height: 20px; font-weight: 600">{{f.k}}</dt>
+<dd style="margin: 0; font-size: 16px; line-height: 22px; font-weight: 300">{{f.v}}</dd>
+</div>
+</sc-for>
+</dl>
+<p style="margin: 0; font-size: 12px; line-height: 16px; color: #7A6555">Productor, finca, variedad y proceso vienen de la etiqueta. Altitud, coordenadas, cosecha, notas y precio son datos de muestra.</p>
+<sc-if value="{{p.hasSiblings}}" hint-placeholder-val="{{ false }}">
+<div style="display: flex; flex-wrap: wrap; align-items: center; gap: 8px">
+<span style="font-size: 14px; line-height: 20px; color: #7A6555">Más cafés de {{p.farm}}:</span>
+<sc-for list="{{p.siblings}}" as="c" hint-placeholder-count="2">
+<button type="button" class="gq-pill" onClick="{{c.open}}" style="min-height: 44px; padding: 8px 16px; border: 2px solid #624532; border-radius: 9999px; background: transparent; color: #624532; font-size: 15px; font-weight: 700; cursor: pointer">{{c.name}}</button>
+</sc-for>
+</div>
+</sc-if>
+</div>
+</div>
+</section>
+</sc-if>
+
+<sc-if value="{{is.carrito}}" hint-placeholder-val="{{ false }}">
+<section style="max-width: 1280px; margin: 0 auto; padding: 48px clamp(16px, 4vw, 48px) 64px; display: flex; flex-direction: column; gap: 24px">
+<h1 style="margin: 0; font-family: 'Roboto Slab', Georgia, serif; font-size: clamp(32px, 4vw, 48px); line-height: 1.1; font-weight: 400">Tu carrito</h1>
+<sc-if value="{{cart.empty}}" hint-placeholder-val="{{ false }}">
+<div style="display: flex; flex-wrap: wrap; align-items: center; gap: 32px; padding: 32px; border: 2px dashed #624532; border-radius: 24px; overflow: hidden">
+<x-import component-from-global-scope="Guates.Illustration" name="perezoso" color="cafe-de-origen" size="{{sz.recArt}}"></x-import>
+<div style="flex: 1 1 280px; display: flex; flex-direction: column; gap: 12px; align-items: flex-start">
+<p style="margin: 0; font-family: 'Roboto Slab', Georgia, serif; font-size: 24px; line-height: 30px; font-weight: 500">Tu carrito está esperando su primer café</p>
+<x-import component-from-global-scope="Guates.Button" variant="primary" on-click="{{goCatalog}}">Explora los cafés</x-import>
+</div>
+</div>
+</sc-if>
+<sc-if value="{{cart.has}}" hint-placeholder-val="{{ true }}">
+<div style="display: flex; flex-wrap: wrap; gap: 32px; align-items: flex-start">
+<div style="flex: 2 1 520px; min-width: 0; display: flex; flex-direction: column; border-top: 2px solid #624532">
+<sc-for list="{{cart.items}}" as="it" hint-placeholder-count="2">
+<div style="display: flex; flex-wrap: wrap; gap: 16px; align-items: center; padding: 16px 0; border-bottom: 1px solid #62453240">
+<div style="flex: 0 0 96px; height: 96px; display: flex; align-items: center; justify-content: center; background: {{it.bag}}; border-radius: 12px">
+<x-import component-from-global-scope="Guates.Illustration" name="{{it.art}}" color="{{it.artToken}}" size="{{sz.cartArt}}"></x-import>
+</div>
+<div style="flex: 1 1 200px; min-width: 0; display: flex; flex-direction: column; gap: 2px">
+<span style="font-family: 'Roboto Slab', Georgia, serif; font-size: 22px; line-height: 28px; font-weight: 600">{{it.name}}</span>
+<span style="font-size: 14px; line-height: 20px; color: #7A6555">{{it.detail}}</span>
+<button type="button" class="gq-link" onClick="{{it.open}}" style="align-self: flex-start; min-height: 32px; padding: 0; border: 0; background: transparent; color: #81164B; font-size: 14px; cursor: pointer">{{it.link}}</button>
+</div>
+<div role="group" aria-label="{{it.qtyAria}}" style="display: flex; align-items: center; border: 2px solid #624532; border-radius: 9999px">
+<button type="button" onClick="{{it.down}}" aria-label="Quitar una" style="width: 44px; height: 44px; border: 0; border-radius: 9999px; background: transparent; color: #624532; font-size: 22px; cursor: pointer">−</button>
+<span style="min-width: 28px; text-align: center; font-weight: 700">{{it.qty}}</span>
+<button type="button" onClick="{{it.up}}" aria-label="Agregar una" style="width: 44px; height: 44px; border: 0; border-radius: 9999px; background: transparent; color: #624532; font-size: 22px; cursor: pointer">+</button>
+</div>
+<span style="min-width: 96px; text-align: right; font-family: 'Roboto Slab', Georgia, serif; font-size: 20px; line-height: 26px; font-weight: 600">{{it.total}}</span>
+<button type="button" onClick="{{it.remove}}" aria-label="{{it.removeAria}}" style="width: 44px; height: 44px; border: 0; background: transparent; color: #624532; cursor: pointer">
+<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 5l14 14M19 5L5 19"></path></svg>
+</button>
+</div>
+</sc-for>
+<div style="margin-top: 24px; display: flex; flex-direction: column; gap: 8px">
+<p style="margin: 0; font-family: 'Roboto Slab', Georgia, serif; font-size: 20px; line-height: 26px; font-weight: 500">El viaje de tu pedido</p>
+<p style="margin: 0; font-size: 16px; line-height: 24px; color: #000">{{cart.trip}}</p>
+<div style="position: relative; height: 340px; background: #9DB5EC; overflow: hidden; border-radius: 24px">
+<canvas ref="{{refs.cartMap}}" role="img" aria-label="{{cart.trip}}" style="display: block; width: 100%; height: 100%; touch-action: pan-y"></canvas>
+</div>
+</div>
+</div>
+<aside style="flex: 1 1 300px; min-width: 0; display: flex; flex-direction: column; gap: 12px; padding: 24px; border: 2px solid #624532; border-radius: 24px">
+<p style="margin: 0; font-family: 'Roboto Slab', Georgia, serif; font-size: 24px; line-height: 28px; font-weight: 600">Resumen</p>
+<div style="display: flex; justify-content: space-between"><span>Subtotal</span><span>{{cart.subtotal}}</span></div>
+<div style="display: flex; justify-content: space-between; gap: 16px"><span>{{cart.shipLabel}}</span><span>{{cart.ship}}</span></div>
+<div style="display: flex; justify-content: space-between; padding-top: 12px; border-top: 2px solid #624532; font-family: 'Roboto Slab', Georgia, serif; font-size: 24px; line-height: 30px; font-weight: 600"><span>Total</span><span>{{cart.total}}</span></div>
+<p style="margin: 0; font-size: 12px; line-height: 16px; color: #7A6555">Precios y envío de muestra.</p>
+<x-import component-from-global-scope="Guates.Button" variant="primary" size="lg" on-click="{{goCheckout}}">Continuar con el pedido</x-import>
+<button type="button" class="gq-link" onClick="{{goCatalog}}" style="min-height: 44px; padding: 0; border: 0; background: transparent; color: #81164B; font-size: 15px; cursor: pointer">Seguir explorando cafés</button>
+<div style="margin-top: 8px; padding: 16px; background: #F5E380; display: flex; flex-direction: column; gap: 4px; border-radius: 16px">
+<span style="font-family: 'Caveat Brush', cursive; font-size: 24px; line-height: 28px; color: #81164B">Tu pasaporte cafetero</span>
+<span style="font-size: 14px; line-height: 20px; color: #000">{{cart.passport}}</span>
+</div>
+</aside>
+</div>
+</sc-if>
+</section>
+</sc-if>
+
+<sc-if value="{{is.checkout}}" hint-placeholder-val="{{ false }}">
+<section style="max-width: 1280px; margin: 0 auto; padding: 48px clamp(16px, 4vw, 48px) 64px; display: flex; flex-direction: column; gap: 24px">
+<button type="button" class="gq-link" onClick="{{goCart}}" style="align-self: flex-start; min-height: 44px; padding: 0; border: 0; background: transparent; color: #81164B; font-size: 15px; cursor: pointer">Volver al carrito</button>
+<h1 style="margin: 0; font-family: 'Roboto Slab', Georgia, serif; font-size: clamp(32px, 4vw, 48px); line-height: 1.1; font-weight: 400">Tus datos de entrega</h1>
+<div style="display: flex; flex-wrap: wrap; gap: 32px; align-items: flex-start">
+<div role="form" aria-label="Datos de entrega" style="flex: 2 1 480px; min-width: 0; display: flex; flex-direction: column; gap: 24px">
+<fieldset style="margin: 0; padding: 0; border: 0; display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px">
+<legend style="padding: 0 0 12px; font-family: 'Roboto Slab', Georgia, serif; font-size: 20px; line-height: 26px; font-weight: 600">Contacto</legend>
+<sc-for list="{{fields.contact}}" as="f" hint-placeholder-count="3">
+<label style="display: flex; flex-direction: column; gap: 6px; font-size: 14px; line-height: 20px; font-weight: 500">
+<span>{{f.label}}</span>
+<input type="{{f.type}}" name="{{f.key}}" autocomplete="{{f.auto}}" value="{{f.value}}" onChange="{{f.change}}" aria-invalid="{{f.invalid}}" style="min-height: 48px; padding: 10px 12px; border: 2px solid {{f.border}}; border-radius: 8px; background: #F6F3ED; color: #000; font-size: 16px">
+<sc-if value="{{f.invalid}}" hint-placeholder-val="{{ false }}"><span style="color: #81164B; font-size: 14px; font-weight: 500">{{f.error}}</span></sc-if>
+</label>
+</sc-for>
+</fieldset>
+<fieldset style="margin: 0; padding: 0; border: 0; display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px">
+<legend style="padding: 0 0 12px; font-family: 'Roboto Slab', Georgia, serif; font-size: 20px; line-height: 26px; font-weight: 600">Entrega en {{city.name}}</legend>
+<sc-for list="{{fields.address}}" as="f" hint-placeholder-count="2">
+<label style="display: flex; flex-direction: column; gap: 6px; font-size: 14px; line-height: 20px; font-weight: 500">
+<span>{{f.label}}</span>
+<input type="{{f.type}}" name="{{f.key}}" autocomplete="{{f.auto}}" value="{{f.value}}" onChange="{{f.change}}" aria-invalid="{{f.invalid}}" style="min-height: 48px; padding: 10px 12px; border: 2px solid {{f.border}}; border-radius: 8px; background: #F6F3ED; color: #000; font-size: 16px">
+<sc-if value="{{f.invalid}}" hint-placeholder-val="{{ false }}"><span style="color: #81164B; font-size: 14px; font-weight: 500">{{f.error}}</span></sc-if>
+</label>
+</sc-for>
+</fieldset>
+<fieldset style="margin: 0; padding: 0; border: 0; display: flex; flex-direction: column; gap: 8px">
+<legend style="padding: 0 0 12px; font-family: 'Roboto Slab', Georgia, serif; font-size: 20px; line-height: 26px; font-weight: 600">Cómo te llega</legend>
+<sc-for list="{{deliveries}}" as="d" hint-placeholder-count="2">
+<label style="display: flex; align-items: center; gap: 12px; min-height: 48px; padding: 8px 16px; border: 2px solid {{d.border}}; cursor: pointer; border-radius: 12px">
+<input type="radio" name="entrega" value="{{d.key}}" checked="{{d.on}}" onChange="{{d.pick}}" style="width: 20px; height: 20px; accent-color: #81164B">
+<span style="flex-grow: 1"><strong>{{d.label}}</strong> · {{d.hint}}</span>
+<span>{{d.price}}</span>
+</label>
+</sc-for>
+</fieldset>
+<fieldset style="margin: 0; padding: 0; border: 0; display: flex; flex-direction: column; gap: 8px">
+<legend style="padding: 0 0 12px; font-family: 'Roboto Slab', Georgia, serif; font-size: 20px; line-height: 26px; font-weight: 600">Pago</legend>
+<sc-for list="{{pays}}" as="d" hint-placeholder-count="3">
+<label style="display: flex; align-items: center; gap: 12px; min-height: 48px; padding: 8px 16px; border: 2px solid {{d.border}}; cursor: pointer; border-radius: 12px">
+<input type="radio" name="pago" value="{{d.key}}" checked="{{d.on}}" onChange="{{d.pick}}" style="width: 20px; height: 20px; accent-color: #81164B">
+<span>{{d.label}}</span>
+</label>
+</sc-for>
+<p style="margin: 0; padding: 12px 16px; background: #9DB5EC; color: #364831; font-size: 14px; line-height: 20px; border-radius: 14px">Esto es un prototipo: no se cobra nada y no te pedimos datos de tarjeta. En la tienda real, el pago se hace en la pasarela del proveedor.</p>
+</fieldset>
+<sc-if value="{{hasFormError}}" hint-placeholder-val="{{ false }}">
+<p role="alert" style="margin: 0; padding: 12px 16px; border: 2px solid #81164B; color: #81164B; font-weight: 500; border-radius: 14px">{{formError}}</p>
+</sc-if>
+<div><x-import component-from-global-scope="Guates.Button" variant="primary" size="lg" on-click="{{confirm}}">Confirmar pedido simulado · {{cart.total}}</x-import></div>
+</div>
+<aside style="flex: 1 1 300px; min-width: 0; display: flex; flex-direction: column; gap: 12px; padding: 24px; border: 2px solid #624532; border-radius: 24px">
+<p style="margin: 0; font-family: 'Roboto Slab', Georgia, serif; font-size: 22px; line-height: 28px; font-weight: 600">Tu pedido</p>
+<sc-for list="{{cart.items}}" as="it" hint-placeholder-count="2">
+<div style="display: flex; justify-content: space-between; gap: 12px; font-size: 15px; line-height: 22px"><span>{{it.qty}} × {{it.name}} · {{it.short}}</span><span>{{it.total}}</span></div>
+</sc-for>
+<div style="display: flex; justify-content: space-between; gap: 12px; font-size: 15px; line-height: 22px; color: #7A6555"><span>{{cart.shipLabel}}</span><span>{{cart.ship}}</span></div>
+<div style="display: flex; justify-content: space-between; padding-top: 12px; border-top: 2px solid #624532; font-family: 'Roboto Slab', Georgia, serif; font-size: 22px; line-height: 28px; font-weight: 600"><span>Total</span><span>{{cart.total}}</span></div>
+</aside>
+</div>
+</section>
+</sc-if>
+
+<sc-if value="{{is.confirmacion}}" hint-placeholder-val="{{ false }}">
+<section style="max-width: 1280px; margin: 0 auto; padding: 48px clamp(16px, 4vw, 48px) 64px; display: flex; flex-direction: column; gap: 32px">
+<div style="display: flex; flex-wrap: wrap; gap: 32px; align-items: center">
+<div style="flex: 1 1 420px; min-width: 0; display: flex; flex-direction: column; gap: 12px">
+<p style="margin: 0; font-family: 'Caveat Brush', cursive; font-size: clamp(56px, 8vw, 96px); line-height: 0.95; color: #81164B">Algo bueno se está tostando</p>
+<p style="margin: 0; font-size: 18px; line-height: 28px; font-weight: 300; color: #000">{{order.line}}</p>
+<p style="margin: 0; font-size: 14px; line-height: 20px; color: #7A6555">Pedido simulado {{order.no}}. Prototipo: no se generó ningún pedido real.</p>
+</div>
+<ol style="flex: 1 1 360px; min-width: 0; margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column; border-left: 3px solid #624532">
+<sc-for list="{{order.steps}}" as="s" hint-placeholder-count="4">
+<li style="padding: 8px 0 16px 20px; display: flex; flex-direction: column; gap: 2px">
+<span style="font-family: 'Roboto Slab', Georgia, serif; font-size: 18px; line-height: 24px; font-weight: 600">{{s.title}}</span>
+<span style="font-size: 14px; line-height: 20px; color: #7A6555">{{s.when}}</span>
+</li>
+</sc-for>
+</ol>
+</div>
+<div style="position: relative; height: clamp(320px, 40vw, 480px); background: #9DB5EC; overflow: hidden; border-radius: 24px">
+<canvas ref="{{refs.orderRoute}}" role="img" aria-label="{{order.routeAria}}" style="display: block; width: 100%; height: 100%; touch-action: pan-y"></canvas>
+</div>
+<div style="display: flex; flex-direction: column; gap: 16px">
+<div style="display: flex; flex-wrap: wrap; align-items: baseline; gap: 8px 24px">
+<h2 style="margin: 0; font-family: 'Caveat Brush', cursive; font-size: 40px; line-height: 44px; font-weight: 400">Tu pasaporte cafetero</h2>
+<p style="margin: 0; font-size: 16px; line-height: 24px; color: #000">Comprar no es lo mismo que probar: marca cada origen cuando lo pruebes.</p>
+</div>
+<div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 16px">
+<sc-for list="{{order.stamps}}" as="s" hint-placeholder-count="2">
+<div style="display: flex; flex-direction: column; align-items: center; gap: 12px; padding: 24px 16px; border: 2px solid #624532; text-align: center; border-radius: 24px">
+<div style="position: relative; width: 140px; height: 140px; border-radius: 50%; border: 3px solid {{s.ring}}; display: flex; align-items: center; justify-content: center; background: {{s.fill}}">
+<x-import component-from-global-scope="Guates.Illustration" name="{{s.art}}" color="{{s.artToken}}" size="{{sz.stamp}}"></x-import>
+<sc-if value="{{s.on}}" hint-placeholder-val="{{ false }}">
+<span style="position: absolute; bottom: -10px; transform: rotate(-6deg); padding: 2px 12px; background: #81164B; color: #F6F3ED; font-family: 'Caveat Brush', cursive; font-size: 22px; line-height: 26px">Probado</span>
+</sc-if>
+</div>
+<span style="font-family: 'Roboto Slab', Georgia, serif; font-size: 20px; line-height: 26px; font-weight: 600">{{s.name}}</span>
+<span style="font-size: 14px; line-height: 20px; color: #7A6555">{{s.place}}</span>
+<button type="button" class="gq-pill" onClick="{{s.toggle}}" aria-pressed="{{s.on}}" style="min-height: 44px; padding: 8px 16px; border: 2px solid #624532; border-radius: 9999px; background: transparent; color: #624532; font-size: 15px; font-weight: 700; cursor: pointer">{{s.label}}</button>
+</div>
+</sc-for>
+</div>
+</div>
+<div style="display: flex; flex-wrap: wrap; gap: 12px">
+<x-import component-from-global-scope="Guates.Button" variant="primary" size="lg" on-click="{{order.recipe}}">Prepara tu primera taza</x-import>
+<x-import component-from-global-scope="Guates.Button" variant="secondary" size="lg" on-click="{{goCatalog}}">Seguir explorando</x-import>
+</div>
+</section>
+</sc-if>
+
+<sc-if value="{{is.suscripcion}}" hint-placeholder-val="{{ false }}">
+<section style="max-width: 1280px; margin: 0 auto; padding: 48px clamp(16px, 4vw, 48px) 64px; display: flex; flex-direction: column; gap: 24px">
+<div style="display: flex; flex-direction: column; gap: 8px; max-width: 720px">
+<p style="margin: 0; font-size: 14px; line-height: 18px; font-weight: 500; letter-spacing: 0.08em; text-transform: uppercase; color: #7A6555">Suscripción</p>
+<h1 style="margin: 0; font-family: 'Roboto Slab', Georgia, serif; font-size: clamp(32px, 4vw, 48px); line-height: 1.1; font-weight: 400">Café recién tostado, a tu ritmo</h1>
+<p style="margin: 0; font-size: 18px; line-height: 28px; font-weight: 300; color: #000">Tú eliges qué, cuánto y cada cuánto. Antes de cada envío te avisamos qué café va en camino.</p>
+</div>
+<div style="display: flex; flex-wrap: wrap; gap: 32px; align-items: flex-start">
+<div style="flex: 2 1 480px; min-width: 0; display: flex; flex-direction: column; gap: 24px">
+<div role="group" aria-label="Qué café" style="display: flex; flex-direction: column; gap: 8px">
+<span style="font-family: 'Roboto Slab', Georgia, serif; font-size: 18px; line-height: 24px; font-weight: 600">Qué café</span>
+<div style="display: flex; flex-wrap: wrap; gap: 8px">
+<sc-for list="{{sub.modes}}" as="o" hint-placeholder-count="2">
+<button type="button" class="gq-pill" onClick="{{o.pick}}" aria-pressed="{{o.on}}" style="min-height: 44px; padding: 8px 18px; border: 2px solid #624532; border-radius: 9999px; background: {{o.bg}}; color: {{o.fg}}; font-size: 15px; font-weight: 500; cursor: pointer">{{o.label}}</button>
+</sc-for>
+</div>
+</div>
+<sc-if value="{{sub.fixed}}" hint-placeholder-val="{{ true }}">
+<div role="group" aria-label="Elige tu café" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 8px">
+<sc-for list="{{sub.products}}" as="o" hint-placeholder-count="5">
+<button type="button" onClick="{{o.pick}}" aria-pressed="{{o.on}}" style="display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 12px 8px; border: 3px solid {{o.border}}; border-radius: 14px; background: {{o.bag}}; color: #624532; cursor: pointer">
+<x-import component-from-global-scope="Guates.Illustration" name="{{o.art}}" color="{{o.artToken}}" size="{{sz.subArt}}"></x-import>
+<span style="padding: 2px 8px; background: #F6F3ED; font-family: 'Roboto Slab', Georgia, serif; font-size: 16px; line-height: 22px; font-weight: 600; border-radius: 8px">{{o.name}}</span>
+</button>
+</sc-for>
+</div>
+</sc-if>
+<sc-if value="{{sub.explore}}" hint-placeholder-val="{{ false }}">
+<div style="padding: 16px; background: #F5E380; display: flex; flex-direction: column; gap: 8px; border-radius: 16px">
+<span style="font-family: 'Roboto Slab', Georgia, serif; font-size: 16px; line-height: 22px; font-weight: 600">Tu ruta de exploración (propuesta)</span>
+<div style="display: flex; flex-wrap: wrap; align-items: center; gap: 8px">
+<sc-for list="{{sub.route}}" as="r" hint-placeholder-count="3">
+<span style="padding: 4px 10px; border: 2px solid #624532; background: #F6F3ED; font-size: 14px; line-height: 20px; font-weight: 500; border-radius: 8px">{{r}}</span>
+</sc-for>
+</div>
+<span style="font-size: 13px; line-height: 18px; color: #000">El orden real se confirma con cada lote; nunca prometemos un café que aún no ha llegado.</span>
+</div>
+</sc-if>
+<div role="group" aria-label="Frecuencia" style="display: flex; flex-direction: column; gap: 8px">
+<span style="font-family: 'Roboto Slab', Georgia, serif; font-size: 18px; line-height: 24px; font-weight: 600">Cada cuánto</span>
+<div style="display: flex; flex-wrap: wrap; gap: 8px">
+<sc-for list="{{sub.freqs}}" as="o" hint-placeholder-count="2">
+<button type="button" class="gq-pill" onClick="{{o.pick}}" aria-pressed="{{o.on}}" style="min-height: 44px; padding: 8px 18px; border: 2px solid #624532; border-radius: 9999px; background: {{o.bg}}; color: {{o.fg}}; font-size: 15px; font-weight: 500; cursor: pointer">{{o.label}}</button>
+</sc-for>
+</div>
+</div>
+<div role="group" aria-label="Cantidad por envío" style="display: flex; flex-direction: column; gap: 8px">
+<span style="font-family: 'Roboto Slab', Georgia, serif; font-size: 18px; line-height: 24px; font-weight: 600">Cuánto por envío</span>
+<div style="display: flex; flex-wrap: wrap; gap: 8px">
+<sc-for list="{{sub.sizes}}" as="o" hint-placeholder-count="3">
+<button type="button" class="gq-pill" onClick="{{o.pick}}" aria-pressed="{{o.on}}" style="min-height: 44px; padding: 8px 18px; border: 2px solid #624532; border-radius: 9999px; background: {{o.bg}}; color: {{o.fg}}; font-size: 15px; font-weight: 500; cursor: pointer">{{o.label}}</button>
+</sc-for>
+</div>
+</div>
+<div role="group" aria-label="Molienda de la suscripción" style="display: flex; flex-direction: column; gap: 8px">
+<span style="font-family: 'Roboto Slab', Georgia, serif; font-size: 18px; line-height: 24px; font-weight: 600">Molienda</span>
+<div style="display: flex; flex-wrap: wrap; gap: 8px">
+<sc-for list="{{sub.grinds}}" as="o" hint-placeholder-count="4">
+<button type="button" class="gq-pill" onClick="{{o.pick}}" aria-pressed="{{o.on}}" style="min-height: 44px; padding: 8px 18px; border: 2px solid #624532; border-radius: 9999px; background: {{o.bg}}; color: {{o.fg}}; font-size: 15px; font-weight: 500; cursor: pointer">{{o.label}}</button>
+</sc-for>
+</div>
+</div>
+</div>
+<aside class="gq-dark" data-theme="dark" style="flex: 1 1 320px; min-width: 0; display: flex; flex-direction: column; gap: 16px; padding: 24px; background: #624532; color: #F6F3ED; border-radius: 24px">
+<p style="margin: 0; font-family: 'Caveat Brush', cursive; font-size: 32px; line-height: 36px; color: #F5E380">Tu suscripción</p>
+<p style="margin: 0; font-size: 18px; line-height: 28px; font-weight: 300">{{sub.summary}}</p>
+<div style="display: flex; justify-content: space-between; padding-top: 12px; border-top: 1px solid #F6F3ED59; font-family: 'Roboto Slab', Georgia, serif; font-size: 22px; line-height: 28px; font-weight: 600"><span>Por envío</span><span>{{sub.price}}</span></div>
+<p style="margin: 0; font-size: 14px; line-height: 20px; color: #D9CBBB">Próximo envío: por confirmar. Propuesta: pausar, saltar o cancelar desde tu cuenta, sin llamadas. Precio de muestra.</p>
+<x-import component-from-global-scope="Guates.Button" variant="primary" size="lg" on-click="{{addSub}}">Agregar suscripción al carrito</x-import>
+</aside>
+</div>
+</section>
+</sc-if>
+
+</main>
+
+<footer class="gq-dark" data-theme="dark" style="background: #624532; color: #F6F3ED">
+<x-import component-from-global-scope="Guates.Pattern" name="franjas" height="{{sz.pattern}}"></x-import>
+<div style="max-width: 1280px; margin: 0 auto; padding: 48px clamp(16px, 4vw, 48px); display: flex; flex-wrap: wrap; gap: 32px; align-items: center; justify-content: space-between">
+<div style="display: flex; flex-direction: column; gap: 12px">
+<x-import component-from-global-scope="Guates.Logo" version="alternativo" color="cielo-abierto" height="{{sz.footerLogo}}"></x-import>
+<p style="margin: 0; font-family: 'Caveat Brush', cursive; font-size: 28px; line-height: 32px; color: #F5E380">Donde empieza otro mapa del café</p>
+<p style="margin: 0; font-size: 14px; line-height: 20px; color: #D9CBBB">Instagram · WhatsApp · correo: [por confirmar]</p>
+</div>
+<x-import component-from-global-scope="Guates.Seal" size="{{sz.seal}}"></x-import>
+</div>
+</footer>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"startScreen":{"editor":"enum","options":["home","catalogo","producto","carrito","suscripcion"],"default":"home","section":"Prototipo"},"startProduct":{"editor":"enum","options":["regional","lavado","natural","honey","platea"],"default":"lavado","section":"Prototipo"},"$preview":{"width":1440,"height":3000}}'>
+var C = { cafe: '#624532', crema: '#F6F3ED', cereza: '#81164B', moriche: '#364831', brote: '#91AD80', azul: '#4E71F0', cielo: '#9DB5EC', sol: '#F2D139', luz: '#F5E380', naranja: '#CD591C', atardecer: '#D6855A', rosa: '#DB92BA', muted: '#7A6555' };
+
+var PRODUCTS = [
+  { key: 'regional', name: 'Regional', idea: 'El café de la casa', scene: 'Una mañana sin afán, la greca en la estufa y alguien que pregunta si queda más.', sceneShort: 'Mañana sin afán, con leche', personality: 'Como el chigüiro: tranquilo y de confianza', emotion: 'Se siente como llegar a casa', traits: ['Tranquilo', 'Generoso', 'De confianza'], milk: true, code: 'REG', producer: 'Tatiana Rincón', place: 'Cubarral, Meta', farm: 'Llanogrande', farmId: 'llanogrande', variety: 'Blend', process: 'Lavado',
+    bag: C.crema, label: C.cafe, artToken: 'cafe-de-origen', art: 'mono', bagArt: 'chiguiro', accent: C.naranja,
+    alt: 1350, lat: 3.86, lng: -73.98, minAlt: 500, maxAlt: 2300, seed: 11, harvest: 'Mayo de 2026',
+    notes: ['Panela', 'Cacao', 'Naranja dulce'], feel: 'Redondo y dulce, para todos los días. Con leche se vuelve postre.',
+    trilla: 'Granada, Meta', trillaLat: 3.546, trillaLng: -73.706, trillaKm: 48, roastKm: 87, ferment: '24 h', dry: 9, total: 11, price: 36000 },
+  { key: 'lavado', name: 'Lavado', idea: 'Claridad en la taza', scene: 'La primera taza del día, negro, junto a la ventana mientras la ciudad arranca.', sceneShort: 'Primera taza, negro', personality: 'Como la nutria: juguetona y precisa', emotion: 'Despierta sin empujar', traits: ['Claro', 'Brillante', 'Curioso'], milk: false, code: 'LAV', producer: 'Benedicto Puentes', place: 'China Alta, Tolima', farm: 'Palma Roja', farmId: 'palma', variety: 'Castillo', process: 'Lavado',
+    bag: C.cielo, label: C.azul, artToken: 'azul-exploracion', art: 'pajaro', bagArt: 'nutria', accent: C.azul,
+    alt: 1850, lat: 4.58, lng: -75.16, minAlt: 1000, maxAlt: 2800, seed: 23, harvest: 'Junio de 2026',
+    notes: ['Mandarina', 'Caramelo', 'Flor blanca'], feel: 'Limpio y brillante, con algo de mandarina al final. Se luce si lo tomas negro.',
+    trilla: 'Ibagué, Tolima', trillaLat: 4.4389, trillaLng: -75.2322, trillaKm: 38, roastKm: 315, ferment: '36 h', dry: 9.5, total: 12, price: 42000 },
+  { key: 'natural', name: 'Natural', idea: 'Fruta que se toma despacio', scene: 'Una tarde con tiempo, un filtrado y alguien con quien comparar qué fruta encuentra cada uno.', sceneShort: 'Tarde larga, filtrado', personality: 'Como el colibrí: inquieto, de flor en flor', emotion: 'Sorpresa en cada sorbo', traits: ['Frutal', 'Vivo', 'Explorador'], milk: false, code: 'NAT', producer: 'Benedicto Puentes', place: 'China Alta, Tolima', farm: 'Palma Roja', farmId: 'palma', variety: 'Bourbon Rosado', process: 'Natural',
+    bag: C.brote, label: C.moriche, artToken: 'verde-moriche', art: 'erizo', bagArt: 'colibri', accent: C.sol,
+    alt: 1850, lat: 4.58, lng: -75.16, minAlt: 1000, maxAlt: 2800, seed: 23, harvest: 'Junio de 2026',
+    notes: ['Fresa', 'Guayaba', 'Chocolate'], feel: 'Frutal y jugoso, como mermelada de fresa con chocolate. Para descubrir sin afán.',
+    trilla: 'Ibagué, Tolima', trillaLat: 4.4389, trillaLng: -75.2322, trillaKm: 38, roastKm: 315, ferment: '3 días', dry: 22, total: 23, price: 48000 },
+  { key: 'honey', name: 'Honey', idea: 'Dulzura sin prisa', scene: 'Media tarde, una prensa francesa y nada urgente en la agenda.', sceneShort: 'Media tarde, prensa', personality: 'Como el perezoso: sin afán, abrazado al grano', emotion: 'Como un abrazo tibio', traits: ['Dulce', 'Suave', 'Paciente'], milk: false, code: 'HON', producer: 'Juan Rengifo', place: 'Pitalito, Huila', farm: 'Rengijo', farmId: 'rengijo', variety: 'Papayo', process: 'Honey',
+    bag: C.luz, label: C.sol, artToken: 'cafe-de-origen', art: 'perezoso', bagArt: 'perezoso', accent: C.naranja,
+    alt: 1780, lat: 1.86, lng: -76.07, minAlt: 1000, maxAlt: 2700, seed: 41, harvest: 'Mayo de 2026',
+    notes: ['Miel de caña', 'Durazno', 'Flor de azahar'], feel: 'Dulce y suave, con cuerpo de miel de caña. Que diga honey no significa que tenga miel.',
+    trilla: 'Neiva, Huila', trillaLat: 2.9386, trillaLng: -75.2673, trillaKm: 191, roastKm: 425, ferment: '24 h', dry: 15, total: 17, price: 50000 },
+  { key: 'platea', name: 'Platea', idea: 'Una taza para mirar de cerca', scene: 'Después de cenar, en la mejor taza de la casa, para una conversación larga.', sceneShort: 'Sobremesa larga', personality: 'Como la garza: elegante y paciente', emotion: 'Calma con carácter', traits: ['Intenso', 'Profundo', 'Elegante'], milk: false, code: 'PLA', producer: 'Benedicto Puentes', place: 'China Alta, Tolima', farm: 'Palma Roja', farmId: 'palma', variety: 'Moka', process: 'Natural',
+    bag: C.rosa, label: C.cereza, artToken: 'cereza-profunda', art: 'garza', bagArt: 'garza', accent: C.cereza,
+    alt: 1850, lat: 4.58, lng: -75.16, minAlt: 1000, maxAlt: 2800, seed: 23, harvest: 'Junio de 2026',
+    notes: ['Ciruela', 'Cacao', 'Uva morada'], feel: 'Intenso y profundo, de fruta oscura y cacao. Para una taza que se toma despacio.',
+    trilla: 'Ibagué, Tolima', trillaLat: 4.4389, trillaLng: -75.2322, trillaKm: 38, roastKm: 315, ferment: '4 días', dry: 24, total: 25, price: 56000 },
+];
+var PERSONA = {
+  regional: { title: 'El anfitrión', animal: 'Chigüiro', line: 'Como el chigüiro, se lleva bien con todo el mundo. Redondo, dulce y sin complicaciones: el que siempre está en la mesa.' },
+  lavado: { title: 'El explorador', animal: 'Nutria', line: 'Como la nutria, limpio, ágil y curioso. Brillante en la taza, con un final de mandarina que te invita a otro sorbo.' },
+  natural: { title: 'El inquieto', animal: 'Colibrí', line: 'Como el colibrí, va de fruta en fruta. Jugoso y vivo, para cuando quieres que el café te sorprenda.' },
+  honey: { title: 'El tranquilo', animal: 'Perezoso', line: 'Como el perezoso, no tiene afán. Suave, dulce y con cuerpo de miel de caña, para tomarlo con calma.' },
+  platea: { title: 'El elegante', animal: 'Garza', line: 'Como la garza, quieto y profundo. Fruta oscura y cacao para una taza que se toma despacio.' },
+};
+var BY = {};
+PRODUCTS.forEach((p) => { BY[p.key] = p; });
+
+var CITIES = [
+  { key: 'bogota', name: 'Bogotá', lat: 4.711, lng: -74.0721, alt: 2640, ship: 9000, days: '2 a 3 días' },
+  { key: 'medellin', name: 'Medellín', lat: 6.2442, lng: -75.5812, alt: 1495, ship: 12000, days: '2 a 4 días' },
+  { key: 'cali', name: 'Cali', lat: 3.4516, lng: -76.532, alt: 1018, ship: 12000, days: '2 a 4 días' },
+  { key: 'barranquilla', name: 'Barranquilla', lat: 10.9639, lng: -74.7964, alt: 18, ship: 15000, days: '3 a 5 días' },
+  { key: 'bucaramanga', name: 'Bucaramanga', lat: 7.1193, lng: -73.1227, alt: 959, ship: 12000, days: '2 a 4 días' },
+  { key: 'villavicencio', name: 'Villavicencio', lat: 4.142, lng: -73.627, alt: 467, ship: 6000, days: '1 día' },
+];
+var ROASTERY = { name: 'Tostión · Villavicencio', lat: 4.142, lng: -73.627 };
+var FARMS = [
+  { id: 'palma', name: 'Palma Roja', place: 'China Alta, Tolima', lat: 4.58, lng: -75.16, color: C.cereza, products: ['lavado', 'natural', 'platea'] },
+  { id: 'llanogrande', name: 'Llanogrande', place: 'Cubarral, Meta', lat: 3.86, lng: -73.98, color: C.cafe, products: ['regional'] },
+  { id: 'rengijo', name: 'Rengijo', place: 'Pitalito, Huila', lat: 1.86, lng: -76.07, color: C.sol, products: ['honey'] },
+];
+var SIZES = [{ label: '250 g', mult: 1 }, { label: '500 g', mult: 1.85 }, { label: '1 kg', mult: 3.4 }];
+var GRINDS = [
+  { key: 'grano', label: 'En grano', hint: 'Para moler en casa' },
+  { key: 'fina', label: 'Fina', hint: 'Greca y espresso' },
+  { key: 'media', label: 'Media', hint: 'Filtrado' },
+  { key: 'gruesa', label: 'Gruesa', hint: 'Prensa francesa' },
+];
+var STAGE_MAP = [0, 0.5, 1, 1, 2, 3, 3, 3, 3];
+var TONES = [['sol-de-sabana', 'cafe-de-origen', -3], ['cereza-profunda', 'crema-de-papel', 2], ['verde-moriche', 'crema-de-papel', -1]];
+var CURIOUS = {
+  regional: 'Es el café que nace más cerca de la tostión: Cubarral está en el piedemonte llanero, en el mismo Meta.',
+  lavado: 'Castillo es una variedad colombiana, desarrollada para resistir la roya, una enfermedad de la hoja del café.',
+  natural: 'Bourbon Rosado es una variedad poco común: sus cerezas maduran rosadas en vez de rojas.',
+  honey: 'Se llama honey por el mucílago pegajoso que se seca con el grano, no porque tenga miel.',
+  platea: 'Moka es una variedad de grano pequeño y redondo, que suele dar tazas intensas.',
+};
+var MOODS = [
+  { key: 'despertar', label: 'Quiero despertar', product: 'lavado', why: 'Limpio y brillante, con mandarina al final. Una taza que te abre los ojos sin pelear contigo.' },
+  { key: 'abrazo', label: 'Necesito un abrazo', product: 'regional', why: 'Redondo y dulce, con panela y cacao. Sabe a casa, solo o con leche.' },
+  { key: 'sorpresa', label: 'Quiero sorprenderme', product: 'natural', why: 'Fresa, guayaba y chocolate. Para cuando quieres que el café te cuente algo nuevo.' },
+  { key: 'calma', label: 'Voy sin afán', product: 'honey', why: 'Suave, con cuerpo de miel de caña y algo de durazno. Para una tarde lenta.' },
+  { key: 'pensar', label: 'Para pensar despacio', product: 'platea', why: 'Intenso, de fruta oscura y cacao. Una taza para sentarse con ella.' },
+];
+var TASTES = [
+  { key: 'leche', label: 'Con leche', product: 'regional', why: 'Redondo y dulce, con notas de panela y cacao: con leche se vuelve postre.' },
+  { key: 'greca', label: 'Negro, en greca', product: 'platea', why: 'Intenso, de fruta oscura y cacao. Aguanta bien la greca y no se pierde.' },
+  { key: 'filtrado', label: 'Filtrado, sin afán', product: 'lavado', why: 'Limpio y brillante: en un filtro se notan la mandarina y el caramelo.' },
+  { key: 'frutal', label: 'Quiero algo frutal', product: 'natural', why: 'Se seca con la fruta puesta y se nota: fresa, guayaba y chocolate.' },
+  { key: 'suave', label: 'Suave y dulce', product: 'honey', why: 'Cuerpo de miel de caña y algo de durazno. Que diga honey no significa que tenga miel.' },
+];
+var METHODS = {
+  filtrado: { label: 'Filtrado', title: 'Filtrado (V60 o Chemex)', coffee: 15, water: 250, grind: 'Media', time: '2:30 a 3:00 min', hot: true,
+    steps: ['Enjuaga el filtro con agua caliente y bota esa agua.', 'Agrega el café y un chorrito de agua; espera 30 segundos a que suelte el gas.', 'Vierte el resto en círculos lentos hasta completar el agua.'] },
+  prensa: { label: 'Prensa francesa', title: 'Prensa francesa', coffee: 16, water: 250, grind: 'Gruesa', time: '4 min', hot: true,
+    steps: ['Agrega el café y toda el agua.', 'Revuelve suave y tapa sin bajar el émbolo.', 'A los 4 minutos baja el émbolo despacio y sirve de una vez.'] },
+  greca: { label: 'Greca', title: 'Greca', coffee: 15, water: 150, grind: 'Fina', time: '4 a 5 min al fuego', hot: false,
+    steps: ['Llena la base con agua hasta la válvula.', 'Pon el café en el filtro sin compactarlo.', 'A fuego medio; retírala apenas empiece a borbotear.'] },
+};
+
+var dots = (n) => String(Math.round(n)).replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+var money = (n) => '$' + dots(n);
+var priceOf = (key, size) => Math.round((BY[key].price * SIZES[size].mult) / 1000) * 1000;
+var boil = (alt) => Math.round(100 - alt / 300);
+function haversine(a, b) {
+  const R = 6371, r = Math.PI / 180;
+  const dLat = (b.lat - a.lat) * r, dLng = (b.lng - a.lng) * r;
+  const h = Math.sin(dLat / 2) ** 2 + Math.cos(a.lat * r) * Math.cos(b.lat * r) * Math.sin(dLng / 2) ** 2;
+  return 2 * R * Math.asin(Math.sqrt(h));
+}
+function dms(v, pos, neg) {
+  const a = Math.abs(v);
+  let d = Math.floor(a), m = Math.floor((a - d) * 60), s = Math.round(((a - d) * 60 - m) * 60);
+  if (s === 60) { s = 0; m += 1; }
+  if (m === 60) { m = 0; d += 1; }
+  return d + '°' + String(m).padStart(2, '0') + '′' + String(s).padStart(2, '0') + '″ ' + (v >= 0 ? pos : neg);
+}
+var coords = (p) => dms(p.lat, 'N', 'S') + ' · ' + dms(p.lng, 'E', 'O');
+var pill = (on, dark) => (dark
+  ? { bg: on ? C.luz : 'transparent', fg: on ? C.cafe : C.crema }
+  : { bg: on ? C.cafe : 'transparent', fg: on ? C.crema : C.cafe });
+
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.state = {
+      screen: props.startScreen || 'home', product: props.startProduct || 'lavado', size: 0, grind: 'grano', qty: 1,
+      cart: [], city: 'bogota', stage: 0, playing: false, roast: 3, hoverAlt: null, highlight: true,
+      filter: 'todos', sort: 'altura', taste: null, moodMode: 'animo', moodAnimo: 'despertar', moodCostumbre: 'leche', mapFarm: null, slide: 0, trail: 0, trailOn: false, method: 'filtrado', cups: 1,
+      sub: { mode: 'fijo', product: 'lavado', freq: 2, size: 0, grind: 'media' },
+      form: { name: '', email: '', phone: '', address: '', detail: '' }, delivery: 'envio', pay: 'pse', tried: false,
+      order: null, orderStage: 0, stamps: {}, toast: null,
+    };
+    this._sc = {};
+    this._refs = {};
+    this.pickFarm = (id) => this.setState({ mapFarm: id });
+    this.onAlt = (v) => { if (v !== this.state.hoverAlt) this.setState({ hoverAlt: v }); };
+    this.setTop = (el) => { this._top = el; };
+    this.setJourney = (el) => { this._journey = el; };
+    this.onTrail = (i) => { if (i !== this.state.trail) this.setState({ trail: i }); };
+    this.pickTrail = (i) => { this.open('lavado', true); this.setState({ stage: i }); };
+    this.setTrail = (el) => {
+      if (this._trailObs) { this._trailObs.disconnect(); this._trailObs = null; }
+      if (!el || this.state.trailOn) return;
+      if (typeof IntersectionObserver === 'undefined') { setTimeout(() => this.setState({ trailOn: true }), 0); return; }
+      this._trailObs = new IntersectionObserver((es) => {
+        if (es.some((e) => e.isIntersecting)) { this._trailObs.disconnect(); this._trailObs = null; this.setState({ trailOn: true }); }
+      }, { threshold: 0.35 });
+      this._trailObs.observe(el);
+    };
+  }
+
+  componentDidUpdate(prevProps, prevState) {
+    Object.keys(this._sc).forEach((k) => { try { this._sc[k].api.update(this.sceneOpts(k)); } catch (e) { /* scene keeps last state */ } });
+    const moved = this._wantTop || (prevState && prevState.screen !== this.state.screen);
+    this._wantTop = false;
+    if (this._wantJourney && this._journey) {
+      this._wantJourney = false;
+      this._journey.scrollIntoView({ block: 'start', behavior: 'smooth' });
+    } else if (moved && this._top && this._top.getBoundingClientRect().top < 0) {
+      this._top.scrollIntoView({ block: 'start' });
+    }
+  }
+
+  componentWillUnmount() {
+    Object.keys(this._sc).forEach((k) => { try { this._sc[k].api.destroy(); } catch (e) { /* already gone */ } });
+    this._sc = {};
+    clearInterval(this._play);
+    if (this._trailObs) this._trailObs.disconnect();
+    clearTimeout(this._trailT);
+    clearTimeout(this._toastT);
+    clearTimeout(this._orderT);
+  }
+
+  // Each <canvas> gets a stable ref: mount its scene when it appears, destroy it when it leaves.
+  sceneRef(key, kind) {
+    if (!this._refs[key]) {
+      this._refs[key] = (el) => {
+        const cur = this._sc[key];
+        if (cur && cur.el === el) return;
+        if (cur) { try { cur.api.destroy(); } catch (e) { /* already gone */ } delete this._sc[key]; }
+        if (!el) return;
+        const S = window.GuatesScenes;
+        if (!S || !S[kind]) return;
+        try { this._sc[key] = { el, api: S[kind](el, this.sceneOpts(key)) }; } catch (e) { console.warn('Guates 3D', e); }
+      };
+    }
+    return this._refs[key];
+  }
+
+  city() { return CITIES.find((c) => c.key === this.state.city) || CITIES[0]; }
+  cityPin() { const c = this.city(); return { name: c.name, lat: c.lat, lng: c.lng }; }
+  stops(p) {
+    const c = this.city();
+    return [
+      { name: 'Tu taza · ' + c.name, kind: 'ciudad', lat: c.lat, lng: c.lng },
+      { name: 'Tostión · Villavicencio', kind: 'tostion', lat: ROASTERY.lat, lng: ROASTERY.lng },
+      { name: 'Trilla · ' + p.trilla.split(',')[0], kind: 'trilla', lat: p.trillaLat, lng: p.trillaLng },
+      { name: 'Finca ' + p.farm, kind: 'finca', lat: p.lat, lng: p.lng },
+    ];
+  }
+
+  sceneOpts(key) {
+    const s = this.state, p = BY[s.product];
+    if (key === 'hero') return { mode: 'overview', farms: FARMS, hub: ROASTERY, city: this.cityPin(), highlight: s.mapFarm ? [s.mapFarm] : [], onPick: this.pickFarm };
+    if (key === 'terrain') return { seed: p.seed, farmAltitude: p.alt, accent: p.accent, farmName: 'Finca ' + p.farm, highlight: s.highlight, city: { name: this.city().name, alt: this.city().alt }, onHover: this.onAlt };
+    if (key === 'route') return { mode: 'journey', stops: this.stops(p), stage: STAGE_MAP[s.stage] };
+    if (key === 'bean') { const b = this.stageList(p)[s.stage].bean; return { stage: b.stage, dried: !!b.dried, honey: !!b.honey, roast: s.roast }; }
+    if (key === 'cup') return { roast: s.roast };
+    if (key === 'cupIdea') return { roast: 3, milk: !!p.milk };
+    if (key === 'trailCanvas') return { fine: true, steps: this.stageList(BY.lavado).map((x) => ({ title: x.title })), active: s.trail || 0, run: !!s.trailOn, onHover: this.onTrail, onPick: this.pickTrail };
+    if (key === 'cartMap') {
+      const ids = [];
+      s.cart.forEach((it) => { const k = it.sub ? (it.sub.mode === 'fijo' ? it.sub.product : null) : it.key; if (k && ids.indexOf(BY[k].farmId) < 0) ids.push(BY[k].farmId); });
+      return { mode: 'overview', farms: FARMS, hub: ROASTERY, city: this.cityPin(), highlight: ids, onPick: null };
+    }
+    if (key === 'orderRoute') {
+      const c = s.order ? s.order.city : this.city();
+      return { mode: 'journey', speed: 0.35, stops: [{ name: 'Tostión · Villavicencio', kind: 'tostion', lat: ROASTERY.lat, lng: ROASTERY.lng }, { name: 'Tu taza · ' + c.name, kind: 'ciudad', lat: c.lat, lng: c.lng }], stage: s.orderStage };
+    }
+    return {};
+  }
+
+  stageList(p) {
+    const s = this.state, c = this.city();
+    const nat = p.process === 'Natural', honey = p.process === 'Honey';
+    const straight = Math.round(haversine(ROASTERY, c));
+    const total = p.trillaKm + p.roastKm + straight, b = boil(c.alt);
+    const dry = String(p.dry).replace('.', ',');
+    const born = p.total + 44;
+    const ago = (n) => (n <= 0 ? 'Hoy' : 'Hace ≈ ' + n + ' días');
+    const where = dms(p.lat, 'N', 'S') + ' · ' + dms(p.lng, 'E', 'O');
+    return [
+      { title: 'Tu taza', cup: true, bean: { stage: 3 }, map: 0, km: 0, day: ago(0),
+        text: 'Empieza por aquí, por lo que sientes al primer sorbo. ' + p.feel + ' Ahora vamos hacia atrás, a ver cómo llegó hasta ' + c.name + '.',
+        facts: [['El agua en ' + c.name, 'hierve a ≈ ' + b + ' °C'], ['Receta sugerida', METHODS[s.method].title]] },
+      { title: 'Envío', bean: { stage: 3 }, map: 0.5, km: Math.round(straight / 2), day: ago(3),
+        text: 'Antes de llegar a tus manos viajó sellado desde los Llanos hasta ' + c.name + ', para que llegara fresco.',
+        facts: [['En línea recta', dots(straight) + ' km'], ['Entrega estimada', c.days]] },
+      { title: 'Empaque', bean: { stage: 3 }, map: 1, km: straight, day: ago(4),
+        text: 'Antes del viaje lo empacamos con la fecha de tostión y el número de lote, para que sepas qué bolsa tienes en las manos.',
+        facts: [['Lote', 'GUA-' + p.code + '-2607'], ['Presentación', SIZES[s.size].label]] },
+      { title: 'Tostión', roast: true, bean: { stage: 3 }, map: 1, km: straight, day: ago(4),
+        text: 'Antes de empacarlo lo tostamos en Villavicencio. El calor le dio el color y los aromas que sientes ahora.',
+        facts: [['Dónde', 'Villavicencio, Meta'], ['Tiempo de tostión', '10 min']] },
+      { title: 'Trilla', bean: { stage: 2 }, map: 2, km: straight + p.roastKm, day: ago(14),
+        text: 'Antes de la tostión era café verde. En ' + p.trilla + ' le quitaron las capas secas que lo protegían' + (nat ? ', incluida la fruta seca' : '') + '.',
+        facts: [['Lugar', p.trilla + ' (propuesto)'], ['Hasta la tostión', p.roastKm + ' km']] },
+      { title: nat ? 'Secado en fruta' : honey ? 'Secado con miel' : 'Secado', bean: { stage: nat ? 0 : 1, dried: nat, honey }, map: 3, km: total, day: ago(44),
+        text: nat ? 'Antes de la trilla, la cereza entera se secó ' + dry + ' días hasta quedar oscura y arrugada, como una uva pasa.'
+          : honey ? 'Antes de la trilla se secó ' + dry + ' días con el mucílago pegado; lo movían seguido para que quedara parejo.'
+          : 'Antes de la trilla se secó ' + dry + ' días al sol y al aire, hasta quedar con cerca de 11 % de humedad.',
+        facts: [['Días de secado', dry], ['Humedad final', '11 %']] },
+      { title: 'Fermentación', bean: { stage: nat ? 0 : 1, honey }, map: 3, km: total, day: ago(born - (nat ? 3 : 1)),
+        text: nat ? 'Mientras se secaba, la fruta fermentó despacio. El tiempo y el cuidado influyen, pero por sí solos no prometen un sabor.'
+          : honey ? 'Antes de secarse tuvo una fermentación corta, porque el mucílago se quedó con el grano.'
+          : 'Antes de secarse fermentó: los microorganismos transformaron parte de los azúcares del mucílago, y luego se lavó con agua limpia.',
+        facts: [['Tiempo de referencia', p.ferment], ['Método', 'Por confirmar con el productor']] },
+      nat
+        ? { title: 'Selección', bean: { stage: 0 }, map: 3, km: total, day: ago(born),
+            text: 'Antes de todo eso se escogieron las cerezas enteras para secarlas con su fruta. En un natural no se despulpa.',
+            facts: [['Qué se seca', 'La cereza entera']] }
+        : { title: 'Despulpado', bean: { stage: 1, honey }, map: 3, km: total, day: ago(born),
+            text: honey ? 'Antes de todo eso, a la cereza le quitaron la piel pero no todo el mucílago. De ahí viene el nombre honey: no lleva miel.'
+              : 'Antes de todo eso, a la cereza le quitaron la piel y casi toda la pulpa, el mismo día de la cosecha.',
+            facts: [['Cuándo', 'El día de la cosecha']] },
+      { title: 'Cosecha', bean: { stage: 0 }, map: 3, km: total, day: ago(born),
+        text: 'Y aquí empezó todo: en la finca ' + p.farm + ', a ' + dots(p.alt) + ' metros, ' + p.producer + ' y su equipo recogieron a mano solo las cerezas maduras. Antes de ser tu taza, fue una fruta roja.',
+        facts: [['Altitud', dots(p.alt) + ' m s. n. m.'], ['Coordenadas', where], ['Cosecha', p.harvest]] },
+    ];
+  }
+
+  go(screen, extra) {
+    if (screen !== 'producto') this.stopPlay();
+    this.setState(Object.assign({ screen }, extra || {}));
+  }
+  open(key, journey) {
+    this.stopPlay();
+    this._wantJourney = !!journey;
+    this._wantTop = true;
+    this.setState({ screen: 'producto', product: key, stage: 0, size: 0, grind: 'grano', qty: 1, hoverAlt: null });
+  }
+  stopPlay() { clearInterval(this._play); this._play = null; if (this.state.playing) this.setState({ playing: false }); }
+  togglePlay() {
+    if (this.state.playing) { this.stopPlay(); return; }
+    this.setState({ playing: true, stage: this.state.stage >= 8 ? 0 : this.state.stage });
+    this._play = setInterval(() => {
+      if (this.state.stage >= 8) { this.stopPlay(); return; }
+      this.setState({ stage: this.state.stage + 1 });
+    }, 3600);
+  }
+  toast(msg) {
+    clearTimeout(this._toastT);
+    this.setState({ toast: msg });
+    this._toastT = setTimeout(() => this.setState({ toast: null }), 4000);
+  }
+  add(item, msg) {
+    const cart = this.state.cart.slice();
+    const i = cart.findIndex((x) => x.id === item.id);
+    if (i >= 0) cart[i] = Object.assign({}, cart[i], { qty: cart[i].qty + item.qty });
+    else cart.push(item);
+    this.setState({ cart });
+    this.toast(msg);
+  }
+  addProduct(key, size, grind, qty) {
+    this.add({ id: key + '|' + size + '|' + grind, key, size, grind, qty }, 'Agregaste ' + qty + ' × ' + BY[key].name + ' de ' + SIZES[size].label + ' al carrito.');
+  }
+  subPrice(sub) { return sub.mode === 'fijo' ? priceOf(sub.product, sub.size) : Math.round((46000 * SIZES[sub.size].mult) / 1000) * 1000; }
+  setQty(id, d) {
+    const cart = this.state.cart.map((x) => (x.id === id ? Object.assign({}, x, { qty: Math.max(1, x.qty + d) }) : x));
+    this.setState({ cart });
+  }
+  remove(id) { this.setState({ cart: this.state.cart.filter((x) => x.id !== id) }); }
+  field(key) { return (e) => this.setState({ form: Object.assign({}, this.state.form, { [key]: e.target.value }) }); }
+  errors() {
+    const f = this.state.form, e = {};
+    if (!f.name.trim()) e.name = 'Escribe tu nombre.';
+    if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(f.email.trim())) e.email = 'Escribe un correo válido, por ejemplo nombre@correo.com.';
+    if (this.state.delivery === 'envio' && !f.address.trim()) e.address = 'Escribe la dirección de entrega.';
+    return e;
+  }
+  confirm(ev) {
+    if (ev && ev.preventDefault) ev.preventDefault();
+    const e = this.errors();
+    if (Object.keys(e).length || !this.state.cart.length) { this.setState({ tried: true }); return; }
+    const c = this.city(), t = this.totals();
+    const order = { no: 'GUA-' + String(Date.now()).slice(-5), items: this.state.cart.slice(), city: c, email: this.state.form.email.trim(), name: this.state.form.name.trim(), total: t.total, delivery: this.state.delivery };
+    this.setState({ order, cart: [], screen: 'confirmacion', orderStage: 0, tried: false });
+    clearTimeout(this._orderT);
+    this._orderT = setTimeout(() => this.setState({ orderStage: 1 }), 900);
+  }
+  totals() {
+    const s = this.state, c = this.city();
+    const sub = s.cart.reduce((n, it) => n + (it.sub ? this.subPrice(it.sub) : priceOf(it.key, it.size)) * it.qty, 0);
+    const ship = !s.cart.length || s.delivery === 'recoger' ? 0 : c.ship;
+    return { sub, ship, total: sub + ship };
+  }
+
+  renderVals() {
+    const s = this.state, p = BY[s.product], c = this.city();
+    const is = { home: s.screen === 'home', catalogo: s.screen === 'catalogo', producto: s.screen === 'producto', carrito: s.screen === 'carrito', checkout: s.screen === 'checkout', confirmacion: s.screen === 'confirmacion', suscripcion: s.screen === 'suscripcion' };
+    const navDefs = [['Cafés', 'catalogo', () => this.go('catalogo')], ['El recorrido', 'producto', () => this.open('lavado', true)], ['Suscripción', 'suscripcion', () => this.go('suscripcion')]];
+    const nav = navDefs.map(([label, scr, fn]) => ({ label, go: fn, current: s.screen === scr ? 'page' : undefined, line: s.screen === scr ? C.cereza : 'transparent' }));
+    const cartCount = s.cart.reduce((n, it) => n + it.qty, 0);
+    const straight = Math.round(haversine(ROASTERY, c));
+
+    const farm = s.mapFarm ? FARMS.find((f) => f.id === s.mapFarm) : null;
+    const heroFarm = farm
+      ? { has: true, none: false, name: farm.name, place: farm.place,
+          line: farm.products.length > 1 ? 'De aquí salen ' + farm.products.length + ' cafés con procesos distintos.' : 'De aquí sale el ' + BY[farm.products[0]].name + '.',
+          coffees: farm.products.map((k) => ({ name: BY[k].name, open: () => this.open(k) })) }
+      : { has: false, none: true, coffees: [] };
+    const farms = FARMS.map((f) => Object.assign({ name: f.name, on: s.mapFarm === f.id, pick: () => this.setState({ mapFarm: s.mapFarm === f.id ? null : f.id }) }, pill(s.mapFarm === f.id)));
+
+    const isAnimo = s.moodMode !== 'costumbre';
+    const moodList = isAnimo ? MOODS : TASTES;
+    const moodKey = isAnimo ? s.moodAnimo : s.moodCostumbre;
+    const moodPick = moodList.find((m) => m.key === moodKey) || moodList[0];
+    const mp = BY[moodPick.product], mper = PERSONA[mp.key] || { title: '', animal: '', line: '' };
+    const LINE = { regional: [C.cafe, C.crema], lavado: [C.azul, '#000'], natural: [C.moriche, C.crema], honey: [C.naranja, '#000'], platea: [C.cereza, C.crema] };
+    const [mLine, mOn] = LINE[mp.key] || [C.cafe, C.crema];
+    const emoIsAnimo = s.moodMode !== 'costumbre';
+    const emoList = emoIsAnimo ? MOODS : TASTES;
+    const emoSel = emoList.find((m) => m.key === (emoIsAnimo ? s.moodAnimo : s.moodCostumbre)) || emoList[0];
+    const ep = BY[emoSel.product], eper = PERSONA[ep.key] || { title: '', animal: '', line: '' };
+    const emo = {
+      band: ep.bag,
+      modes: [['animo', 'Por ánimo'], ['costumbre', 'Por costumbre']].map(([k, label]) => { const on = (k === 'animo') === emoIsAnimo; return { label, sel: on ? 'true' : 'false', bg: on ? C.cafe : C.crema, fg: on ? C.crema : C.cafe, pick: () => this.setState({ moodMode: k }) }; }),
+      groupLabel: emoIsAnimo ? 'Cómo te sientes' : 'Tu costumbre',
+      options: emoList.map((m) => { const on = m === emoSel, x = BY[m.product]; return { label: m.label, coffee: x.name, dot: x.bag, sel: on ? 'true' : 'false', bg: on ? C.cafe : C.crema, fg: on ? C.crema : C.cafe, pick: () => this.setState(emoIsAnimo ? { moodAnimo: m.key } : { moodCostumbre: m.key }) }; }),
+      over: 'Elegiste «' + emoSel.label.toLowerCase() + '»',
+      name: ep.name, idea: ep.idea, why: emoSel.why, bag: ep.bag, art: ep.bagArt, artToken: ep.artToken,
+      persona: eper.title, animal: eper.animal, line: eper.line, personality: ep.personality,
+      traits: ep.traits.map((label, i) => ({ label, tone: TONES[i][0], ink: TONES[i][1], tilt: TONES[i][2] })),
+      feel: ep.feel, notes: ep.notes.map((n) => ({ n, dot: ep.label })),
+      facts: [{ k: 'Origen', v: ep.place }, { k: 'Finca', v: ep.farm }, { k: 'Productor', v: ep.producer }, { k: 'Variedad', v: ep.variety }, { k: 'Proceso', v: ep.process }, { k: 'Altitud', v: dots(ep.alt) + ' m' }, { k: 'Cosecha', v: ep.harvest }],
+      curious: CURIOUS[ep.key], price: money(priceOf(ep.key, 0)),
+      open: () => this.open(ep.key), quick: () => this.addProduct(ep.key, 0, 'grano', 1),
+    };
+    const moodTabs = [['animo', 'Por ánimo'], ['costumbre', 'Por costumbre']].map(([k, label]) => {
+      const sel = (k === 'animo') === isAnimo;
+      return { label, sel: sel ? 'true' : 'false', bg: sel ? mLine : 'transparent', fg: sel ? mOn : C.cafe, pick: () => this.setState({ moodMode: k }) };
+    });
+    const moodOpts = moodList.map((m) => {
+      const on = m.key === moodPick.key;
+      return { label: m.label, coffee: BY[m.product].name, on, bg: on ? mLine : 'transparent', fg: on ? mOn : '#000',
+        pick: () => this.setState(isAnimo ? { moodAnimo: m.key } : { moodCostumbre: m.key }) };
+    });
+    
+    const mood = {
+      band: mp.bag, bag: mp.bag, line: mLine, lineSoft: mLine + '40', art: mp.bagArt, artToken: mp.artToken, name: mp.name, why: moodPick.why, pickLabel: moodPick.label,
+      persona: mper.title, animal: mper.animal, line: mper.line, feel: mp.feel, notes: mp.notes,
+      panelLabel: isAnimo ? 'Cafés por ánimo' : 'Cafés por costumbre', groupLabel: isAnimo ? 'Tu ánimo' : 'Tu forma de tomar café',
+      facts: [['Productor', mp.producer], ['Origen', mp.place], ['Finca', mp.farm], ['Variedad', mp.variety], ['Proceso', mp.process],
+        ['Altitud', dots(mp.alt) + ' m'], ['Fermentación', mp.ferment], ['Secado', String(mp.dry).replace('.', ',') + ' días'], ['Cosecha', mp.harvest]].map(([k, v]) => ({ k, v })),
+      open: () => this.open(mp.key), quick: () => this.addProduct(mp.key, 0, 'grano', 1), quickAria: 'Agregar ' + mp.name + ' de 250 g en grano al carrito',
+    };
+    const tastes = TASTES.map((t) => Object.assign({ label: t.label, on: s.taste === t.key, pick: () => this.setState({ taste: t.key }) }, pill(s.taste === t.key)));
+    const tasteSel = TASTES.find((t) => t.key === s.taste);
+    const rec = tasteSel
+      ? { has: true, none: false, name: BY[tasteSel.product].name, why: tasteSel.why, bag: BY[tasteSel.product].bag, art: BY[tasteSel.product].bagArt, artToken: BY[tasteSel.product].artToken, open: () => this.open(tasteSel.product) }
+      : { has: false, none: true };
+
+    const top = Math.max(2500, Math.ceil((c.alt + 300) / 500) * 500);
+    const H = 260;
+    const px = (alt) => Math.round((alt / top) * H) + 'px';
+    const profile = {
+      items: PRODUCTS.slice().sort((a, b) => a.alt - b.alt || a.name.localeCompare(b.name)).map((x) => ({
+        name: x.name, alt: dots(x.alt) + ' m', height: px(x.alt), color: x.label, open: () => this.open(x.key),
+        aria: x.name + ', ' + dots(x.alt) + ' metros sobre el nivel del mar. Ver su recorrido.' })),
+      guides: [500, 1000, 1500, 2000, 2500, 3000].filter((g) => g < top).map((g) => ({ label: dots(g) + ' m', bottom: px(g) })),
+      cityBottom: px(c.alt),
+      cityTag: 'Tu ciudad · ' + c.name + ' · ' + dots(c.alt) + ' m',
+      cityLine: c.alt > 1900
+        ? c.name + ' está más alto que todas nuestras fincas: allá arriba el agua hierve a unos ' + boil(c.alt) + ' °C.'
+        : 'Todas nuestras fincas están más arriba que ' + c.name + '. Toca una montaña para ver su recorrido.',
+    };
+
+    const nP = PRODUCTS.length;
+    const cp = PRODUCTS[((s.slide % nP) + nP) % nP];
+    const go = (i) => this.setState({ slide: ((i % nP) + nP) % nP });
+    const car = {
+      name: cp.name, persona: PERSONA[cp.key].title, animal: PERSONA[cp.key].animal, line: PERSONA[cp.key].line, notes: cp.notes,
+      bag: cp.bag, art: cp.bagArt, artToken: cp.artToken, count: (s.slide + 1) + ' de ' + nP,
+      open: () => this.open(cp.key), prev: () => go(s.slide - 1), next: () => go(s.slide + 1),
+      dots: PRODUCTS.map((x, i) => ({ label: 'Ver ' + x.name, current: i === s.slide ? 'true' : undefined, bg: i === s.slide ? C.cafe : 'transparent', pick: () => go(i) })),
+    };
+
+    const PTS = [[7, 18], [27, 10], [47, 20], [67, 10], [90, 24], [76, 52], [52, 46], [26, 64], [54, 86]];
+    const tr = this.stageList(BY.lavado);
+    const ti = Math.min(s.trail || 0, tr.length - 1);
+    const num2 = (i) => String(i + 1).padStart(2, '0');
+    const trailPts = tr.map((x, i) => {
+      const pt = PTS[Math.min(i, PTS.length - 1)], on = i === ti;
+      return { num: num2(i), title: x.title, x: pt[0] + '%', y: pt[1] + '%', delay: (0.2 + i * 0.36).toFixed(2) + 's',
+        size: on ? '24px' : '18px', fill: on ? C.luz : C.moriche, ring: on ? C.luz : C.crema, label: on ? C.luz : C.crema,
+        aria: 'Paso ' + num2(i) + ': ' + x.title, current: on ? 'step' : undefined, btnBg: on ? C.luz : 'transparent', btnFg: on ? C.cafe : C.crema,
+        show: () => { if (this.state.trail !== i) this.setState({ trail: i }); } };
+    });
+    const tsel = tr[ti];
+    const trailSel = { num: num2(ti), title: tsel.title, text: tsel.text, day: tsel.day, facts: (tsel.facts || []).map(([k, v]) => ({ k, v })) };
+    const trailCls = s.trailOn ? 'is-on' : '';
+    const replayTrail = () => { clearTimeout(this._trailT); this.setState({ trailOn: false }); this._trailT = setTimeout(() => this.setState({ trailOn: true }), 60); };
+
+    const stepsPreview = this.stageList(BY.lavado).map((x, i) => ({ num: String(i + 1).padStart(2, '0'), title: x.title }));
+
+    const filterDefs = [['todos', 'Todos'], ['Lavado', 'Lavado'], ['Natural', 'Natural'], ['Honey', 'Honey']];
+    const filters = filterDefs.map(([k, label]) => Object.assign({ label, on: s.filter === k, pick: () => this.setState({ filter: k }) }, pill(s.filter === k)));
+    const sorts = [['altura', 'Altura'], ['precio', 'Precio']].map(([k, label]) => Object.assign({ label, on: s.sort === k, pick: () => this.setState({ sort: k }) }, pill(s.sort === k)));
+    const list = PRODUCTS.filter((x) => s.filter === 'todos' || x.process === s.filter).sort((a, b) => (s.sort === 'precio' ? a.price - b.price : b.alt - a.alt));
+    const cards = list.map((x) => ({
+      name: x.name, producer: x.producer, place: x.place, altLabel: dots(x.alt) + ' m s. n. m.', feel: x.feel, notes: x.notes,
+      process: x.process, bag: x.bag, bagArt: x.bagArt, artToken: x.artToken, price: money(x.price),
+      open: () => this.open(x.key), quick: () => this.addProduct(x.key, 0, 'grano', 1), quickAria: 'Agregar ' + x.name + ' de 250 g en grano al carrito',
+    }));
+    const help = {
+      todos: 'Lavado, natural y honey son formas de quitarle la fruta al grano. Cambian mucho lo que sientes en la taza.',
+      Lavado: 'Lavado: se quita la pulpa, se fermenta y se lava con agua antes de secar. Suele dar tazas limpias y brillantes.',
+      Natural: 'Natural: la cereza se seca entera, con la fruta puesta. Por eso suele saber más a fruta.',
+      Honey: 'Honey: se quita la piel pero se seca con parte del mucílago, la capa dulce que rodea el grano. No lleva miel.',
+    };
+
+    const helpFor = { Lavado: help.Lavado, Natural: help.Natural, Honey: help.Honey };
+    const siblings = PRODUCTS.filter((x) => x.farmId === p.farmId && x.key !== p.key).map((x) => ({ name: x.name, open: () => this.open(x.key) }));
+    const pv = {
+      key: p.key, name: p.name, producer: p.producer, farm: p.farm, feel: p.feel, notes: p.notes, bag: p.bag, art: p.art, artToken: p.artToken,
+      overline: p.idea, processHelp: helpFor[p.process],
+      idea: p.idea, scene: p.scene, sceneShort: p.sceneShort, personality: p.personality, emotion: p.emotion, bagArt: p.bagArt,
+      traits: p.traits.map((label, i) => ({ label, tone: TONES[i][0], ink: TONES[i][1], tilt: TONES[i][2] })),
+      cupAria: 'Tu taza de ' + p.name + ' servida' + (p.milk ? ' con leche' : '') + '.',
+      labelGrind: s.grind === 'grano' ? undefined : s.grind,
+      farmTitle: 'La finca ' + p.farm + ' está a ' + dots(p.alt) + ' metros sobre el nivel del mar',
+      terrainAria: 'Relieve ilustrado alrededor de la finca ' + p.farm + ', con curvas de nivel cada 100 metros y la altura de la finca marcada.',
+      facts: [{ k: 'Altitud', v: dots(p.alt) + ' m s. n. m.' }, { k: 'Coordenadas', v: coords(p) }, { k: 'Cosecha', v: p.harvest }, { k: 'Variedad', v: p.variety }],
+      altFacts: [{ k: 'Altitud de la finca', v: dots(p.alt) + ' m' }, { k: 'Coordenadas', v: coords(p) }, { k: 'El agua hierve allá a', v: '≈ ' + boil(p.alt) + ' °C' }, { k: 'Comparado con ' + c.name, v: (p.alt >= c.alt ? dots(p.alt - c.alt) + ' m más arriba' : dots(c.alt - p.alt) + ' m más abajo') }],
+      siblings, hasSiblings: siblings.length > 0,
+    };
+    const sizes = SIZES.map((x, i) => Object.assign({ label: x.label, price: money(priceOf(p.key, i)), on: s.size === i, pick: () => this.setState({ size: i }) }, pill(s.size === i)));
+    const grinds = GRINDS.map((g) => Object.assign({ label: g.label, hint: g.hint, on: s.grind === g.key, pick: () => this.setState({ grind: g.key }) }, pill(s.grind === g.key)));
+    const legend = [{ color: C.luz, label: 'Menos de 1.000 m' }, { color: C.brote, label: '1.000 a 2.000 m' }, { color: C.moriche, label: '2.000 a 3.000 m' }, { color: p.accent, label: 'Altura de la finca' }];
+
+    const stagesAll = this.stageList(p);
+    const cur = stagesAll[s.stage];
+    const stages = stagesAll.map((x, i) => Object.assign({ num: String(i + 1).padStart(2, '0'), title: x.title, current: i === s.stage ? 'step' : undefined, pick: () => { this.stopPlay(); this.setState({ stage: i }); } }, pill(i === s.stage, true)));
+    const mapStop = Math.round(cur.map);
+    const stopChips = this.stops(p).map((x, i) => ({ label: x.name, bg: i === mapStop ? C.luz : i < mapStop ? C.crema : C.crema, fg: C.cafe }));
+    const beanStage = cur.bean.stage;
+    const beanCaption = cur.cup ? 'Tu taza: aquí empieza la historia.'
+      : beanStage === 0 ? (cur.bean.dried ? 'Cereza seca: la fruta entera, oscura y arrugada.' : 'Cereza: la fruta que guarda dos semillas.')
+      : beanStage === 1 ? (cur.bean.honey ? 'Pergamino con miel: el mucílago se seca pegado al grano.' : 'Pergamino: la capa que protege el grano.')
+      : beanStage === 2 ? 'Café verde: sin capas, listo para tostar.'
+      : 'Café tostado: el calor le cambió el color.';
+    const roastWords = ['', 'Clara', 'Media clara', 'Media', 'Media oscura', 'Oscura'];
+    const st = {
+      over: 'Paso ' + String(s.stage + 1).padStart(2, '0') + ' de 09 · ' + cur.day,
+      title: cur.title, text: cur.text, facts: cur.facts.map(([k, v]) => ({ k, v })), km: dots(cur.km),
+      isCup: !!cur.cup, isBean: !cur.cup, isRoast: !!cur.roast, beanCaption, first: s.stage === 0, last: s.stage === 8,
+    };
+
+    const m = METHODS[s.method];
+    const cupsN = s.cups;
+    const b = boil(c.alt);
+    const recipe = {
+      title: m.title + ' · ' + (cupsN === 1 ? '1 taza' : '2 tazas'),
+      facts: [{ k: 'Café', v: m.coffee * cupsN + ' g' }, { k: 'Agua', v: m.water * cupsN + ' g' }, { k: 'Molienda', v: m.grind }, { k: 'Tiempo', v: m.time }, { k: 'Proporción', v: '1:' + Math.round(m.water / m.coffee) }],
+      steps: m.steps,
+      water: m.hot
+        ? (b <= 93 ? 'En ' + c.name + ' el agua hierve a unos ' + b + ' °C: úsala recién hervida.' : 'Usa agua a unos 93 °C: déjala reposar 30 segundos después de hervir.')
+        : 'En greca el agua hace el trabajo: usa agua fresca y fuego medio.',
+    };
+    const methods = Object.keys(METHODS).map((k) => Object.assign({ label: METHODS[k].label, on: s.method === k, pick: () => this.setState({ method: k }) }, pill(s.method === k)));
+    const cupsOpts = [1, 2].map((n) => Object.assign({ label: n === 1 ? '1 taza' : '2 tazas', on: cupsN === n, pick: () => this.setState({ cups: n }) }, pill(cupsN === n)));
+
+    const t = this.totals();
+    const farmIds = [];
+    let km = 0;
+    const items = s.cart.map((it) => {
+      if (it.sub) {
+        const x = it.sub.mode === 'fijo' ? BY[it.sub.product] : null;
+        const name = x ? 'Suscripción ' + x.name : 'Suscripción exploradora';
+        return { name, qty: it.qty, bag: x ? x.bag : C.luz, art: x ? x.bagArt : 'pajaro', artToken: x ? x.artToken : 'cafe-de-origen',
+          detail: SIZES[it.sub.size].label + ' · ' + GRINDS.find((g) => g.key === it.sub.grind).label + ' · cada ' + it.sub.freq + ' semanas',
+          short: 'cada ' + it.sub.freq + ' sem.', total: money(this.subPrice(it.sub) * it.qty), link: x ? 'Ver su recorrido' : 'Cambiar suscripción',
+          open: () => (x ? this.open(x.key, true) : this.go('suscripcion')), up: () => this.setQty(it.id, 1), down: () => this.setQty(it.id, -1), remove: () => this.remove(it.id),
+          qtyAria: 'Cantidad de ' + name, removeAria: 'Quitar ' + name + ' del carrito' };
+      }
+      const x = BY[it.key];
+      if (farmIds.indexOf(x.farmId) < 0) { farmIds.push(x.farmId); km += x.trillaKm + x.roastKm; }
+      return { name: x.name, qty: it.qty, bag: x.bag, art: x.bagArt, artToken: x.artToken,
+        detail: SIZES[it.size].label + ' · ' + GRINDS.find((g) => g.key === it.grind).label + ' · ' + money(priceOf(it.key, it.size)) + ' c/u',
+        short: SIZES[it.size].label, total: money(priceOf(it.key, it.size) * it.qty), link: 'Así llegó hasta aquí',
+        open: () => this.open(x.key, true), up: () => this.setQty(it.id, 1), down: () => this.setQty(it.id, -1), remove: () => this.remove(it.id),
+        qtyAria: 'Cantidad de ' + x.name, removeAria: 'Quitar ' + x.name + ' del carrito' };
+    });
+    const nFarms = farmIds.length;
+    const cart = {
+      items, empty: !s.cart.length, has: s.cart.length > 0,
+      subtotal: money(t.sub), ship: s.delivery === 'recoger' ? 'Gratis' : money(t.ship), total: money(t.total),
+      shipLabel: s.delivery === 'recoger' ? 'Recoges en Villavicencio' : 'Envío a ' + c.name + ' (' + c.days + ')',
+      trip: nFarms
+        ? 'Tus cafés vienen de ' + (nFarms === 1 ? '1 finca' : nFarms + ' fincas') + ', pasan por la tostión en Villavicencio y suman unos ' + dots(km + straight * nFarms) + ' km hasta ' + c.name + '.'
+        : 'Tu suscripción sale de la tostión en Villavicencio y recorre unos ' + dots(straight) + ' km hasta ' + c.name + '.',
+      passport: nFarms ? 'Con este pedido sumas ' + (nFarms === 1 ? '1 origen' : nFarms + ' orígenes') + ' por probar. Los marcas cuando los pruebes.' : 'Cada origen que pruebes queda en tu pasaporte.',
+    };
+
+    const err = s.tried ? this.errors() : {};
+    const mk = (key, label, type, auto) => ({ key, label, type, auto, value: s.form[key], change: this.field(key), invalid: !!err[key], error: err[key] || '', border: err[key] ? C.cereza : C.cafe });
+    const fields = {
+      contact: [mk('name', 'Nombre', 'text', 'name'), mk('email', 'Correo', 'email', 'email'), mk('phone', 'Celular (opcional)', 'tel', 'tel')],
+      address: s.delivery === 'envio' ? [mk('address', 'Dirección', 'text', 'street-address'), mk('detail', 'Apartamento, barrio o indicaciones (opcional)', 'text', 'address-line2')] : [],
+    };
+    const deliveries = [
+      { key: 'envio', label: 'Envío a ' + c.name, hint: c.days, price: money(c.ship) },
+      { key: 'recoger', label: 'Recoger en la tostión', hint: 'Villavicencio, Meta', price: 'Gratis' },
+    ].map((d) => Object.assign(d, { on: s.delivery === d.key, pick: () => this.setState({ delivery: d.key }), border: s.delivery === d.key ? C.cafe : '#62453240' }));
+    const pays = [{ key: 'pse', label: 'PSE, desde tu banco' }, { key: 'tarjeta', label: 'Tarjeta, en la pasarela de pago' }, { key: 'contraentrega', label: 'Contraentrega' }]
+      .map((d) => Object.assign(d, { on: s.pay === d.key, pick: () => this.setState({ pay: d.key }), border: s.pay === d.key ? C.cafe : '#62453240' }));
+    const formError = s.tried && (Object.keys(err).length || !s.cart.length)
+      ? (!s.cart.length ? 'Tu carrito está vacío.' : 'Revisa los campos marcados para poder confirmar.')
+      : '';
+
+    const o = s.order;
+    const orderKeys = [];
+    if (o) o.items.forEach((it) => { const k = it.sub ? (it.sub.mode === 'fijo' ? it.sub.product : null) : it.key; if (k && orderKeys.indexOf(k) < 0) orderKeys.push(k); });
+    const order = o
+      ? { no: o.no,
+          line: (o.name ? o.name + ', tu' : 'Tu') + ' pedido por ' + money(o.total) + (o.delivery === 'recoger' ? ' te espera en la tostión de Villavicencio.' : ' va camino a ' + o.city.name + '.') + (o.email ? ' Te escribimos a ' + o.email + ' en cada paso.' : ''),
+          routeAria: 'Ruta ilustrada desde la tostión en Villavicencio hasta ' + o.city.name + '.',
+          steps: [{ title: 'Tostión', when: 'Próximo martes (fecha de muestra)' }, { title: 'Empaque con fecha y lote', when: 'El mismo día' }, { title: 'Sale de Villavicencio', when: o.delivery === 'recoger' ? 'Te avisamos para recoger' : 'Al día siguiente' }, { title: o.delivery === 'recoger' ? 'Listo para recoger' : 'Llega a ' + o.city.name, when: o.delivery === 'recoger' ? 'Villavicencio, Meta' : o.city.days }],
+          stamps: orderKeys.map((k) => { const x = BY[k], on = !!s.stamps[k]; return { name: x.name, place: x.farm + ' · ' + x.place, art: x.art, artToken: x.artToken, ring: x.label, fill: on ? x.bag : C.crema, on, label: on ? 'Lo probé' : 'Ya lo probé', toggle: () => this.setState({ stamps: Object.assign({}, s.stamps, { [k]: !on }) }) }; }),
+          recipe: () => this.open(orderKeys[0] || 'lavado') }
+      : { steps: [], stamps: [], recipe: () => this.go('catalogo') };
+
+    const sb = s.sub;
+    const subView = {
+      fixed: sb.mode === 'fijo', explore: sb.mode === 'explora',
+      modes: [['fijo', 'Siempre el mismo café'], ['explora', 'Explorador: un origen distinto cada vez']].map(([k, label]) => Object.assign({ label, on: sb.mode === k, pick: () => this.setState({ sub: Object.assign({}, sb, { mode: k }) }) }, pill(sb.mode === k))),
+      products: PRODUCTS.map((x) => ({ name: x.name, bag: x.bag, art: x.bagArt, artToken: x.artToken, on: sb.product === x.key, border: sb.product === x.key ? C.cafe : 'transparent', pick: () => this.setState({ sub: Object.assign({}, sb, { product: x.key }) }) })),
+      freqs: [2, 4].map((n) => Object.assign({ label: 'Cada ' + n + ' semanas', on: sb.freq === n, pick: () => this.setState({ sub: Object.assign({}, sb, { freq: n }) }) }, pill(sb.freq === n))),
+      sizes: SIZES.map((x, i) => Object.assign({ label: x.label, on: sb.size === i, pick: () => this.setState({ sub: Object.assign({}, sb, { size: i }) }) }, pill(sb.size === i))),
+      grinds: GRINDS.map((g) => Object.assign({ label: g.label, on: sb.grind === g.key, pick: () => this.setState({ sub: Object.assign({}, sb, { grind: g.key }) }) }, pill(sb.grind === g.key))),
+      route: ['Lavado · Tolima', 'Honey · Huila', 'Regional · Meta', 'Natural · Tolima'],
+      summary: 'Recibirás ' + SIZES[sb.size].label + ' de ' + (sb.mode === 'fijo' ? BY[sb.product].name : 'un origen distinto') + ', ' + GRINDS.find((g) => g.key === sb.grind).label.toLowerCase() + ', cada ' + sb.freq + ' semanas en ' + c.name + '.',
+      price: money(this.subPrice(sb)),
+    };
+
+    return {
+      is, nav, cities: CITIES, city: c, cartCount, cartAria: 'Carrito, ' + cartCount + (cartCount === 1 ? ' bolsa' : ' bolsas'), toast: s.toast,
+      heroKm: dots(straight), emo, car, trailPts, trailSel, trailCls, replayTrail, heroFarm, farms, tastes, rec, moodTabs, moodOpts, mood, profile, stepsPreview,
+      filters, sorts, cards, cardsEmpty: cards.length === 0, cardsCount: cards.length === 1 ? '1 café' : cards.length + ' cafés', filterHelp: help[s.filter],
+      p: pv, sizes, grinds, qty: s.qty, lineTotal: money(priceOf(p.key, s.size) * s.qty), legend,
+      hoverLine: s.hoverAlt == null ? dots(p.alt) + ' m' : dots(s.hoverAlt) + ' m s. n. m.',
+      hoverHint: s.hoverAlt == null ? 'Es la altura de la finca. Pasa el cursor o el dedo por el relieve para medir otros puntos.' : (s.hoverAlt > p.alt ? dots(s.hoverAlt - p.alt) + ' m por encima de la finca.' : s.hoverAlt < p.alt ? dots(p.alt - s.hoverAlt) + ' m por debajo de la finca.' : 'Justo a la altura de la finca.'),
+      highlight: s.highlight, bandLabel: s.highlight ? 'Ocultar la altura de la finca' : 'Marcar la altura de la finca',
+      journeyIntro: 'Nueve pasos hacia atrás, de tu taza en ' + c.name + ' a la finca ' + p.farm + ': unos ' + dots(stagesAll[8].km) + ' km. Rebobina a tu ritmo o deja que se cuente solo.',
+      stages, stopChips, st, routeAria: 'Mapa del recorrido hacia atrás: tu taza en ' + c.name + ', tostión en Villavicencio, trilla en ' + p.trilla + ' y finca ' + p.farm + '.',
+      roast: s.roast, roastText: 'Tostión ' + roastWords[s.roast].toLowerCase() + ', nivel ' + s.roast + ' de 5',
+      playing: s.playing, playLabel: s.playing ? 'Pausar' : 'Rebobinar hasta la finca',
+      recipe, methods, cupsOpts,
+      cart, fields, deliveries, pays, formError, hasFormError: !!formError, hasToast: !!s.toast,
+      order, sub: subView,
+      refs: { top: this.setTop, journey: this.setJourney, trail: this.setTrail, trailCanvas: this.sceneRef('trailCanvas', 'trail'), hero: this.sceneRef('hero', 'route'), cupIdea: this.sceneRef('cupIdea', 'cup'), terrain: this.sceneRef('terrain', 'terrain'), route: this.sceneRef('route', 'route'), bean: this.sceneRef('bean', 'bean'), cup: this.sceneRef('cup', 'cup'), cartMap: this.sceneRef('cartMap', 'route'), orderRoute: this.sceneRef('orderRoute', 'route') },
+      sz: { moodArt2: 220, moodArt: 200, portrait: 240, heroArt: 240, logo: 48, footerLogo: 56, tilt: -3, recArt: 140, cardArt: 168, label: 360, marker: 88, bean: 20, disc: 150, cartArt: 80, stamp: 96, subArt: 72, seal: 96, pattern: 56 },
+      goHome: () => this.go('home'), goCatalog: () => this.go('catalogo'), goCart: () => this.go('carrito'), goCheckout: () => this.go('checkout'), goSub: () => this.go('suscripcion'),
+      followCup: () => this.open('lavado', true),
+      onCity: (e) => this.setState({ city: e.target.value }),
+      qtyUp: () => this.setState({ qty: Math.min(20, s.qty + 1) }), qtyDown: () => this.setState({ qty: Math.max(1, s.qty - 1) }),
+      addCurrent: () => this.addProduct(p.key, s.size, s.grind, s.qty),
+      subThis: () => this.go('suscripcion', { sub: Object.assign({}, s.sub, { mode: 'fijo', product: p.key }) }),
+      toggleBand: () => this.setState({ highlight: !s.highlight }),
+      prevStage: () => { this.stopPlay(); this.setState({ stage: Math.max(0, s.stage - 1) }); },
+      nextStage: () => { this.stopPlay(); this.setState({ stage: Math.min(8, s.stage + 1) }); },
+      togglePlay: () => this.togglePlay(),
+      toJourney: () => { this._wantJourney = true; this.forceUpdate(); },
+      onRoast: (e) => this.setState({ roast: Number(e.target.value) }),
+      confirm: (e) => this.confirm(e),
+      addSub: () => this.add({ id: 'sub|' + JSON.stringify(sb), sub: Object.assign({}, sb), qty: 1 }, 'Agregaste una suscripción cada ' + sb.freq + ' semanas al carrito.'),
+    };
+  }
+}
+</script>
+</body>
+</html>

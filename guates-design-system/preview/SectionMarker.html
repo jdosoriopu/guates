@@ -1,0 +1,19 @@
+<!doctype html>
+<html lang="es">
+<head><meta name="viewport" content="width=device-width, initial-scale=1"><script>document.documentElement.setAttribute("data-theme", location.hash === "#dark" ? "dark" : "light");</script><link rel="stylesheet" href="../tokens.css"><link rel="stylesheet" href="../components/bundle.css"><script src="https://cdn.jsdelivr.net/npm/react@18.3.1/umd/react.production.min.js"></script><script src="https://cdn.jsdelivr.net/npm/react-dom@18.3.1/umd/react-dom.production.min.js"></script><script src="../components/bundle.js"></script><meta charset="utf-8"><title>SectionMarker</title>
+<style>
+  .grid { display: grid; grid-template-columns: 1fr 1fr; }
+  .grid .g-block { display: flex; justify-content: flex-end; min-height: 200px; box-sizing: border-box; }
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script>
+  var G = window.Guates, h = React.createElement;
+  ReactDOM.createRoot(document.getElementById('root')).render(
+    h('div', { className: 'grid' },
+      h(G.ColorBlock, { tone: 'cafe-de-origen' }, h(G.SectionMarker, { family: 'sol-de-sabana', number: '01', title: 'ADN de marca', size: 80 })),
+      h(G.ColorBlock, { tone: 'verde-moriche' }, h(G.SectionMarker, { family: 'naranja-tostion', number: '03', title: 'Territorio de marca', size: 80 }))));
+</script>
+</body>
+</html>

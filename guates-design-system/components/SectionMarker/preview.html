@@ -1,0 +1,20 @@
+<!-- @dsCard group="Editorial" height=250 subtitle="Chapter opener: star in a strong colour, numeral and title in its light partner" -->
+<!doctype html>
+<html lang="es">
+<head><meta charset="utf-8"><title>SectionMarker</title>
+<style>
+  .grid { display: grid; grid-template-columns: 1fr 1fr; }
+  .grid .g-block { display: flex; justify-content: flex-end; min-height: 200px; box-sizing: border-box; }
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script>
+  var G = window.Guates, h = React.createElement;
+  ReactDOM.createRoot(document.getElementById('root')).render(
+    h('div', { className: 'grid' },
+      h(G.ColorBlock, { tone: 'cafe-de-origen' }, h(G.SectionMarker, { family: 'sol-de-sabana', number: '01', title: 'ADN de marca', size: 80 })),
+      h(G.ColorBlock, { tone: 'verde-moriche' }, h(G.SectionMarker, { family: 'naranja-tostion', number: '03', title: 'Territorio de marca', size: 80 }))));
+</script>
+</body>
+</html>

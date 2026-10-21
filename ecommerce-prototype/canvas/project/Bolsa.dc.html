@@ -1,0 +1,66 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>Bolsa de café</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="ds/guates/components/bundle.css">
+<script src="ds/guates/components/bundle.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Caveat+Brush&amp;family=Roboto:wght@300;400;500;700&amp;family=Roboto+Slab:wght@200..900&amp;display=swap">
+<style>
+body{margin:0}
+</style>
+</helmet>
+<div role="img" aria-label="{{aria}}" style="position: relative; width: {{w}}; height: {{h}}; font-family: Roboto, Arial, sans-serif; color: #624532">
+<div style="position: absolute; inset: 0; overflow: hidden; background: {{bag}}; clip-path: {{clip}}">
+<div style="position: absolute; left: 0; right: 0; top: {{sealTop}}; border-top: 1px solid #62453240"></div>
+<div style="position: absolute; right: 11%; top: {{valveTop}}; width: {{valve}}; height: {{valve}}; border-radius: 50%; border: 1px solid #62453266"></div>
+<div aria-hidden="true" style="position: absolute; left: {{logoLeft}}; bottom: {{logoBottom}}; transform: rotate(-90deg); transform-origin: left bottom; line-height: 0">
+<x-import component-from-global-scope="Guates.Logo" version="alternativo" on="{{token}}" height="{{logoH}}"></x-import>
+</div>
+<div aria-hidden="true" style="position: absolute; left: {{labelLeft}}; top: {{labelTop}}; width: 380px; transform: scale({{labelScale}}); transform-origin: top left">
+<x-import component-from-global-scope="Guates.OriginLabel" product="{{key}}" width="{{labelW}}"></x-import>
+</div>
+<div style="position: absolute; left: 6%; right: 6%; bottom: 3%; height: 6%; border-top: 1px solid #62453240; border-radius: 50% 50% 0 0"></div>
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"product":{"editor":"enum","options":["regional","lavado","natural","honey","platea"],"default":"lavado"},"width":{"editor":"int","min":160,"max":640,"default":420},"$preview":{"width":420,"height":600}}'>
+var BAGS = {
+  regional: { bag: '#F6F3ED', token: 'crema-de-papel', name: 'Regional' },
+  lavado: { bag: '#9DB5EC', token: 'cielo-abierto', name: 'Lavado' },
+  natural: { bag: '#91AD80', token: 'verde-brote', name: 'Natural' },
+  honey: { bag: '#F5E380', token: 'luz-de-manana', name: 'Honey' },
+  platea: { bag: '#DB92BA', token: 'rosa-floracion', name: 'Platea' },
+};
+class Component extends DCLogic {
+  renderVals() {
+    const key = BAGS[this.props.product] ? this.props.product : 'lavado';
+    const b = BAGS[key];
+    const w = Math.max(160, Number(this.props.width) || 420);
+    const h = Math.round(w * 1.42);
+    // Zigzag heat seal along the top, soft gusset at the bottom.
+    const teeth = 20, pts = [];
+    for (let i = 0; i <= teeth; i++) pts.push(((i / teeth) * 100).toFixed(2) + '% ' + (i % 2 ? '0%' : '1.6%'));
+    const clip = 'polygon(' + pts.join(', ') + ', 99.5% 94%, 96% 99%, 50% 100%, 4% 99%, 0.5% 94%)';
+    const logoH = Math.max(48, Math.round(w * 0.12));
+    const margin = Math.round(w * 0.05);
+    const labelLeft = margin + logoH + Math.round(w * 0.04);
+    const labelW = w - labelLeft - Math.round(w * 0.07);
+    return {
+      key, bag: b.bag, token: b.token, clip, logoH, labelW: 380,
+      aria: 'Bolsa de café ' + b.name + ' de Guates',
+      w: w + 'px', h: h + 'px',
+      sealTop: Math.round(h * 0.07) + 'px', valveTop: Math.round(h * 0.1) + 'px', valve: Math.round(w * 0.06) + 'px',
+      logoLeft: margin + logoH + 'px', logoBottom: Math.round(h * 0.07) + 'px',
+      labelLeft: labelLeft + 'px', labelTop: Math.round(h * 0.17) + 'px', labelScale: (labelW / 380).toFixed(3),
+    };
+  }
+}
+</script>
+</body>
+</html>

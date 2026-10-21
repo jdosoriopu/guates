@@ -1,0 +1,20 @@
+<!-- @dsCard group="Voice" height=210 subtitle="The six tone-of-voice traits as brush pills" -->
+<!doctype html>
+<html lang="es">
+<head><meta charset="utf-8"><title>VoiceTag</title>
+<style>
+  .tags { display: flex; flex-wrap: wrap; gap: var(--space-3) var(--space-4); padding: var(--space-6); align-items: center; }
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script>
+  var G = window.Guates, h = React.createElement;
+  var tilts = [-2, 1.5, -1, 2, -2.5, 1];
+  ReactDOM.createRoot(document.getElementById('root')).render(
+    h('div', { className: 'tags' }, G.voice.map(function (v, i) {
+      return h(G.VoiceTag, { key: v.word, tone: v.tone, tilt: tilts[i], size: 'lg' }, v.word);
+    })));
+</script>
+</body>
+</html>

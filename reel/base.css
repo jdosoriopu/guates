@@ -1,0 +1,18 @@
+#stage { --ground:#624532; --main:#cd591c; --second:#f6f3ed; --accent:#f2d139; color:var(--second); font-family:var(--sans, system-ui, sans-serif) }
+.ground { position:absolute; inset:0; background:var(--ground) }
+.words { position:absolute; margin:0; display:flex; flex-direction:column; gap:28px } .words > * { margin:0 }
+.line { font-family:var(--display, var(--sans, system-ui, sans-serif)); font-size:104px; line-height:1.04; font-weight:700; text-wrap:balance; letter-spacing:-.01em }
+.sub { font-size:42px; line-height:1.3; font-weight:400; color:color-mix(in srgb, var(--second) 82%, var(--ground)) }
+.hand { font-family:var(--serif, cursive); color:var(--accent); font-size:72px; line-height:1 }
+.mono { font-family:var(--mono, ui-monospace, monospace) }
+.eyebrow { font-size:30px; letter-spacing:.14em; text-transform:uppercase; font-weight:700; color:var(--accent) }
+.card { position:absolute; border-radius:32px; overflow:hidden; box-sizing:border-box }
+.paper { background:var(--second); color:var(--ground) }
+.panel { background:color-mix(in srgb, var(--ground) 82%, black); color:var(--second) }
+.chip { display:inline-flex; align-items:center; gap:12px; padding:14px 28px; border-radius:999px; font-size:30px; font-weight:700 }
+.pill { border-radius:999px }
+.art { position:absolute; inset:0; width:100%; height:100%; overflow:visible }
+.grano-svg { width:100%; height:100%; display:block } .grano-svg path { fill:currentColor }
+.logo-svg { width:100%; height:auto; display:block } .logo-svg path { fill:currentColor }
+.c-lavado { background:#4e71f0 } .c-honey { background:#f2d139 } .c-natural { background:#364831 } .c-platea { background:#81164b } .c-regional { background:#624532 }
+.c-cielo { background:#9db5ec } .c-luz { background:#f5e380 } .c-brote { background:#91ad80 } .c-rosa { background:#db92ba } .c-naranja { background:var(--main) }

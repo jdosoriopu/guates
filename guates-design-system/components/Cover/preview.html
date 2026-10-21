@@ -1,0 +1,59 @@
+<!-- @dsCard height=288 -->
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>Guates</title>
+<style>
+  html, body { margin: 0; height: 100%; }
+  body { background: var(--surface); color: var(--ink); font-family: var(--font-sans); overflow: hidden; }
+  .cover { position: relative; width: 960px; height: 288px; overflow: hidden; }
+  .art { position: absolute; top: 0; left: 480px; width: 480px; height: 288px; overflow: hidden; }
+  .art svg { display: block; width: 480px; height: 288px; }
+  .azul { fill: var(--azul-exploracion); }
+  .sol { fill: var(--sol-de-sabana); }
+  .naranja { fill: var(--naranja-tostion); }
+  .rosa { fill: var(--rosa-floracion); }
+  .cielo { fill: var(--cielo-abierto); }
+  .cut { fill: var(--surface); }
+  .col, .cut { rx: var(--radius-none); }
+  .words { position: absolute; left: var(--space-8); bottom: var(--space-8); max-width: 440px; }
+  .name { margin: 0; line-height: 0; }
+  .tag { margin: var(--space-2) 0 0 4px; font-size: 14px; line-height: 20px; color: var(--ink-muted); }
+</style>
+</head>
+<body>
+<div class="cover">
+<div class="art" aria-hidden="true">
+<svg viewBox="0 0 480 288" width="480" height="288">
+<!--
+  blocks      five full-height columns at full value, bleeding top and bottom: azul-exploracion 128 · sol-de-sabana 64 · naranja-tostion 96 · rosa-floracion 48 · cielo-abierto 112 (off the right edge) — about 46% of 960×288
+  arrangement a strip of unequal bands, the way the brandbook's palette sheet and the franjas pattern stack colour, starting space-8 right of the text zone
+  pattern     cruces: the brand's woven-bands pattern ("franjas, cruces y formas orgánicas"); three surface-coloured bands, space-6 tall at a 84px pitch, pass over every other column like the woven intro frame
+  scales      widths in space-12/space-16 multiples (48, 64, 96, 112, 128); band height space-6; corners radius-none (the identity is square-cornered)
+-->
+<rect class="col azul" x="32" y="0" width="128" height="288"/>
+<rect class="col sol" x="160" y="0" width="64" height="288"/>
+<rect class="col naranja" x="224" y="0" width="96" height="288"/>
+<rect class="col rosa" x="320" y="0" width="48" height="288"/>
+<rect class="col cielo" x="368" y="0" width="112" height="288"/>
+<rect class="cut" x="32" y="48" width="128" height="24"/>
+<rect class="cut" x="224" y="48" width="96" height="24"/>
+<rect class="cut" x="368" y="48" width="112" height="24"/>
+<rect class="cut" x="160" y="132" width="64" height="24"/>
+<rect class="cut" x="320" y="132" width="48" height="24"/>
+<rect class="cut" x="32" y="216" width="128" height="24"/>
+<rect class="cut" x="224" y="216" width="96" height="24"/>
+<rect class="cut" x="368" y="216" width="112" height="24"/>
+</svg>
+</div>
+<div class="words">
+<h1 class="name" id="name"></h1>
+<p class="tag">Donde empieza otro mapa del café.</p>
+</div>
+</div>
+<script>
+  ReactDOM.createRoot(document.getElementById('name')).render(React.createElement(window.Guates.Logo, { version: 'alternativo', color: 'ink', height: 104, title: 'Guates' }));
+</script>
+</body>
+</html>

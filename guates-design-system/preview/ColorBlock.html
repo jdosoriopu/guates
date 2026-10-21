@@ -1,0 +1,29 @@
+<!doctype html>
+<html lang="es">
+<head><meta name="viewport" content="width=device-width, initial-scale=1"><script>document.documentElement.setAttribute("data-theme", location.hash === "#dark" ? "dark" : "light");</script><link rel="stylesheet" href="../tokens.css"><link rel="stylesheet" href="../components/bundle.css"><script src="https://cdn.jsdelivr.net/npm/react@18.3.1/umd/react.production.min.js"></script><script src="https://cdn.jsdelivr.net/npm/react-dom@18.3.1/umd/react-dom.production.min.js"></script><script src="../components/bundle.js"></script><meta charset="utf-8"><title>ColorBlock</title>
+<style>
+  .grid { display: grid; grid-template-columns: repeat(6, 1fr); }
+  .grid .g-block { padding: var(--space-4); min-height: 140px; display: flex; flex-direction: column; justify-content: space-between; gap: var(--space-2); }
+  .name { font: 400 20px/24px var(--font-slab); margin: 0; }
+  .meta { font: 400 12px/16px var(--font-sans); margin: 0; font-variant-numeric: tabular-nums; }
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script>
+  var G = window.Guates, h = React.createElement;
+  var order = [];
+  G.families.forEach(function (f) { order.push(f.strong); });
+  G.families.forEach(function (f) { order.push(f.light); });
+  var byKey = {};
+  G.palette.forEach(function (c) { byKey[c.key] = c; });
+  ReactDOM.createRoot(document.getElementById('root')).render(
+    h('div', { className: 'grid' }, order.map(function (key) {
+      var c = byKey[key], ink = G.inkFor(key);
+      return h(G.ColorBlock, { key: key, tone: key },
+        h('p', { className: 'name' }, c.name),
+        h('p', { className: 'meta' }, c.hex + ' · ' + G.contrast(key, ink).toFixed(1) + ':1'));
+    })));
+</script>
+</body>
+</html>
