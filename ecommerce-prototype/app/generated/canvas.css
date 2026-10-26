@@ -5,6 +5,18 @@ body{margin:0;background:#f6f3ed}
 a{color:#81164b}a:hover{color:#6a1240}
 .gq button,.gq input,.gq select,.gq textarea{font-family:inherit}
 .gq button:focus-visible,.gq input:focus-visible,.gq select:focus-visible,.gq textarea:focus-visible,.gq a:focus-visible{outline:2px solid transparent;box-shadow:var(--focus-ring)}
+.gq-quick-trigger,.gq-quick-choices button,.gq-quick-confirm{border:2px solid var(--cafe-de-origen);border-radius:var(--radius-pill);padding:10px 18px;min-height:44px;background:var(--crema-de-papel);color:var(--cafe-de-origen);font-size:15px;font-weight:700;cursor:pointer}
+.gq-quick-options{display:flex;flex-direction:column;gap:var(--space-4);border-top:1px solid var(--cafe-de-origen);padding-top:var(--space-6)}
+.gq-quick-options p{margin:0 0 var(--space-2);line-height:1.5}
+.gq-quick-choices{display:flex;flex-wrap:wrap;gap:var(--space-2)}
+.gq-quick-choices button span{display:block;font-size:13px;font-weight:400;margin-top:4px}
+.gq-quick-choices button[aria-pressed=true]{background:var(--cafe-de-origen);color:var(--crema-de-papel)}
+.gq-quick-confirm{background:var(--cereza-profunda);color:var(--crema-de-papel);border-color:var(--cereza-profunda);align-self:flex-start}
+.gq-quick-confirm:disabled{background:var(--crema-de-papel);color:var(--cafe-de-origen);border-style:dashed;cursor:not-allowed}
+.gq-recommendation{display:grid;grid-template-columns:minmax(0,1fr) 260px;background:var(--crema-de-papel);color:var(--cafe-de-origen);scroll-margin-top:100px}
+.gq-recommendation-copy{min-width:0;padding:var(--space-8);display:flex;flex-direction:column;gap:var(--space-6)}
+.gq-recommendation-art{padding:var(--space-6);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:var(--space-6)}
+@media(max-width:760px){.gq-recommendation{grid-template-columns:minmax(0,1fr)}.gq-recommendation-copy{padding:var(--space-6)}.gq-recommendation-art{flex-direction:row;justify-content:space-between;padding:var(--space-4) var(--space-6);gap:var(--space-3)}.gq-recommendation-art svg{width:88px!important;height:88px!important}}
 .gq .gq-pill{transition:background-color 120ms,color 120ms}
 .gq .gq-pill:hover{background:#624532 !important;color:#f6f3ed !important}
 .gq .gq-dark .gq-pill:hover{background:#f5e380 !important;color:#624532 !important}

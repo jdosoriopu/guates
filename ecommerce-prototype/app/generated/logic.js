@@ -391,6 +391,7 @@ export class CanvasLogic extends React.Component {
     const emoList = emoIsAnimo ? MOODS : TASTES;
     const emoSel = emoList.find((m) => m.key === (emoIsAnimo ? s.moodAnimo : s.moodCostumbre)) || emoList[0];
     const ep = BY[emoSel.product], eper = PERSONA[ep.key] || { title: '', animal: '', line: '' };
+    const emoChosen = emoIsAnimo ? s.chosenAnimo === emoSel.key : s.chosenCostumbre === emoSel.key;
     const WLINE = { regional: [C.cafe, C.crema], lavado: [C.azul, '#000'], natural: [C.moriche, C.crema], honey: [C.naranja, '#000'], platea: [C.cereza, C.crema] };
     const [wLine, wOn] = WLINE[ep.key] || [C.cafe, C.crema];
     const wc = this.city(), wNat = ep.process === 'Natural', wHoney = ep.process === 'Honey', wDry = String(ep.dry).replace('.', ',');
@@ -433,15 +434,27 @@ export class CanvasLogic extends React.Component {
       band: ep.bag,
       modes: [['animo', 'Por ánimo'], ['costumbre', 'Por costumbre']].map(([k, label]) => { const on = (k === 'animo') === emoIsAnimo; return { label, sel: on ? 'true' : 'false', bg: on ? C.cafe : C.crema, fg: on ? C.crema : C.cafe, pick: () => this.setState({ moodMode: k }) }; }),
       groupLabel: emoIsAnimo ? 'Cómo te sientes' : 'Tu costumbre',
-      options: emoList.map((m) => { const on = m === emoSel, x = BY[m.product]; return { label: m.label, coffee: x.name, dot: x.bag, sel: on ? 'true' : 'false', bg: on ? C.cafe : C.crema, fg: on ? C.crema : C.cafe, pick: () => this.setState(emoIsAnimo ? { moodAnimo: m.key } : { moodCostumbre: m.key }) }; }),
-      over: 'Elegiste «' + emoSel.label.toLowerCase() + '»',
-      name: ep.name, idea: ep.idea, why: emoSel.why, bag: ep.bag, art: ep.bagArt, artToken: ep.artToken,
+      options: emoList.map((m) => { const on = m === emoSel, x = BY[m.product]; return { label: m.label, coffee: x.name, dot: x.bag, sel: on ? 'true' : 'false', bg: on ? C.cafe : C.crema, fg: on ? C.crema : C.cafe, pick: () => this.setState(emoIsAnimo ? { moodAnimo: m.key, chosenAnimo: m.key } : { moodCostumbre: m.key, chosenCostumbre: m.key }) }; }),
+      over: emoChosen ? 'Elegiste «' + emoSel.label.toLowerCase() + '»' : 'Una taza para empezar',
+      name: ep.name, idea: ep.idea, why: emoChosen ? emoSel.why : ep.feel, bag: ep.bag, art: ep.bagArt, artToken: ep.artToken,
       persona: eper.title, animal: eper.animal, line: eper.line, personality: ep.personality,
       traits: ep.traits.map((label, i) => ({ label, tone: TONES[i][0], ink: TONES[i][1], tilt: TONES[i][2] })),
       feel: ep.feel, notes: ep.notes.map((n) => ({ n, dot: ep.label })),
       facts: [{ k: 'Origen', v: ep.place }, { k: 'Finca', v: ep.farm }, { k: 'Productor', v: ep.producer }, { k: 'Variedad', v: ep.variety }, { k: 'Proceso', v: ep.process }, { k: 'Altitud', v: dots(ep.alt) + ' m' }, { k: 'Cosecha', v: ep.harvest }],
       curious: CURIOUS[ep.key], price: money(priceOf(ep.key, 0)),
-      open: () => this.open(ep.key), quick: () => this.addProduct(ep.key, 0, 'grano', 1),
+      open: () => this.open(ep.key),
+      customizing: s.quickProduct === ep.key,
+      quick: () => this.setState({ quickProduct: s.quickProduct === ep.key ? null : ep.key, quickSize: 0, quickGrind: null }),
+      sizes: SIZES.map((x, i) => ({ label: x.label, on: (s.quickSize || 0) === i, pick: () => this.setState({ quickSize: i }) })),
+      grinds: GRINDS.map((g) => ({ ...g, on: s.quickGrind === g.key, pick: () => this.setState({ quickGrind: g.key }) })),
+      needsGrind: !GRINDS.some((g) => g.key === s.quickGrind),
+      selectedPrice: money(priceOf(ep.key, s.quickSize || 0)),
+      selection: GRINDS.some((g) => g.key === s.quickGrind) ? ep.name + ' · ' + SIZES[s.quickSize || 0].label + ' · ' + GRINDS.find((g) => g.key === s.quickGrind).label : 'Elige si lo quieres en grano o molido antes de agregarlo.',
+      addSelected: () => {
+        if (s.quickProduct !== ep.key || !GRINDS.some((g) => g.key === s.quickGrind)) return;
+        this.addProduct(ep.key, s.quickSize || 0, s.quickGrind, 1);
+        this.setState({ quickProduct: null });
+      },
     };
     const moodTabs = [['animo', 'Por ánimo'], ['costumbre', 'Por costumbre']].map(([k, label]) => {
       const sel = (k === 'animo') === isAnimo;

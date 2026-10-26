@@ -19,6 +19,18 @@ body{margin:0;background:#f6f3ed}
 a{color:#81164b}a:hover{color:#6a1240}
 .gq button,.gq input,.gq select,.gq textarea{font-family:inherit}
 .gq button:focus-visible,.gq input:focus-visible,.gq select:focus-visible,.gq textarea:focus-visible,.gq a:focus-visible{outline:2px solid transparent;box-shadow:var(--focus-ring)}
+.gq-quick-trigger,.gq-quick-choices button,.gq-quick-confirm{border:2px solid var(--cafe-de-origen);border-radius:var(--radius-pill);padding:10px 18px;min-height:44px;background:var(--crema-de-papel);color:var(--cafe-de-origen);font-size:15px;font-weight:700;cursor:pointer}
+.gq-quick-options{display:flex;flex-direction:column;gap:var(--space-4);border-top:1px solid var(--cafe-de-origen);padding-top:var(--space-6)}
+.gq-quick-options p{margin:0 0 var(--space-2);line-height:1.5}
+.gq-quick-choices{display:flex;flex-wrap:wrap;gap:var(--space-2)}
+.gq-quick-choices button span{display:block;font-size:13px;font-weight:400;margin-top:4px}
+.gq-quick-choices button[aria-pressed=true]{background:var(--cafe-de-origen);color:var(--crema-de-papel)}
+.gq-quick-confirm{background:var(--cereza-profunda);color:var(--crema-de-papel);border-color:var(--cereza-profunda);align-self:flex-start}
+.gq-quick-confirm:disabled{background:var(--crema-de-papel);color:var(--cafe-de-origen);border-style:dashed;cursor:not-allowed}
+.gq-recommendation{display:grid;grid-template-columns:minmax(0,1fr) 260px;background:var(--crema-de-papel);color:var(--cafe-de-origen);scroll-margin-top:100px}
+.gq-recommendation-copy{min-width:0;padding:var(--space-8);display:flex;flex-direction:column;gap:var(--space-6)}
+.gq-recommendation-art{padding:var(--space-6);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:var(--space-6)}
+@media(max-width:760px){.gq-recommendation{grid-template-columns:minmax(0,1fr)}.gq-recommendation-copy{padding:var(--space-6)}.gq-recommendation-art{flex-direction:row;justify-content:space-between;padding:var(--space-4) var(--space-6);gap:var(--space-3)}.gq-recommendation-art svg{width:88px!important;height:88px!important}}
 .gq .gq-pill{transition:background-color 120ms,color 120ms}
 .gq .gq-pill:hover{background:#624532 !important;color:#f6f3ed !important}
 .gq .gq-dark .gq-pill:hover{background:#f5e380 !important;color:#624532 !important}
@@ -220,59 +232,55 @@ a{color:#81164b}a:hover{color:#6a1240}
 </button>
 </sc-for>
 </div>
-<article id="gq-mood-panel" role="tabpanel" aria-live="polite" style="display: flex; flex-wrap: wrap; background: #F6F3ED">
-<div style="flex: 1 1 280px; max-width: 360px; min-height: 380px; box-sizing: border-box; padding: 28px; display: flex; flex-direction: column; justify-content: space-between; align-items: flex-start; gap: 16px; background: {{emo.bag}}; border-right: 1px solid #62453240">
+<article id="gq-mood-panel" role="tabpanel" aria-live="polite" class="gq-recommendation">
+<div class="gq-recommendation-copy">
+<div style="display: flex; flex-direction: column; gap: 8px">
+<p style="margin: 0; font-size: 12px; line-height: 16px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: var(--cafe-de-origen)">{{emo.over}}</p>
+<h3 style="margin: 0; font-family: 'Roboto Slab', Georgia, serif; font-size: clamp(40px, 4.4vw, 56px); line-height: 1; font-weight: 600; color: #624532">{{emo.name}}</h3>
+<p style="margin: 0; font-family: 'Roboto Slab', Georgia, serif; font-size: 22px; line-height: 28px; font-weight: 300; color: #624532">{{emo.idea}}</p>
+</div>
+<p style="margin: 0; max-width: 38em; font-size: 19px; line-height: 30px; font-weight: 300; color: var(--cafe-de-origen)">{{emo.why}}</p>
+<div style="display: flex; flex-direction: column; gap: var(--space-2)">
+<p style="margin: 0; font-size: 14px; font-weight: 700">Así sabe</p>
+<ul style="margin: 0; padding: 0; list-style: none; display: flex; flex-wrap: wrap; gap: var(--space-2)">
+<sc-for list="{{emo.notes}}" as="n" hint-placeholder-count="3">
+<li style="padding: 6px 12px; border: 1px solid var(--cafe-de-origen); border-radius: var(--radius-sm); font-size: 15px; line-height: 22px">{{n.n}}</li>
+</sc-for>
+</ul>
+</div>
+<p style="margin: 0; font-size: 18px; line-height: 26px; font-weight: 700">Desde {{emo.price}} / 250 g <span style="font-size: 13px; font-weight: 400; white-space: nowrap">· dato de muestra</span></p>
+<div style="display: flex; flex-wrap: wrap; align-items: center; gap: 12px 16px">
+<x-import component-from-global-scope="Guates.Button" variant="primary" on-click="{{emo.open}}">Conocer este café</x-import>
+<button type="button" class="gq-quick-trigger" onClick="{{emo.quick}}" aria-expanded="{{emo.customizing}}" aria-controls="gq-quick-options">Elegir presentación y molienda</button>
+
+</div>
+<sc-if value="{{emo.customizing}}">
+<section id="gq-quick-options" class="gq-quick-options" aria-label="Configura tu café">
+<h4 style="margin: 0; font-family: var(--font-slab); font-size: 20px">Tu {{emo.name}}, como lo prefieres</h4>
+<div role="group" aria-label="Presentación de compra rápida">
+<p>Presentación</p>
+<div class="gq-quick-choices"><sc-for list="{{emo.sizes}}" as="o">
+<button type="button" onClick="{{o.pick}}" aria-pressed="{{o.on}}">{{o.label}}</button>
+</sc-for></div>
+</div>
+<div role="group" aria-label="Molienda de compra rápida">
+<p>Molienda: cómo preparamos el grano para tu cafetera.</p>
+<div class="gq-quick-choices"><sc-for list="{{emo.grinds}}" as="o">
+<button type="button" onClick="{{o.pick}}" aria-pressed="{{o.on}}">{{o.label}}<span>{{o.hint}}</span></button>
+</sc-for></div>
+</div>
+<p role="status" style="margin: 0">{{emo.selection}}</p>
+<button type="button" class="gq-quick-confirm" disabled="{{emo.needsGrind}}" onClick="{{emo.addSelected}}">Agregar al carrito · {{emo.selectedPrice}}</button>
+<p style="margin: 0; font-size: 13px">Precio: dato de muestra. Envío calculado en el carrito.</p>
+</section>
+</sc-if>
+</div>
+<div class="gq-recommendation-art" style="background: {{emo.bag}}">
 <x-import component-from-global-scope="Guates.VoiceTag" tone="crema-de-papel" ink="cafe-de-origen" tilt="{{sz.tilt}}">{{emo.persona}}</x-import>
 <div style="align-self: center; line-height: 0">
 <x-import component-from-global-scope="Guates.Illustration" name="{{emo.art}}" color="{{emo.artToken}}" sticker="crema-de-papel" size="{{sz.moodArt2}}" title="{{emo.animal}}"></x-import>
 </div>
-<p style="margin: 0; font-size: 14px; line-height: 20px; font-weight: 600; color: #000">Su animal: {{emo.animal}}</p>
-</div>
-<div style="flex: 999 1 480px; min-width: 0; padding: 32px; box-sizing: border-box; display: flex; flex-direction: column; gap: 24px">
-<div style="display: flex; flex-direction: column; gap: 8px">
-<p style="margin: 0; font-size: 12px; line-height: 16px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: #7A6555">{{emo.over}}</p>
-<h3 style="margin: 0; font-family: 'Roboto Slab', Georgia, serif; font-size: clamp(40px, 4.4vw, 56px); line-height: 1; font-weight: 600; color: #624532">{{emo.name}}</h3>
-<p style="margin: 0; font-family: 'Roboto Slab', Georgia, serif; font-size: 22px; line-height: 28px; font-weight: 300; color: #624532">{{emo.idea}}</p>
-</div>
-<p style="margin: 0; max-width: 38em; font-size: 19px; line-height: 30px; font-weight: 300; color: #000">{{emo.why}}</p>
-<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 28px; padding-top: 24px; border-top: 1px solid #62453240">
-<div style="display: flex; flex-direction: column; gap: 12px">
-<p style="margin: 0; font-size: 12px; line-height: 16px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: #7A6555">Así sabe</p>
-<ul style="margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: 6px">
-<sc-for list="{{emo.notes}}" as="n" hint-placeholder-count="3">
-<li style="display: flex; align-items: center; gap: 10px; font-family: 'Roboto Slab', Georgia, serif; font-size: 22px; line-height: 28px; font-weight: 400; color: #624532"><span aria-hidden="true" style="width: 10px; height: 10px; flex: none; border-radius: 50%; background: {{n.dot}}; border: 1px solid #624532"></span>{{n.n}}</li>
-</sc-for>
-</ul>
-<p style="margin: 0; font-size: 15px; line-height: 22px; color: #000">{{emo.feel}}</p>
-</div>
-<div style="display: flex; flex-direction: column; gap: 12px">
-<p style="margin: 0; font-size: 12px; line-height: 16px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: #7A6555">Su personalidad</p>
-<p style="margin: 0; font-family: 'Caveat Brush', cursive; font-size: 26px; line-height: 30px; color: #81164B">{{emo.personality}}</p>
-<p style="margin: 0; font-size: 15px; line-height: 22px; color: #000">{{emo.line}}</p>
-<div style="display: flex; flex-wrap: wrap; gap: 8px">
-<sc-for list="{{emo.traits}}" as="t" hint-placeholder-count="3">
-<x-import component-from-global-scope="Guates.VoiceTag" tone="{{t.tone}}" ink="{{t.ink}}" tilt="{{t.tilt}}">{{t.label}}</x-import>
-</sc-for>
-</div>
-</div>
-<div style="display: flex; flex-direction: column; gap: 12px">
-<p style="margin: 0; font-size: 12px; line-height: 16px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: #7A6555">Los datos</p>
-<dl style="margin: 0; display: flex; flex-direction: column; border-top: 1px solid #624532">
-<sc-for list="{{emo.facts}}" as="f" hint-placeholder-count="7">
-<div style="display: flex; justify-content: space-between; gap: 12px; padding: 7px 0; border-bottom: 1px solid #62453240">
-<dt style="font-size: 14px; line-height: 20px; color: #7A6555">{{f.k}}</dt>
-<dd style="margin: 0; font-size: 14px; line-height: 20px; font-weight: 600; text-align: right; color: #624532">{{f.v}}</dd>
-</div>
-</sc-for>
-</dl>
-</div>
-</div>
-<p style="margin: 0; padding: 14px 18px; background: #F5E380; border-radius: 14px; font-size: 15px; line-height: 22px; color: #000"><strong style="font-weight: 700">Dato curioso.</strong> {{emo.curious}}</p>
-<div style="display: flex; flex-wrap: wrap; align-items: center; gap: 12px 16px">
-<x-import component-from-global-scope="Guates.Button" variant="primary" on-click="{{emo.open}}">Ver su recorrido</x-import>
-<x-import component-from-global-scope="Guates.Button" variant="secondary" on-click="{{emo.quick}}">Agregar 250 g · {{emo.price}}</x-import>
-<span style="margin-left: auto; font-size: 12px; line-height: 16px; color: #7A6555">Altitud, cosecha y precio de muestra.</span>
-</div>
+
 </div>
 </article>
 </div>
@@ -332,7 +340,7 @@ a{color:#81164b}a:hover{color:#6a1240}
 <span style="font-size: 14px; line-height: 20px; color: #7A6555">250 g · precio de muestra</span>
 </div>
 <div style="display: flex; flex-wrap: wrap; align-items: center; gap: 12px">
-<x-import component-from-global-scope="Guates.Button" variant="primary" size="lg" on-click="{{emo.quick}}">Agregar al carrito</x-import>
+<x-import component-from-global-scope="Guates.Button" variant="primary" size="lg" on-click="{{emo.open}}">Elegir presentación y molienda</x-import>
 <x-import component-from-global-scope="Guates.Button" variant="secondary" size="lg" on-click="{{goSub}}">Recíbelo cada 2 o 4 semanas</x-import>
 </div>
 <button type="button" class="gq-link" onClick="{{emo.open}}" style="align-self: flex-start; min-height: 44px; padding: 0; border: 0; background: transparent; color: #81164B; font-size: 16px; font-weight: 500; cursor: pointer">Ver la ficha completa del {{emo.name}}</button>
@@ -1325,6 +1333,7 @@ class Component extends DCLogic {
     const emoList = emoIsAnimo ? MOODS : TASTES;
     const emoSel = emoList.find((m) => m.key === (emoIsAnimo ? s.moodAnimo : s.moodCostumbre)) || emoList[0];
     const ep = BY[emoSel.product], eper = PERSONA[ep.key] || { title: '', animal: '', line: '' };
+    const emoChosen = emoIsAnimo ? s.chosenAnimo === emoSel.key : s.chosenCostumbre === emoSel.key;
     const WLINE = { regional: [C.cafe, C.crema], lavado: [C.azul, '#000'], natural: [C.moriche, C.crema], honey: [C.naranja, '#000'], platea: [C.cereza, C.crema] };
     const [wLine, wOn] = WLINE[ep.key] || [C.cafe, C.crema];
     const wc = this.city(), wNat = ep.process === 'Natural', wHoney = ep.process === 'Honey', wDry = String(ep.dry).replace('.', ',');
@@ -1367,15 +1376,27 @@ class Component extends DCLogic {
       band: ep.bag,
       modes: [['animo', 'Por ánimo'], ['costumbre', 'Por costumbre']].map(([k, label]) => { const on = (k === 'animo') === emoIsAnimo; return { label, sel: on ? 'true' : 'false', bg: on ? C.cafe : C.crema, fg: on ? C.crema : C.cafe, pick: () => this.setState({ moodMode: k }) }; }),
       groupLabel: emoIsAnimo ? 'Cómo te sientes' : 'Tu costumbre',
-      options: emoList.map((m) => { const on = m === emoSel, x = BY[m.product]; return { label: m.label, coffee: x.name, dot: x.bag, sel: on ? 'true' : 'false', bg: on ? C.cafe : C.crema, fg: on ? C.crema : C.cafe, pick: () => this.setState(emoIsAnimo ? { moodAnimo: m.key } : { moodCostumbre: m.key }) }; }),
-      over: 'Elegiste «' + emoSel.label.toLowerCase() + '»',
-      name: ep.name, idea: ep.idea, why: emoSel.why, bag: ep.bag, art: ep.bagArt, artToken: ep.artToken,
+      options: emoList.map((m) => { const on = m === emoSel, x = BY[m.product]; return { label: m.label, coffee: x.name, dot: x.bag, sel: on ? 'true' : 'false', bg: on ? C.cafe : C.crema, fg: on ? C.crema : C.cafe, pick: () => this.setState(emoIsAnimo ? { moodAnimo: m.key, chosenAnimo: m.key } : { moodCostumbre: m.key, chosenCostumbre: m.key }) }; }),
+      over: emoChosen ? 'Elegiste «' + emoSel.label.toLowerCase() + '»' : 'Una taza para empezar',
+      name: ep.name, idea: ep.idea, why: emoChosen ? emoSel.why : ep.feel, bag: ep.bag, art: ep.bagArt, artToken: ep.artToken,
       persona: eper.title, animal: eper.animal, line: eper.line, personality: ep.personality,
       traits: ep.traits.map((label, i) => ({ label, tone: TONES[i][0], ink: TONES[i][1], tilt: TONES[i][2] })),
       feel: ep.feel, notes: ep.notes.map((n) => ({ n, dot: ep.label })),
       facts: [{ k: 'Origen', v: ep.place }, { k: 'Finca', v: ep.farm }, { k: 'Productor', v: ep.producer }, { k: 'Variedad', v: ep.variety }, { k: 'Proceso', v: ep.process }, { k: 'Altitud', v: dots(ep.alt) + ' m' }, { k: 'Cosecha', v: ep.harvest }],
       curious: CURIOUS[ep.key], price: money(priceOf(ep.key, 0)),
-      open: () => this.open(ep.key), quick: () => this.addProduct(ep.key, 0, 'grano', 1),
+      open: () => this.open(ep.key),
+      customizing: s.quickProduct === ep.key,
+      quick: () => this.setState({ quickProduct: s.quickProduct === ep.key ? null : ep.key, quickSize: 0, quickGrind: null }),
+      sizes: SIZES.map((x, i) => ({ label: x.label, on: (s.quickSize || 0) === i, pick: () => this.setState({ quickSize: i }) })),
+      grinds: GRINDS.map((g) => ({ ...g, on: s.quickGrind === g.key, pick: () => this.setState({ quickGrind: g.key }) })),
+      needsGrind: !GRINDS.some((g) => g.key === s.quickGrind),
+      selectedPrice: money(priceOf(ep.key, s.quickSize || 0)),
+      selection: GRINDS.some((g) => g.key === s.quickGrind) ? ep.name + ' · ' + SIZES[s.quickSize || 0].label + ' · ' + GRINDS.find((g) => g.key === s.quickGrind).label : 'Elige si lo quieres en grano o molido antes de agregarlo.',
+      addSelected: () => {
+        if (s.quickProduct !== ep.key || !GRINDS.some((g) => g.key === s.quickGrind)) return;
+        this.addProduct(ep.key, s.quickSize || 0, s.quickGrind, 1);
+        this.setState({ quickProduct: null });
+      },
     };
     const moodTabs = [['animo', 'Por ánimo'], ['costumbre', 'Por costumbre']].map(([k, label]) => {
       const sel = (k === 'animo') === isAnimo;
