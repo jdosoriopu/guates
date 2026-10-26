@@ -1,0 +1,85 @@
+/* Generated canvas styles. Canonical tokens come from the design system. */
+
+
+body{margin:0;background:#f6f3ed}
+a{color:#81164b}a:hover{color:#6a1240}
+.gq button,.gq input,.gq select,.gq textarea{font-family:inherit}
+.gq button:focus-visible,.gq input:focus-visible,.gq select:focus-visible,.gq textarea:focus-visible,.gq a:focus-visible{outline:2px solid transparent;box-shadow:var(--focus-ring)}
+.gq .gq-pill{transition:background-color 120ms,color 120ms}
+.gq .gq-pill:hover{background:#624532 !important;color:#f6f3ed !important}
+.gq .gq-dark .gq-pill:hover{background:#f5e380 !important;color:#624532 !important}
+.gq .gq-link:hover{text-decoration:underline}
+.gq input[type=range]{accent-color:#81164b}
+.gq .gq-trail-line{stroke-dasharray:1;stroke-dashoffset:1}
+.gq .gq-trail.is-on .gq-trail-line{animation:gqTrace 3.2s ease-in-out forwards}
+.gq .gq-trail-pt{opacity:0;transform:scale(.4)}
+.gq .gq-trail.is-on .gq-trail-pt{animation:gqPop 360ms ease-out forwards}
+@keyframes gqTrace{to{stroke-dashoffset:0}}
+@keyframes gqPop{to{opacity:1;transform:scale(1)}}
+@media (prefers-reduced-motion: reduce){.gq .gq-trail-line{stroke-dashoffset:0;animation:none !important}.gq .gq-trail-pt{opacity:1;transform:none;animation:none !important}}
+.gq .gq-walk-row{display:grid;grid-template-columns:minmax(0,1fr) 88px minmax(0,1fr);align-items:center}
+.gq .gq-walk-row .gq-walk-card{grid-column:1;grid-row:1}
+.gq .gq-walk-row.is-right .gq-walk-card{grid-column:3}
+.gq .gq-walk-dot{grid-column:2;grid-row:1;justify-self:center;position:relative}
+.gq .gq-walk-line{left:calc(50% - 44px);width:88px}
+@media (max-width: 760px){.gq .gq-walk-row{grid-template-columns:56px minmax(0,1fr)}.gq .gq-walk-row .gq-walk-card,.gq .gq-walk-row.is-right .gq-walk-card{grid-column:2}.gq .gq-walk-dot{grid-column:1}.gq .gq-walk-line{left:0;width:56px}}
+.gq .gq-nav:hover{background:#0000000F !important}
+.gq .gq-nav[aria-current="page"]:hover{filter:brightness(0.97)}
+.gq .gq-in-a{animation:gqInA 600ms cubic-bezier(.2,.8,.2,1) both}
+.gq .gq-in-b{animation:gqInB 600ms cubic-bezier(.2,.8,.2,1) both}
+@keyframes gqInA{from{opacity:0;transform:translateY(24px) scale(.85) rotate(-4deg)}to{opacity:1;transform:none}}
+@keyframes gqInB{from{opacity:0;transform:translateY(24px) scale(.85) rotate(4deg)}to{opacity:1;transform:none}}
+.gq .gq-txt-a{animation:gqTxtA 500ms ease-out both}
+.gq .gq-txt-b{animation:gqTxtB 500ms ease-out both}
+@keyframes gqTxtA{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+@keyframes gqTxtB{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+.gq .gq-ani{transform-origin:50% 85%;animation:gqBob 3.2s ease-in-out infinite}
+.gq .gq-ani-chiguiro{animation:gqChig 3.4s ease-in-out infinite}
+.gq .gq-ani-nutria{animation:gqSwim 2.8s ease-in-out infinite}
+.gq .gq-ani-colibri{animation:gqHover 1.6s ease-in-out infinite}
+.gq .gq-ani-perezoso{transform-origin:50% 0;animation:gqSway 4.6s ease-in-out infinite}
+.gq .gq-ani-garza{animation:gqStep 3.8s ease-in-out infinite}
+@keyframes gqBob{0%,100%{transform:none}50%{transform:translateY(-8px)}}
+@keyframes gqChig{0%,100%{transform:none}40%{transform:translateY(-5px) scaleY(1.03)}60%{transform:translateY(-5px) scaleY(1.03) rotate(-1.5deg)}}
+@keyframes gqSwim{0%,100%{transform:translateX(-10px) rotate(-4deg)}50%{transform:translateX(10px) translateY(-4px) rotate(4deg)}}
+@keyframes gqHover{0%,100%{transform:translate(0,0) rotate(0)}25%{transform:translate(5px,-12px) rotate(4deg)}50%{transform:translate(0,-5px) rotate(0)}75%{transform:translate(-5px,-13px) rotate(-4deg)}}
+@keyframes gqSway{0%,100%{transform:rotate(-5deg)}50%{transform:rotate(5deg)}}
+@keyframes gqStep{0%,30%,100%{transform:none}45%{transform:translateY(-4px) rotate(-3deg)}60%{transform:translateY(2px) rotate(2deg)}75%{transform:none}}
+.gq .gq-bar-a{animation:gqBarA 5.5s linear both}
+.gq .gq-bar-b{animation:gqBarB 5.5s linear both}
+@keyframes gqBarA{from{transform:scaleX(0)}to{transform:scaleX(1)}}
+@keyframes gqBarB{from{transform:scaleX(0)}to{transform:scaleX(1)}}
+@media (prefers-reduced-motion: reduce){.gq .gq-ani,.gq .gq-in-a,.gq .gq-in-b,.gq .gq-txt-a,.gq .gq-txt-b{animation:none !important}.gq .gq-car-bar{display:none}}
+.gq .gqc-w{transform-box:view-box;transform-origin:82px 87px;animation:gqcFlap 83ms ease-in-out infinite alternate}
+.gq .gqc-w1{animation-delay:-17ms}
+.gq .gqc-w2{animation-delay:-33ms}
+@keyframes gqcFlap{from{transform:rotate(-9deg) scaleY(.52)}to{transform:rotate(15deg) scaleY(1)}}
+.gq .gqc-tail{transform-box:view-box;transform-origin:67px 127px;animation:gqcTail 375ms ease-in-out infinite alternate}
+@keyframes gqcTail{from{transform:rotate(-3.5deg)}to{transform:rotate(3.5deg)}}
+.gq .gqc-b{opacity:0;animation:gqcBoil 250ms steps(1,end) infinite}
+.gq .gqc-b1{animation-delay:-83ms}
+.gq .gqc-b2{animation-delay:-167ms}
+@keyframes gqcBoil{0%{opacity:1}33.33%{opacity:0}100%{opacity:0}}
+@media (prefers-reduced-motion: reduce){.gq .gqc-w,.gq .gqc-tail{animation:none !important}.gq .gqc-w1,.gq .gqc-w2,.gq .gqc-b{display:none}}
+.gq .gqa-p{transform-box:view-box}
+.gq .gqa-b{opacity:0;animation:gqcBoil 750ms steps(1,end) infinite}
+.gq .gqa-b1{animation-delay:-250ms}
+.gq .gqa-b2{animation-delay:-500ms}
+.gq .gqa-jit{animation:gqaJit 250ms steps(1,end) infinite}
+@keyframes gqaJit{0%{transform:translate(0,0)}33.33%{transform:translate(.6px,-.5px)}66.66%{transform:translate(-.5px,.5px)}}
+@keyframes gqaBreathe{0%,100%{transform:scale(1,1)}50%{transform:scale(1.03,1.055)}}
+@keyframes gqaBob{0%,15%,45%,100%{transform:translateY(0)}25%,35%{transform:translateY(3px)}}
+@keyframes gqaFloat{0%,100%{transform:translateY(-9px) rotate(-4deg)}50%{transform:translateY(7px) rotate(3.5deg)}}
+@keyframes gqaWave{0%,100%{transform:translateX(-7px)}50%{transform:translateX(7px)}}
+@keyframes gqaDrop{0%{transform:translate(0,0);opacity:0}15%{opacity:1}100%{transform:translate(-8px,-22px);opacity:0}}
+@keyframes gqaNod{0%,38%,100%{transform:rotate(0)}52%{transform:rotate(-13deg)}64%{transform:rotate(5deg)}76%{transform:rotate(-2deg)}86%{transform:rotate(0)}}
+@keyframes gqaSway{0%,100%{transform:rotate(-11deg)}50%{transform:rotate(11deg)}}
+@keyframes gqaTilt{0%,100%{transform:rotate(-8deg)}50%{transform:rotate(9deg)}}
+@keyframes gqaTail{0%,100%{transform:rotate(-11deg)}50%{transform:rotate(13deg)}}
+@keyframes gqaLift{0%,22%,100%{transform:rotate(0)}48%,68%{transform:rotate(-15deg)}80%{transform:rotate(-3deg)}}
+@keyframes gqaZ{0%{transform:translate(0,0) scale(.6);opacity:0}20%{opacity:1}100%{transform:translate(10px,-26px) scale(1.1);opacity:0}}
+@keyframes gqaPeck{0%,28%,100%{transform:rotate(0)}40%{transform:rotate(-18deg)}48%{transform:rotate(-15deg)}56%{transform:rotate(5deg)}64%{transform:rotate(0)}}
+@keyframes gqaStep{0%,8%,52%,100%{transform:rotate(0)}20%,38%{transform:rotate(-24deg)}}
+@keyframes gqaBreatheSlow{0%,100%{transform:scale(1,1)}50%{transform:scale(1.015,1.035)}}
+@media (prefers-reduced-motion: reduce){.gq .gqa-p,.gq .gqa-jit{animation:none !important}.gq .gqa-p[opacity]{display:none}}
+@media (prefers-reduced-motion: reduce){.gq *{transition:none !important;scroll-behavior:auto !important}}

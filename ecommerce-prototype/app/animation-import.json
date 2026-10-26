@@ -1,0 +1,14 @@
+{
+  "export": "Guates tienda el recorrido de tu taza – Prototipo · tienda Guates (3).html",
+  "sha256": "702556dd785f81a9f109063cb35efbecd361dcdefb235424f50a6e2544f9e111",
+  "scope": "Five carousel animals, matching keyframes, reduced-motion styles and selection flags.",
+  "markupSha256": "94bb5f7e3212dfce5401cff5165cfbc935f84748bd8604f822b8271b024bc588",
+  "cssSha256": "5d5eb1dfea1588a2e8d93794a29a335c910be739e2463646cba8d3a5141f36c5",
+  "excluded": [
+    "navigation changes",
+    "footer changes",
+    "bundled fonts",
+    "editor runtime",
+    "unchanged Canvas scenes"
+  ]
+}
