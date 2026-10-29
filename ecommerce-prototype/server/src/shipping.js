@@ -24,7 +24,7 @@ export function shippingFor({ subtotal, destinoDane, pesoG }, { db }) {
   const row = db.prepare("SELECT value FROM settings WHERE key = 'free_shipping_from'").get();
   const threshold = Number(row?.value) || DEFAULT_FREE_FROM;
   const missingForFree = Math.max(0, threshold - subtotal);
-  if (subtotal >= threshold) return { price: 0, free: true, covered: true, missingForFree };
   const { price, covered } = cotizarEnvio({ destinoDane, pesoG }, { db });
-  return { price, free: false, covered, missingForFree };
+  const free = covered && subtotal >= threshold;
+  return { price: free ? 0 : price, free, covered, missingForFree };
 }

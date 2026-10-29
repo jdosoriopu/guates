@@ -22,7 +22,8 @@ export const fixtureCatalog = () =>
 
 // overrides: { config (partial, merged over test config), fetch, fixture (Pulso catalog JSON), clock (start ms) }
 export function makeDeps({ config: configOverrides = {}, fetch, fixture, clock: start = 1_700_000_000_000 } = {}) {
-  const config = { ...loadConfig(baseEnv), ...configOverrides };
+  const base = loadConfig(baseEnv);
+  const config = { ...base, ...configOverrides, wompi: { ...base.wompi, ...configOverrides.wompi } };
   const db = openDb(config.dbPath);
   const clock = { t: start, now: () => clock.t, advance: (ms) => (clock.t += ms) };
   const pulso = createPulso({ config, fetch, fixture: fixture ?? fixtureCatalog() });

@@ -70,6 +70,49 @@ const MIGRATIONS = [
     confirmed INTEGER NOT NULL DEFAULT 0,
     PRIMARY KEY (dane_code, max_g)
   );`,
+  // Orders/order_items were unused placeholders; rebuilt keyed by the public order number.
+  `DROP TABLE order_items;
+  DROP TABLE orders;
+  CREATE TABLE orders (
+    no TEXT PRIMARY KEY,
+    token TEXT NOT NULL,
+    status TEXT NOT NULL,
+    customer_name TEXT NOT NULL,
+    customer_phone TEXT NOT NULL,
+    customer_email TEXT NOT NULL,
+    dane_code TEXT NOT NULL,
+    municipio TEXT NOT NULL,
+    departamento TEXT NOT NULL,
+    address TEXT NOT NULL,
+    notes TEXT,
+    subtotal INTEGER NOT NULL,
+    shipping INTEGER NOT NULL,
+    total INTEGER NOT NULL,
+    utm_source TEXT,
+    utm_medium TEXT,
+    utm_campaign TEXT,
+    utm_content TEXT,
+    landing TEXT,
+    wompi_tx TEXT,
+    pulso_sale_id TEXT,
+    tracking TEXT,
+    attention_reason TEXT,
+    privacy_accepted_at TEXT NOT NULL,
+    created_at TEXT NOT NULL,
+    updated_at TEXT NOT NULL
+  );
+  CREATE TABLE order_items (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    order_no TEXT NOT NULL REFERENCES orders(no),
+    variant_id TEXT NOT NULL,
+    category_key TEXT NOT NULL,
+    category_name TEXT NOT NULL,
+    variant_name TEXT NOT NULL,
+    grind TEXT NOT NULL,
+    qty INTEGER NOT NULL,
+    unit_price INTEGER NOT NULL
+  );
+  CREATE INDEX order_items_order ON order_items(order_no);`,
 ];
 
 // Seeds run only on empty tables so owner edits are never overwritten.

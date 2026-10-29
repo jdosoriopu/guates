@@ -1,6 +1,7 @@
 import Fastify from "fastify";
 import { CatalogUnavailable } from "./catalog.js";
 import { listPlaces, placeByCode } from "./places.js";
+import { OrderError } from "./orders.js";
 import { shippingFor, PACKAGING_G } from "./shipping.js";
 
 export function buildApp(deps) {
@@ -47,6 +48,21 @@ export function buildApp(deps) {
       pesoG += variant.weightG * line.qty;
     }
     return { subtotal, shipping: shippingFor({ subtotal, destinoDane, pesoG }, { db: deps.db }) };
+  });
+
+  app.post("/api/orders", async (req, reply) => {
+    try {
+      return reply.code(201).send(await deps.orders.create(req.body ?? {}));
+    } catch (err) {
+      if (!(err instanceof OrderError)) throw err;
+      return reply.code(err.status).send({ error: err.message, code: err.code, detail: err.detail });
+    }
+  });
+
+  app.get("/api/orders/:no", async (req, reply) => {
+    const view = deps.orders.publicView(req.params.no, req.query?.t);
+    if (!view) return reply.code(404).send({ error: "No encontramos ese pedido." });
+    return view;
   });
 
   return app;

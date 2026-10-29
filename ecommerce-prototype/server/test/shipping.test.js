@@ -75,3 +75,12 @@ test("places include Bogotá with 8-digit code", async () => {
   assert.match(res.headers["cache-control"], /max-age=86400/);
   assert.ok(res.json().length > 1000);
 });
+
+test("free shipping never masks an uncovered destination", () => {
+  const { db } = makeDeps();
+  addRate(db, "27001000", 1000, 0, 0);
+  const r = shippingFor({ subtotal: 200000, destinoDane: "27001000", pesoG: 500 }, { db });
+  assert.equal(r.covered, false);
+  const ok = shippingFor({ subtotal: 200000, destinoDane: "11001000", pesoG: 500 }, { db });
+  assert.deepEqual([ok.covered, ok.price, ok.free], [true, 0, true]);
+});
