@@ -29,7 +29,7 @@ npm run dev
 | Suscripción | Café fijo/explorador, frecuencias, presentaciones y molienda de Main | Gestión de pausas, saltos, cambios y cancelación |
 | Pasaporte de confirmación | Sellos y acción explícita «Ya lo probé» | Perfil local, notas, edición y cafés probados fuera de la tienda |
 | Móvil | Main adaptable, usado por Movil.dc.html | Viewport real de 390 px, sin el marco fijo del editor |
-| Moderna, ModernaMovil, Bolsa y propuestas Astra | Originales intactos | Se conservan como alternativas; no se fusionan con Main |
+| Propuestas Astra | Originales intactos | Se conservan como alternativas; no se fusionan con Main |
 | Escenas 3D | `scenes-3d/` y `astra/three/` intactos | No se cargan sobre el global de las escenas 2D |
 
 El Main actual dibuja el inicio con SVG. La ficha y los flujos comerciales usan Canvas 2D. No se sustituye esa elección por WebGL. La API 3D no incluye todas las funciones usadas por Main, como `trail`.
