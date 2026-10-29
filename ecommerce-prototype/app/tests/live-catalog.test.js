@@ -5,6 +5,7 @@ import {
   ALL_PRODUCTS,
   applyCatalog,
   isOnSale,
+  isListed,
   liveFor,
   variantById,
   defaultVariant,
@@ -96,4 +97,26 @@ test("validLine rejects old size-based lines", () => {
   assert.equal(validLine({ id: "v1|grano", key: "lavado", variantId: "v1", size: 1, grind: "grano", qty: 1 }), false);
   assert.equal(FEATURES.subscriptions, false);
   assert.equal(validLine({ id: "sub|x", sub: { mode: "fijo", product: "lavado", freq: 2, size: 0, grind: "media" }, qty: 1 }), false);
+});
+
+test("an empty catalog keeps PRODUCTS listed but nothing on sale", () => {
+  applyCatalog({ asOf: "2026-10-29T00:00:00Z", stale: false, categories: [] });
+  assert.equal(PRODUCTS.length, ALL_PRODUCTS.length);
+  for (const p of ALL_PRODUCTS) {
+    assert.equal(isOnSale(p.key), false);
+    assert.equal(isListed(p.key), true);
+    assert.equal(liveFor(p.key), null);
+  }
+  assert.equal(variantById("a2f190a6-7b8d-46c7-9c75-107889a6d3b7"), null);
+  applyCatalog(fixture);
+  assert.equal(isListed("honey"), false);
+});
+
+test("only a plain category on sale still lists products and sells the plain one", async () => {
+  applyCatalog(await storeCatalog({ as_of: "2026-10-29T00:00:00Z", items: [plain] }));
+  assert.equal(PRODUCTS.length, ALL_PRODUCTS.length);
+  assert.ok(ALL_PRODUCTS.every((p) => !isOnSale(p.key)));
+  assert.deepEqual(plainCategories().map((c) => c.key), ["cafe_de_temporada"]);
+  assert.equal(variantById("var-plain").variant.available, 5);
+  applyCatalog(fixture);
 });

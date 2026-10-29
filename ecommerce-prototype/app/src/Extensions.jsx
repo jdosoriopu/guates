@@ -964,7 +964,10 @@ export function Extension({ controller, values, placement }) {
               {GRINDS.find((g) => g.key === s.grind).label}
             </small>
           </span>
-          <Button disabled={!controller.canBuy()} onClick={values.addCurrent}>
+          <Button
+            disabled={!controller.canBuy() || !liveFor(s.product)}
+            onClick={values.addCurrent}
+          >
             Agregar este café
           </Button>
         </aside>

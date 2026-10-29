@@ -1,6 +1,6 @@
 import { BY, PRODUCTS, CITIES, SIZES, GRINDS } from "../generated/logic.js";
 import { FEATURES } from "./live/features.js";
-import { isOnSale, keyForSlug, slugFor, plainCategories } from "./live/catalog.js";
+import { isListed, keyForSlug, slugFor, plainCategories } from "./live/catalog.js";
 export const STORE_KEY = "guates.canvas-store.v1";
 export const paths = {
   home: "/",
@@ -92,7 +92,7 @@ export function parseRoute(url, state = {}) {
   const product = slug && keyForSlug(slug);
   const plain = slug && plainCategories().find((c) => c.slug === slug);
   if (plain) Object.assign(result, { screen: "categoria", plain: plain.key });
-  if (product && isOnSale(product))
+  if (product && isListed(product))
     Object.assign(result, {
       screen: "producto",
       product,

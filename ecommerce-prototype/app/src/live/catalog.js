@@ -3,13 +3,16 @@ import { PRODUCTS, BY } from "../../generated/logic.js";
 export const ALL_PRODUCTS = PRODUCTS.slice();
 
 let current = null;
+const onSale = new Set();
 
 const slugOf = (category) => String(category).replaceAll("_", "-");
 
-// Mutates the generated PRODUCTS in place: generated code reads it at render time.
+// Mutates the generated PRODUCTS in place: generated code reads it at render time and
+// cannot handle an empty list, so with nothing on sale every product stays listed for display.
 export function applyCatalog(catalog) {
   current = catalog;
   const next = [];
+  onSale.clear();
   ALL_PRODUCTS.forEach((p) => delete p.live);
   for (const c of catalog?.categories ?? []) {
     if (!c.content) continue;
@@ -17,8 +20,9 @@ export function applyCatalog(catalog) {
     if (!p || next.includes(p)) continue;
     p.live = { key: c.key, name: c.name, slug: c.slug, variants: c.variants };
     next.push(p);
+    onSale.add(p.key);
   }
-  PRODUCTS.splice(0, PRODUCTS.length, ...next);
+  PRODUCTS.splice(0, PRODUCTS.length, ...(next.length ? next : ALL_PRODUCTS));
 }
 
 export const catalogApplied = () => current !== null;
@@ -26,8 +30,11 @@ export const catalogApplied = () => current !== null;
 // Before any catalog arrives every known product is assumed on sale, so content still renders.
 export function isOnSale(key) {
   if (!BY[key]) return false;
-  return current === null || PRODUCTS.includes(BY[key]);
+  return current === null || onSale.has(key);
 }
+
+// Listed products have a page and a card; they are on sale unless nothing is.
+export const isListed = (key) => !!BY[key] && (current === null || PRODUCTS.includes(BY[key]));
 
 export const liveFor = (key) => BY[key]?.live ?? null;
 
@@ -39,7 +46,7 @@ export const plainCategory = (key) => plainCategories().find((c) => c.key === ke
 export const variantsFor = (key) => (liveFor(key) ?? plainCategory(key))?.variants ?? [];
 
 export function variantById(id) {
-  for (const p of PRODUCTS) {
+  for (const p of ALL_PRODUCTS) {
     const variant = p.live?.variants.find((v) => v.id === id);
     if (variant) return { product: p, category: p.live, variant };
   }

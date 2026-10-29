@@ -14,6 +14,8 @@ import {
   ALL_PRODUCTS,
   applyCatalog,
   defaultVariant,
+  catalogApplied,
+  isListed,
   isOnSale,
   liveFor,
   plainCategory,
@@ -129,7 +131,7 @@ export class Store extends CanvasLogic {
     const s = this.state;
     if (
       s.screen === "notfound" ||
-      (s.screen === "producto" && !isOnSale(s.product)) ||
+      (s.screen === "producto" && !isListed(s.product)) ||
       (s.screen === "categoria" && !plainCategory(s.plain))
     ) {
       const route = parseRoute(location.href, s);
@@ -272,7 +274,7 @@ export class Store extends CanvasLogic {
         variantId: liveFor("platea").variants.find((v) => v.process === "Honey")
           ?.id,
       };
-    return { key: PRODUCTS[0]?.key ?? key };
+    return { key: PRODUCTS.find((p) => isOnSale(p.key))?.key ?? key };
   }
   componentDidUpdate(prevProps, prevState) {
     const reducedJourney = this._wantJourney && this._motion?.matches;
@@ -331,7 +333,8 @@ export class Store extends CanvasLogic {
     this.setState(route);
   }
   open(key, journey, variantId) {
-    if (!isOnSale(key)) key = PRODUCTS[0]?.key;
+    if (!isOnSale(key))
+      key = PRODUCTS.find((p) => isOnSale(p.key))?.key ?? (isListed(key) ? key : PRODUCTS[0]?.key);
     if (!key) return;
     this.stopPlay();
     this._wantJourney = !!journey;
@@ -612,7 +615,8 @@ export class Store extends CanvasLogic {
       v.addCurrent = () => this.addVariant(s.product, sel.id, s.grind, s.qty);
     } else {
       v.sizes = [];
-      v.lineTotal = NO_PRICE;
+      v.lineTotal = catalogApplied() ? "agotado" : NO_PRICE;
+      if (catalogApplied()) v.addCurrent = this.disabled(() => {});
     }
     v.addCurrent = this.buy(v.addCurrent);
   }
@@ -621,7 +625,9 @@ export class Store extends CanvasLogic {
       const p = ALL_PRODUCTS.find((x) => x.name === card.name);
       const variants = p && liveFor(p.key)?.variants;
       if (!variants?.length)
-        return { ...card, price: NO_PRICE, quick: this.buy(card.quick) };
+        return catalogApplied()
+          ? { ...card, price: "Agotado", quick: this.disabled(() => {}) }
+          : { ...card, price: NO_PRICE, quick: this.buy(card.quick) };
       const prices = variants.map((x) => x.price),
         out = variants.every((x) => x.available <= 0);
       return {
@@ -653,6 +659,10 @@ export class Store extends CanvasLogic {
       v.emo.price = NO_PRICE;
       v.emo.selectedPrice = NO_PRICE;
       v.emo.sizes = [];
+      if (catalogApplied()) {
+        v.mood.quick = this.disabled(() => {});
+        v.emo.addSelected = this.disabled(() => {});
+      }
       return;
     }
     v.mood.quickAria = `Agregar ${v.mood.name} · ${preferred.name} en grano al carrito`;

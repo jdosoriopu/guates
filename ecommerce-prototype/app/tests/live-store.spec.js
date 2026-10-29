@@ -145,3 +145,48 @@ test("mood 'Voy sin afán' recommends El Elegante with Geisha Honey", async ({ p
     page.getByRole("group", { name: "Presentación", exact: true }).getByRole("button", { name: /Geisha Honey/ }),
   ).toHaveAttribute("aria-pressed", "true");
 });
+
+async function serveCatalog(page, categories) {
+  await page.route("**/api/catalog", (route) =>
+    route.fulfill({ json: { asOf: "2026-10-29T00:00:00Z", stale: false, categories } }),
+  );
+}
+
+test("an empty catalog keeps the store readable and buying off", async ({ page }) => {
+  const errors = [];
+  page.on("pageerror", (e) => errors.push(e.message));
+  await serveCatalog(page, []);
+  await page.goto("/");
+  await expect(page.getByRole("heading", { level: 1 })).toHaveText("Donde empieza otro mapa del café");
+  await page.goto("/cafes");
+  await expect(page.locator("main article h2")).toHaveCount(5);
+  await expect(page.getByRole("button", { name: /Agregar Nutria/ })).toBeDisabled();
+  await expect(page.locator("main article").filter({ hasText: "Nutria" })).toContainText("Agotado");
+  await page.goto("/cafes/nutria");
+  await expect(page.getByRole("heading", { level: 1 })).toHaveText("Nutria");
+  await expect(page.getByRole("button", { name: /Agregar al carrito/ })).toBeDisabled();
+  await expect(page.getByRole("button", { name: "Agregar este café", exact: true })).toBeDisabled();
+  const cart = await page.evaluate((k) => JSON.parse(localStorage.getItem(k) || "{}").cart ?? [], STORE_KEY);
+  expect(cart).toEqual([]);
+  expect(errors).toEqual([]);
+});
+
+test("with only a plain category published, it still sells", async ({ page }) => {
+  const errors = [];
+  page.on("pageerror", (e) => errors.push(e.message));
+  await serveCatalog(page, [
+    {
+      key: "cafe_de_temporada", name: "Café de temporada", slug: "cafe-de-temporada", content: null,
+      variants: [{ id: "var-plain", name: "Temporada 250 gr", process: "Lavado", weightG: 250, price: 40000, available: 5 }],
+    },
+  ]);
+  await page.goto("/");
+  await expect(page.getByRole("heading", { level: 1 })).toHaveText("Donde empieza otro mapa del café");
+  await page.goto("/cafes");
+  await expect(page.getByRole("button", { name: /Agregar Colibrí/ })).toBeDisabled();
+  await page.getByRole("link", { name: /Café de temporada/ }).click();
+  await page.getByRole("button", { name: "Agregar a tu bolsa", exact: true }).click();
+  const cart = await page.evaluate((k) => JSON.parse(localStorage.getItem(k)).cart, STORE_KEY);
+  expect(cart).toMatchObject([{ key: "cafe_de_temporada", variantId: "var-plain", qty: 1 }]);
+  expect(errors).toEqual([]);
+});
