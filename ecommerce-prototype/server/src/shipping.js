@@ -20,9 +20,13 @@ export function cotizarEnvio({ destinoDane, pesoG }, { db }) {
   return { price: largest.price + extraKg * largest.price, covered: true };
 }
 
-export function shippingFor({ subtotal, destinoDane, pesoG }, { db }) {
+export function freeShippingFrom(db) {
   const row = db.prepare("SELECT value FROM settings WHERE key = 'free_shipping_from'").get();
-  const threshold = Number(row?.value) || DEFAULT_FREE_FROM;
+  return Number(row?.value) || DEFAULT_FREE_FROM;
+}
+
+export function shippingFor({ subtotal, destinoDane, pesoG }, { db }) {
+  const threshold = freeShippingFrom(db);
   const missingForFree = Math.max(0, threshold - subtotal);
   const { price, covered } = cotizarEnvio({ destinoDane, pesoG }, { db });
   const free = covered && subtotal >= threshold;

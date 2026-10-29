@@ -6,7 +6,11 @@ import { CatalogUnavailable } from "./catalog.js";
 import { listPlaces, placeByCode } from "./places.js";
 import { OrderError } from "./orders.js";
 import { verifyEvent } from "./wompi.js";
-import { shippingFor, PACKAGING_G } from "./shipping.js";
+import { existsSync, readFileSync } from "node:fs";
+import { join, resolve } from "node:path";
+import fastifyStatic from "@fastify/static";
+import { shippingFor, freeShippingFrom, PACKAGING_G } from "./shipping.js";
+import { renderPage, robotsTxt, sitemapXml, llmsTxt, loadSeoAssets } from "./seo.js";
 
 export function buildApp(deps) {
   const app = Fastify({ logger: deps.logger ?? false });
@@ -96,5 +100,63 @@ export function buildApp(deps) {
     return reply.send({ ok: true });
   });
 
+  seoRoutes(app, deps);
   return app;
+}
+
+const LONG_CACHE = "public, max-age=31536000, immutable";
+
+function seoRoutes(app, deps) {
+  const { config } = deps;
+  const distDir = resolve(config.distDir);
+  const seo = deps.seo ?? loadSeoAssets(distDir);
+  const baseUrl = config.publicUrl.replace(/\/+$/, "");
+  const text = (reply, type, body) => reply.type(type).send(body);
+
+  // A catalog outage must not take the pages down: render from an empty catalog instead.
+  const snapshot = async () => {
+    try {
+      return await deps.catalog.get();
+    } catch (err) {
+      if (!(err instanceof CatalogUnavailable)) throw err;
+      return { categories: [] };
+    }
+  };
+  const settings = () => ({ freeShippingFrom: freeShippingFrom(deps.db) });
+
+  app.get("/robots.txt", async (_req, reply) => text(reply, "text/plain; charset=utf-8", robotsTxt(baseUrl, { indexing: config.indexing })));
+  app.get("/sitemap.xml", async (_req, reply) => text(reply, "application/xml; charset=utf-8", sitemapXml(await snapshot(), baseUrl)));
+  app.get("/llms.txt", async (_req, reply) =>
+    text(reply, "text/plain; charset=utf-8", llmsTxt(await snapshot(), seo.content, baseUrl, settings().freeShippingFrom)));
+
+  if (existsSync(distDir)) {
+    app.register(fastifyStatic, {
+      root: distDir,
+      index: false,
+      wildcard: false,
+      setHeaders(reply, path) {
+        if (/[\\/](assets|og)[\\/]/.test(path)) reply.header("cache-control", LONG_CACHE);
+        if (/equipo\.html$/.test(path)) reply.header("x-robots-tag", "noindex");
+      },
+    });
+  }
+
+  const equipoHtml = join(distDir, "equipo.html");
+  const serveEquipo = async (_req, reply) => {
+    if (!existsSync(equipoHtml)) return reply.code(404).send({ error: "No encontrado." });
+    return reply.header("x-robots-tag", "noindex").type("text/html; charset=utf-8").send(readFileSync(equipoHtml));
+  };
+  app.get("/equipo", serveEquipo);
+  app.get("/equipo/*", serveEquipo);
+
+  app.setNotFoundHandler(async (req, reply) => {
+    const pathname = req.url.split("?")[0];
+    if (req.method !== "GET" || /^\/(api|assets|og)\//.test(pathname)) {
+      return reply.code(404).send({ error: "No encontrado." });
+    }
+    const { status, html } = renderPage(pathname, {
+      catalog: await snapshot(), content: seo.content, settings: settings(), template: seo.template, baseUrl, indexing: config.indexing,
+    });
+    return reply.code(status).type("text/html; charset=utf-8").send(html);
+  });
 }
