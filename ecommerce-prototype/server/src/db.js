@@ -60,7 +60,29 @@ const MIGRATIONS = [
     id INTEGER PRIMARY KEY CHECK (id = 1),
     last INTEGER NOT NULL
   );`,
+  // Tiered rates: one row per (destination or 'default', weight ceiling).
+  `DROP TABLE rates;
+  CREATE TABLE rates (
+    dane_code TEXT NOT NULL,
+    max_g INTEGER NOT NULL,
+    price INTEGER NOT NULL,
+    covered INTEGER NOT NULL DEFAULT 1,
+    confirmed INTEGER NOT NULL DEFAULT 0,
+    PRIMARY KEY (dane_code, max_g)
+  );`,
 ];
+
+// Seeds run only on empty tables so owner edits are never overwritten.
+function seed(db) {
+  if (!db.prepare("SELECT 1 FROM settings WHERE key = 'free_shipping_from'").get()) {
+    db.prepare("INSERT INTO settings (key, value) VALUES ('free_shipping_from', '90000')").run();
+  }
+  if (!db.prepare("SELECT 1 FROM rates").get()) {
+    const ins = db.prepare("INSERT INTO rates (dane_code, max_g, price, covered, confirmed) VALUES ('default', ?, ?, 1, 0)");
+    ins.run(1000, 15000);
+    ins.run(2000, 22000);
+  }
+}
 
 export function openDb(path) {
   const db = new DatabaseSync(path);
@@ -77,5 +99,6 @@ export function openDb(path) {
       throw err;
     }
   }
+  seed(db);
   return db;
 }
