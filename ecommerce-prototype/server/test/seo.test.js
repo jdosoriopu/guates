@@ -1,4 +1,7 @@
 import { test } from "node:test";
+import { mkdtempSync, mkdirSync, writeFileSync, rmSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
 import assert from "node:assert/strict";
 import { makeDeps, fixtureCatalog } from "./helpers.js";
 import { buildApp } from "../src/app.js";
@@ -54,6 +57,8 @@ test("catalog and content strings are escaped into HTML and JSON-LD", async () =
     assert.doesNotMatch(body, /<script>alert/, path);
     for (const m of body.matchAll(/<script type="application\/ld\+json">([\s\S]*?)<\/script>/g)) JSON.parse(m[1]);
   }
+  await evil.app.close();
+  await app.close();
 });
 
 test("JSON-LD has one Offer per variant with live availability", async () => {
@@ -70,6 +75,7 @@ test("JSON-LD has one Offer per variant with live availability", async () => {
   assert.equal(product.brand.name, "Guates Coffee Roasters");
   assert.match(product.description, /Envío gratis desde \$90\.000/);
   assert.equal(product.offers[0].shippingDetails["@type"], "OfferShippingDetails");
+  assert.equal(product.offers[0].shippingDetails.shippingConditions.orderValue.minValue, 90000);
   assert.ok(elegante.some((x) => x["@type"] === "BreadcrumbList"));
 
   const nutria = lds((await app.inject("/cafes/nutria")).body).find((x) => x["@type"] === "Product");
@@ -89,7 +95,11 @@ test("robots allows AI crawlers and hides private paths", async () => {
   const res = await app.inject("/robots.txt");
   assert.match(res.headers["content-type"], /text\/plain/);
   for (const bot of ["GPTBot", "OAI-SearchBot", "ChatGPT-User", "ClaudeBot", "Claude-User", "PerplexityBot", "Google-Extended", "Applebot-Extended"]) {
-    assert.match(res.body, new RegExp(`User-agent: ${bot}\\nAllow: /`));
+    const group = res.body.split("\n\n").find((g) => g.startsWith(`User-agent: ${bot}\n`));
+    assert.ok(group, bot);
+    assert.match(group, /Disallow: \/equipo/, bot);
+    assert.match(group, /Disallow: \/api\//, bot);
+    assert.match(group, /Allow: \/api\/catalog/, bot);
   }
   assert.match(res.body, /Disallow: \/equipo/);
   assert.match(res.body, /Disallow: \/api\//);
@@ -175,8 +185,33 @@ test("/equipo serves dist/equipo.html as noindex when present, 404 otherwise", a
   assert.equal((await app.inject("/equipo/pedidos")).statusCode, 404);
 });
 
-test("missing asset files are 404, not the app shell", async () => {
-  const { app } = setup();
-  assert.equal((await app.inject("/assets/nope.js")).statusCode, 404);
-  assert.equal((await app.inject({ method: "POST", url: "/cafes/nutria" })).statusCode, 404);
+test("static files, cache headers and equipo.html are served from the dist folder", async () => {
+  const dist = mkdtempSync(join(tmpdir(), "guates-dist-"));
+  mkdirSync(join(dist, "assets"));
+  mkdirSync(join(dist, "og"));
+  writeFileSync(join(dist, "index.html"), TEMPLATE);
+  writeFileSync(join(dist, "assets", "a.js"), "console.log(1)");
+  writeFileSync(join(dist, "og", "x.png"), "png");
+  writeFileSync(join(dist, "equipo.html"), "<!doctype html><title>Equipo</title>");
+  const deps = makeDeps({ config: { indexing: true, distDir: dist } });
+  const app = buildApp({ ...deps, seo: { template: TEMPLATE, content: CONTENT } });
+  try {
+    const asset = await app.inject("/assets/a.js");
+    assert.equal(asset.statusCode, 200);
+    assert.match(asset.headers["cache-control"], /immutable/);
+    const og = await app.inject("/og/x.png");
+    assert.equal(og.statusCode, 200);
+    assert.match(og.headers["cache-control"], /immutable/);
+    assert.equal((await app.inject("/assets/missing.js")).statusCode, 404);
+    assert.equal((await app.inject("/assets/..%2f..%2fpackage.json")).statusCode, 404);
+    const equipo = await app.inject("/equipo");
+    assert.equal(equipo.statusCode, 200);
+    assert.match(equipo.body, /<title>Equipo<\/title>/);
+    assert.equal(equipo.headers["x-robots-tag"], "noindex");
+    assert.equal((await app.inject("/equipo/pedidos")).headers["x-robots-tag"], "noindex");
+    assert.equal((await app.inject({ method: "POST", url: "/cafes/nutria" })).statusCode, 404);
+  } finally {
+    await app.close();
+    rmSync(dist, { recursive: true, force: true });
+  }
 });

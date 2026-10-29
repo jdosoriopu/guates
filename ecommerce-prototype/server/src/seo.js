@@ -51,6 +51,7 @@ export function productJsonLd(category, content, baseUrl, freeShippingFrom = DEF
         "@type": "OfferShippingDetails",
         shippingDestination: { "@type": "DefinedRegion", addressCountry: "CO" },
         shippingRate: { "@type": "MonetaryAmount", value: 0, currency: "COP" },
+        shippingConditions: { "@type": "ShippingConditions", orderValue: { "@type": "MonetaryAmount", minValue: freeShippingFrom, currency: "COP" } },
       },
     })),
   };
@@ -58,10 +59,9 @@ export function productJsonLd(category, content, baseUrl, freeShippingFrom = DEF
 
 export function robotsTxt(baseUrl, { indexing = true } = {}) {
   if (!indexing) return "User-agent: *\nDisallow: /\n";
-  const groups = [
-    ["User-agent: *", "Allow: /", "Disallow: /equipo", "Disallow: /checkout", "Disallow: /pedido", "Disallow: /bolsa", "Disallow: /api/", "Allow: /api/catalog"].join("\n"),
-    ...AI_BOTS.map((bot) => `User-agent: ${bot}\nAllow: /`),
-  ];
+  const rules = ["Allow: /", "Disallow: /equipo", "Disallow: /checkout", "Disallow: /pedido", "Disallow: /bolsa", "Disallow: /api/", "Allow: /api/catalog"].join("\n");
+  // A crawler that matches its own group ignores "*", so every group repeats the rules.
+  const groups = ["*", ...AI_BOTS].map((bot) => `User-agent: ${bot}\n${rules}`);
   return groups.join("\n\n") + `\n\nSitemap: ${baseUrl}/sitemap.xml\n`;
 }
 
