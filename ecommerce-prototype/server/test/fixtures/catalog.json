@@ -1,0 +1,70 @@
+{
+  "as_of": "2026-10-29T14:45:21Z",
+  "items": [
+    {
+      "id": "a3191450-caad-42bb-b251-2c89c03e2a88",
+      "catalog_key": "colibri",
+      "name": "Colibri",
+      "variants": [
+        {
+          "id": "a27f1c47-7687-420b-bf0a-62417deaa56e",
+          "name": "Bourbon Rosado Natural 250 gr",
+          "process": "PROCESO NATURAL",
+          "weight_g": 250,
+          "price": {
+            "amount": 47500,
+            "currency": "COP"
+          },
+          "available_quantity": 25
+        }
+      ]
+    },
+    {
+      "id": "a319105c-0b65-4ff4-ad95-fc52c6cad2c8",
+      "catalog_key": "el_elegante",
+      "name": "El Elegante",
+      "variants": [
+        {
+          "id": "a305c9a3-d55b-48ee-b741-4f6f2f9e8d32",
+          "name": "GEISHA FERIA 250 GR",
+          "process": "PROCESO NATURAL",
+          "weight_g": 250,
+          "price": {
+            "amount": 65000,
+            "currency": "COP"
+          },
+          "available_quantity": 10
+        },
+        {
+          "id": "a3142c24-4752-4b07-996c-34ebb188e0c7",
+          "name": "Geisha Honey",
+          "process": "PROCESO HONEY",
+          "weight_g": 250,
+          "price": {
+            "amount": 52500,
+            "currency": "COP"
+          },
+          "available_quantity": 27
+        }
+      ]
+    },
+    {
+      "id": "a31913d2-2c7c-4fdf-a0ad-8e916f1203af",
+      "catalog_key": "nutria",
+      "name": "Nutria",
+      "variants": [
+        {
+          "id": "a2f190a6-7b8d-46c7-9c75-107889a6d3b7",
+          "name": "Caturra Lavado 250 gr",
+          "process": "PROCESO LAVADO",
+          "weight_g": 250,
+          "price": {
+            "amount": 30000,
+            "currency": "COP"
+          },
+          "available_quantity": 3
+        }
+      ]
+    }
+  ]
+}
