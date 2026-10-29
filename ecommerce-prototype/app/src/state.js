@@ -92,7 +92,7 @@ export function restore(storage) {
     return {};
   }
 }
-export function parseRoute(url, state = {}) {
+export function parseRoute(url) {
   const u = new URL(url, "http://local"),
     q = u.searchParams;
   let screen =
@@ -126,9 +126,10 @@ export function parseRoute(url, state = {}) {
   if (q.has("ciudad") && CITIES.some((c) => c.key === q.get("ciudad")))
     result.city = q.get("ciudad");
   if (screen === "confirmacion") {
-    result.order =
-      (state.orders || []).find((o) => o.no === q.get("pedido")) || null;
-    if (!result.order) result.screen = "notfound";
+    const no = q.get("pedido"),
+      token = q.get("t");
+    if (no && token) result.orderRef = { no, token };
+    else result.screen = "notfound";
   }
   return result;
 }
@@ -149,7 +150,10 @@ export function routeFor(s) {
     if (s.feeling) q.set("sensacion", s.feeling);
     if (s.compare?.length) q.set("comparar", s.compare.join(","));
   }
-  if (s.screen === "confirmacion" && s.order) q.set("pedido", s.order.no);
+  if (s.screen === "confirmacion" && s.orderRef) {
+    q.set("pedido", s.orderRef.no);
+    q.set("t", s.orderRef.token);
+  }
   if (s.city !== "bogota") q.set("ciudad", s.city);
   return path + (q.size ? "?" + q : "");
 }

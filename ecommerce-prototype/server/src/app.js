@@ -24,6 +24,11 @@ export function buildApp(deps) {
       setOwner(deps.db, email, password);
       return reply.code(204).send();
     });
+    app.get("/api/test/orders/:no", async (req, reply) => {
+      const order = deps.db.prepare("SELECT * FROM orders WHERE no = ?").get(req.params.no);
+      if (!order) return reply.code(404).send({ error: "No encontramos ese pedido." });
+      return { ...order };
+    });
   }
 
   app.get("/api/health", async () => ({ ok: true }));

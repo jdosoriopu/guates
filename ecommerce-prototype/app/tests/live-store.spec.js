@@ -1,3 +1,4 @@
+import { createHash } from "node:crypto";
 import { test, expect } from "@playwright/test";
 
 const STORE_KEY = "guates.canvas-store.v1";
@@ -60,7 +61,8 @@ test("an old prototype cart loads without errors and explains the update", async
     sessionStorage.setItem("seeded", "1");
     localStorage.setItem(k, JSON.stringify({ cart: [{ id: "lavado|0|grano", key: "lavado", size: 0, grind: "grano", qty: 1 }], city: "bogota" }));
   }, STORE_KEY);
-  await page.goto("/bolsa");
+  // The toast lasts 4 s and the load event can come later, so wait from the first response.
+  await page.goto("/bolsa", { waitUntil: "commit" });
   await expect(page.getByText("Actualizamos tu bolsa: 1 café(s) ya no están disponibles.")).toBeVisible();
   const cart = await page.evaluate((k) => JSON.parse(localStorage.getItem(k)).cart, STORE_KEY);
   expect(cart).toEqual([]);
@@ -268,4 +270,199 @@ test("information pages carry launch copy", async ({ page }) => {
   }
   await page.goto("/ayuda");
   await expect(main).not.toContainText(/suscripci|prototipo/i);
+});
+
+// --- Real checkout (Task 10) ---
+
+const EVENTS_SECRET = "test_events_x"; // the Playwright server's WOMPI_EVENTS
+const SECRETS = ["prv_", "test_events_", "test_integrity"];
+const FERIA = /GEISHA FERIA 250 GR · Natural/;
+
+function signedEvent({ reference, status, amountInCents, id = `tx-${reference}-${status}` }) {
+  const timestamp = Math.floor(Date.now() / 1000);
+  const checksum = createHash("sha256").update(`${id}${status}${amountInCents}${timestamp}${EVENTS_SECRET}`).digest("hex");
+  return {
+    event: "transaction.updated",
+    data: { transaction: { id, status, amount_in_cents: amountInCents, reference } },
+    environment: "test",
+    signature: { properties: ["transaction.id", "transaction.status", "transaction.amount_in_cents"], checksum },
+    timestamp,
+  };
+}
+
+async function addFeria(page, qty = 1) {
+  await page.goto("/cafes/el-elegante");
+  await page.getByRole("group", { name: "Presentación", exact: true }).getByRole("button", { name: FERIA }).click();
+  const more = page.getByRole("button", { name: "Agregar una bolsa", exact: true });
+  for (let i = 1; i < qty; i++) await more.click();
+  await page.getByRole("button", { name: /Agregar al carrito/ }).click();
+  await expect(page.getByRole("link", { name: /Tu bolsa/ })).toContainText(String(qty));
+}
+
+async function fillCheckout(page, { name = "Ana Pérez" } = {}) {
+  await page.getByLabel("Nombre", { exact: true }).fill(name);
+  await page.getByLabel("Celular", { exact: true }).fill("3001234567");
+  await page.getByLabel("Correo", { exact: true }).fill("ana@correo.com");
+  await page.getByLabel("Departamento", { exact: true }).selectOption({ label: "Bogotá, D.C." });
+  await page.getByLabel("Municipio", { exact: true }).selectOption({ label: "Bogotá, D.C." });
+  await page.getByLabel("Dirección", { exact: true }).fill("Calle 1 # 2-3");
+  await page.getByLabel(/Indicaciones/).fill("Portería");
+  await page.getByRole("checkbox", { name: /Acepto la política de privacidad/ }).check();
+}
+
+// Intercepts Wompi so no browser ever reaches it, and records every request for secret checks.
+async function watch(page) {
+  const seen = { orderPosts: 0, urls: [], bodies: [], wompi: null };
+  page.on("request", (req) => {
+    seen.urls.push(req.url());
+    if (req.postData()) seen.bodies.push(req.postData());
+    if (req.method() === "POST" && new URL(req.url()).pathname === "/api/orders") seen.orderPosts++;
+  });
+  await page.route("https://checkout.wompi.co/**", (route) => {
+    seen.wompi = new URL(route.request().url());
+    return route.fulfill({ contentType: "text/html", body: "<!doctype html><title>Wompi</title><p>Wompi de prueba</p>" });
+  });
+  return seen;
+}
+
+async function payAndRedirect(page, seen, label) {
+  const pay = page.getByRole("button", { name: label });
+  await expect(pay).toBeEnabled();
+  await pay.dblclick();
+  await expect.poll(() => seen.wompi?.href ?? "").toContain("checkout.wompi.co");
+  await page.waitForLoadState();
+  return seen.wompi;
+}
+
+test("checkout pays with Wompi, keeps attribution and confirms once the webhook approves", async ({ page }) => {
+  const seen = await watch(page);
+  await page.goto("/?utm_source=instagram&utm_medium=social&utm_campaign=lanzamiento");
+  await addFeria(page, 1);
+  await page.goto("/checkout");
+  const summary = page.getByRole("region", { name: "Resumen de tu pedido" });
+  await expect(summary).toContainText("El Elegante · GEISHA FERIA 250 GR · En grano · 1");
+  await expect(summary).toContainText("Elige tu municipio");
+  await fillCheckout(page);
+  await expect(summary.getByTestId("subtotal")).toHaveText("$65.000");
+  await expect(summary.getByTestId("envio")).toHaveText("$15.000");
+  await expect(summary.getByTestId("total")).toHaveText("$80.000");
+  await expect(summary).toContainText("Te faltan $25.000 para envío gratis");
+  await expect(page.getByRole("link", { name: /política de privacidad/ })).toHaveAttribute("href", "/privacidad");
+  const source = await page.content();
+  for (const s of SECRETS) expect(source, s).not.toContain(s);
+
+  const wompi = await payAndRedirect(page, seen, "Pagar $80.000 con Wompi");
+  expect(seen.orderPosts).toBe(1);
+  const q = wompi.searchParams;
+  expect(q.get("amount-in-cents")).toBe("8000000");
+  expect(q.get("reference")).toMatch(/^WEB-\d+$/);
+  expect(q.get("signature:integrity")).toMatch(/^[0-9a-f]{64}$/);
+  for (const s of SECRETS) {
+    expect(wompi.href, s).not.toContain(s);
+    for (const u of seen.urls) expect(u, s).not.toContain(s);
+    for (const b of seen.bodies) expect(b, s).not.toContain(s);
+  }
+  const no = q.get("reference");
+
+  const stored = await page.request.get(`/api/test/orders/${no}`);
+  expect(stored.status()).toBe(200);
+  expect(await stored.json()).toMatchObject({ no, utm_source: "instagram", utm_medium: "social", utm_campaign: "lanzamiento" });
+
+  const back = new URL(q.get("redirect-url"));
+  await page.goto(back.pathname + back.search);
+  await expect(page.getByText("Tu pago está en proceso. Apenas Wompi lo confirme, preparamos tu café.")).toBeVisible();
+  const local = await page.evaluate(() => ({
+    last: JSON.parse(localStorage.getItem("guates.lastOrder.v1")),
+    store: JSON.parse(localStorage.getItem("guates.canvas-store.v1")),
+  }));
+  expect(local.last).toEqual({ no, token: back.searchParams.get("t") });
+  expect(JSON.stringify(local.store.form ?? {})).not.toMatch(/Ana|3001234567|ana@correo|Calle 1/);
+  expect(local.store.cart).toHaveLength(1);
+
+  const res = await page.request.post("/api/webhook/payments", { data: signedEvent({ reference: no, status: "APPROVED", amountInCents: 8000000 }) });
+  expect(res.status()).toBe(200);
+  await expect(page.getByRole("heading", { name: "¡Listo, Ana! Recibimos tu pago." })).toBeVisible({ timeout: 15000 });
+  await expect(page.locator("main")).toContainText("Te escribiremos por WhatsApp cuando tu café salga hacia Bogotá, D.C.");
+  await expect(page.locator("main")).toContainText("GEISHA FERIA 250 GR");
+  await expect(page.locator("main")).toContainText("$80.000");
+  await expect.poll(() => page.evaluate(() => JSON.parse(localStorage.getItem("guates.canvas-store.v1")).cart.length)).toBe(0);
+  expect(await page.locator("body").innerText()).not.toMatch(/simulad|prototipo/i);
+});
+
+test("two Geisha Feria ship free", async ({ page }) => {
+  await addFeria(page, 2);
+  await page.goto("/checkout");
+  await fillCheckout(page);
+  const summary = page.getByRole("region", { name: "Resumen de tu pedido" });
+  await expect(summary.getByTestId("envio")).toHaveText("Gratis");
+  await expect(summary.getByTestId("total")).toHaveText("$130.000");
+  await expect(summary).not.toContainText("Te faltan");
+  await expect(page.getByRole("button", { name: "Pagar $130.000 con Wompi" })).toBeEnabled();
+});
+
+test("a declined payment keeps the bag for another try", async ({ page }) => {
+  const seen = await watch(page);
+  await addFeria(page, 1);
+  await page.goto("/checkout");
+  await fillCheckout(page);
+  const wompi = await payAndRedirect(page, seen, "Pagar $80.000 con Wompi");
+  const no = wompi.searchParams.get("reference");
+  const res = await page.request.post("/api/webhook/payments", { data: signedEvent({ reference: no, status: "DECLINED", amountInCents: 8000000 }) });
+  expect(res.status()).toBe(200);
+  const back = new URL(wompi.searchParams.get("redirect-url"));
+  await page.goto(back.pathname + back.search);
+  await expect(page.getByText("El pago no se completó. Tu bolsa sigue aquí para intentarlo de nuevo.")).toBeVisible();
+  const cart = await page.evaluate(() => JSON.parse(localStorage.getItem("guates.canvas-store.v1")).cart);
+  expect(cart).toHaveLength(1);
+  await page.getByRole("button", { name: "Intentar de nuevo" }).click();
+  await expect(page).toHaveURL(/\/checkout$/);
+});
+
+test("an unknown order or token shows the not-found page", async ({ page }) => {
+  await page.goto("/pedido/confirmacion?pedido=WEB-1&t=nope");
+  await expect(page.getByRole("heading", { level: 1 })).toHaveText("Este camino aún no está en el mapa.");
+});
+
+test("an uncovered municipality blocks paying and never nudges free shipping", async ({ page }) => {
+  await page.route("**/api/shipping/quote", (route) =>
+    route.fulfill({ json: { subtotal: 65000, shipping: { price: 0, free: false, covered: false, missingForFree: 25000 } } }),
+  );
+  await addFeria(page, 1);
+  await page.goto("/checkout");
+  await fillCheckout(page);
+  await expect(page.getByText("Todavía no llegamos a Bogotá, D.C. Escríbenos por WhatsApp y lo resolvemos.")).toBeVisible();
+  await expect(page.getByText(/Te faltan/)).toHaveCount(0);
+  await expect(page.getByRole("button", { name: /Pagar/ })).toBeDisabled();
+});
+
+test("a stock error shows what is left and adjusts the bag", async ({ page }) => {
+  await page.route("**/api/orders", (route) =>
+    route.fulfill({
+      status: 409,
+      json: {
+        error: "Algunos cafés no tienen suficientes bolsas.",
+        code: "stock",
+        detail: [{ variantId: "a305c9a3-d55b-48ee-b741-4f6f2f9e8d32", requested: 2, available: 1 }],
+      },
+    }),
+  );
+  await addFeria(page, 2);
+  await page.goto("/checkout");
+  await fillCheckout(page);
+  await page.getByRole("button", { name: "Pagar $130.000 con Wompi" }).click();
+  const alert = page.getByRole("alert").filter({ hasText: "suficientes bolsas" });
+  await expect(alert).toContainText("GEISHA FERIA 250 GR: pediste 2, quedan 1.");
+  await page.getByRole("button", { name: "Ajustar mi bolsa" }).click();
+  await expect(page.getByRole("region", { name: "Resumen de tu pedido" })).toContainText("El Elegante · GEISHA FERIA 250 GR · En grano · 1");
+  await expect(page.getByRole("button", { name: "Pagar $80.000 con Wompi" })).toBeEnabled();
+});
+
+test("missing fields are announced before anything is sent", async ({ page }) => {
+  const seen = await watch(page);
+  await addFeria(page, 1);
+  await page.goto("/checkout");
+  await page.getByRole("button", { name: /Pagar/ }).click();
+  await expect(page.getByRole("alert").first()).toContainText("Revisa los campos marcados.");
+  await expect(page.getByLabel("Celular", { exact: true })).toHaveAttribute("aria-invalid", "true");
+  expect(seen.orderPosts).toBe(0);
 });

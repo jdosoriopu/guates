@@ -16,6 +16,8 @@ import {
   plainCategory,
 } from "./live/catalog.js";
 import { FEATURES } from "./live/features.js";
+import { Checkout } from "./live/Checkout.jsx";
+import { Confirmation } from "./live/Confirmation.jsx";
 const fromPrice = (variants) => {
   const prices = variants.map((x) => x.price);
   return (new Set(prices).size > 1 ? "Desde " : "") + money(Math.min(...prices));
@@ -796,7 +798,7 @@ const info = {
   ayuda: {
     title: "Ayuda y contacto",
     body: [
-      "Pagas en línea y recibes la confirmación de tu pedido apenas se aprueba el pago.",
+      "Pagas en línea con Wompi y recibes la confirmación de tu pedido apenas se aprueba el pago.",
       "Instagram, WhatsApp, correo y horarios: por confirmar.",
     ],
   },
@@ -927,30 +929,12 @@ export function Extension({ controller, values, placement }) {
         {["carrito", "checkout"].includes(s.screen) && (
           <Recurring controller={controller} />
         )}{" "}
-        {s.screen === "checkout" && (
-          <Panel>
-            <h2>Antes de confirmar</h2>
-            <label className="extension-check">
-              <input
-                type="checkbox"
-                checked={s.accepted}
-                onChange={(e) =>
-                  controller.setState({ accepted: e.target.checked })
-                }
-              />
-              Revisé mi pedido y el total de hoy.
-            </label>
-          </Panel>
-        )}
+        {s.screen === "checkout" && <Checkout controller={controller} />}
         {s.screen === "confirmacion" && (
-          <Panel>
-            <h1>
-              {s.order?.status === "pending"
-                ? "Tu pago está pendiente"
-                : "Tu pedido"}
-            </h1>
-            <Link to="/cafes">Seguir explorando cafés</Link>
-          </Panel>
+          <Confirmation
+            key={s.orderRef?.no + "|" + s.orderRef?.token}
+            controller={controller}
+          />
         )}
       </div>
       {s.screen === "producto" && (

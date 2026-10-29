@@ -153,11 +153,13 @@ test("publicView requires the token and hides contact data", async () => {
   assert.equal(await orders.publicView(no, undefined), null);
   assert.equal(await orders.publicView("WEB-9999", token), null);
   const v = await orders.publicView(no, token);
-  assert.deepEqual(Object.keys(v).sort(), ["items", "municipio", "no", "shipping", "status", "subtotal", "total"]);
+  assert.deepEqual(Object.keys(v).sort(), ["items", "municipio", "name", "no", "shipping", "status", "subtotal", "total"]);
   assert.deepEqual(v.items, [{ category: "El Elegante", variant: "GEISHA FERIA 250 GR", grind: "media", qty: 1, unitPrice: 65000 }]);
   assert.equal(v.total, 80000);
   assert.equal(v.municipio, "Bogotá, D.C.");
+  assert.equal(v.name, "Ana");
   assert.ok(!JSON.stringify(v).includes("3001234567"));
+  assert.ok(!JSON.stringify(v).includes("Pérez"));
 });
 
 test("routes: POST /api/orders and GET /api/orders/:no", async () => {
@@ -177,4 +179,22 @@ test("routes: POST /api/orders and GET /api/orders/:no", async () => {
   assert.equal(stock.json().code, "stock");
   const inv = await app.inject({ method: "POST", url: "/api/orders", payload: {} });
   assert.equal(inv.statusCode, 422);
+});
+
+test("test-only order route returns the stored order with attribution, and is 404 outside test", async () => {
+  const deps = makeDeps();
+  const orders = createOrders({ db: deps.db, catalog: deps.catalog, pulso: deps.pulso, config: deps.config, now: deps.clock.now });
+  const app = buildApp({ ...deps, orders });
+  const { no } = await orders.create(input({ attribution: { utm_source: "instagram", utm_campaign: "lanzamiento", landing: "/" } }));
+  const res = await app.inject({ method: "GET", url: `/api/test/orders/${no}` });
+  assert.equal(res.statusCode, 200);
+  assert.equal(res.json().utm_source, "instagram");
+  assert.equal(res.json().utm_campaign, "lanzamiento");
+  assert.equal((await app.inject({ method: "GET", url: "/api/test/orders/WEB-9999" })).statusCode, 404);
+
+  const prodDeps = makeDeps({ config: { env: "production" } });
+  const prodOrders = createOrders({ db: prodDeps.db, catalog: prodDeps.catalog, pulso: prodDeps.pulso, config: prodDeps.config, now: prodDeps.clock.now });
+  const prod = buildApp({ ...prodDeps, orders: prodOrders });
+  const created = await prodOrders.create(input());
+  assert.equal((await prod.inject({ method: "GET", url: `/api/test/orders/${created.no}` })).statusCode, 404);
 });

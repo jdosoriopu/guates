@@ -2,12 +2,6 @@ import { test, expect } from "@playwright/test";
 test.beforeEach(async ({ page }) => {
   await page.emulateMedia({ reducedMotion: "reduce" });
 });
-async function add(page, key = "lavado") {
-  await page.goto("/cafes/" + key);
-  await page
-    .getByRole("button", { name: "Agregar este café", exact: true })
-    .click();
-}
 test("original home and recommendation flows survive, including illustrated steps", async ({
   page,
 }) => {
@@ -71,31 +65,6 @@ test("catalog filters, comparison and empty state are URL-addressable", async ({
   await expect(
     page.getByRole("checkbox", { name: "Nutria", exact: true }),
   ).toBeChecked();
-});
-test("guest checkout confirms without simulation copy or test scenarios", async ({
-  page,
-}) => {
-  await add(page);
-  await page.goto("/checkout");
-  await page
-    .getByRole("textbox", { name: "Nombre", exact: true })
-    .fill("Cliente de prueba");
-  await page.getByRole("textbox", { name: /Correo/ }).fill("demo@example.test");
-  await page
-    .getByRole("textbox", { name: /Dirección/ })
-    .fill("Dirección ficticia 123");
-  await expect(page.getByText("Escenarios de prueba")).toHaveCount(0);
-  await page.getByRole("button", { name: /Confirmar pedido/ }).click();
-  await expect(page.getByRole("alert")).toContainText("Revisa");
-  await page.getByRole("checkbox", { name: /Revisé/ }).check();
-  await page.getByRole("button", { name: /Confirmar pedido/ }).click();
-  await expect(page).toHaveURL(/pedido\/confirmacion/);
-  expect(await page.locator("body").innerText()).not.toMatch(/simulad|prototipo|Tu pasaporte/i);
-  const s = await page.evaluate(() =>
-    JSON.parse(localStorage.getItem("guates.canvas-store.v1")),
-  );
-  expect(s.orders[0].total).toBe(30000);
-  expect(s.cart).toHaveLength(0);
 });
 test("routes work directly with reduced motion and no horizontal overflow", async ({
   page,

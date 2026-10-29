@@ -269,7 +269,9 @@ export function createOrders({ db, catalog, pulso, wompi, notify, config, now = 
       .prepare("SELECT category_name, variant_name, grind, qty, unit_price FROM order_items WHERE order_no = ? ORDER BY id")
       .all(no)
       .map((r) => ({ category: r.category_name, variant: r.variant_name, grind: r.grind, qty: r.qty, unitPrice: r.unit_price }));
-    return { no: o.no, status: o.status, items, subtotal: o.subtotal, shipping: o.shipping, total: o.total, municipio: o.municipio };
+    // Only the first name leaves, for the greeting; contact data stays on the server.
+    const name = o.customer_name.split(/\s+/)[0];
+    return { no: o.no, status: o.status, name, items, subtotal: o.subtotal, shipping: o.shipping, total: o.total, municipio: o.municipio };
   }
 
   const LIST_STATUSES = ["pendiente_pago", "pagado", "pago_fallido", "requiere_atencion", "despachado", "entregado", "anulado"];

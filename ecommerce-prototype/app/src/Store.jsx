@@ -24,6 +24,8 @@ import {
   variantsFor,
 } from "./live/catalog.js";
 import { fetchCatalog } from "./live/api.js";
+import { captureAttribution } from "./live/attribution.js";
+import { EMPTY_FORM } from "./live/Checkout.jsx";
 import { FEATURES } from "./live/features.js";
 import { Template } from "../generated/Template.jsx";
 import {
@@ -34,7 +36,6 @@ import {
   snapshot,
   validLine,
   validSelection,
-  advanceDate,
   screenOn,
 } from "./state.js";
 export const CATALOG_ERROR =
@@ -60,7 +61,6 @@ export class Store extends CanvasLogic {
       profile: null,
       feeling: "",
       compare: [],
-      accepted: false,
       storageError: false,
       catalog: null,
       catalogError: false,
@@ -77,13 +77,14 @@ export class Store extends CanvasLogic {
     this._buyFns = new WeakSet();
     this._disabled = new WeakSet();
     this._hidden = () => {};
-    const route = parseRoute(location.href, this.state);
+    captureAttribution(location);
+    const route = parseRoute(location.href);
     this.state = { ...this.state, ...route };
     if (route.product && validSelection(this._choices[route.product]))
       Object.assign(this.state, this._choices[route.product]);
     this.onPop = () => {
       this.stopPlay();
-      const route = parseRoute(location.href, this.state);
+      const route = parseRoute(location.href);
       if (route.product && validSelection(this._choices[route.product]))
         Object.assign(route, this._choices[route.product]);
       this._fromHistory = true;
@@ -139,7 +140,7 @@ export class Store extends CanvasLogic {
       (s.screen === "producto" && !isListed(s.product)) ||
       (s.screen === "categoria" && !plainCategory(s.plain))
     ) {
-      const route = parseRoute(location.href, s);
+      const route = parseRoute(location.href);
       if (route.product && validSelection(this._choices[route.product]))
         Object.assign(route, this._choices[route.product]);
       this._fromHistory = true;
@@ -247,21 +248,13 @@ export class Store extends CanvasLogic {
     const variant = p && liveFor(p.key) && this.variantFor(p.key);
     return super.stageList(variant ? { ...p, process: toProcess(variant) } : p);
   }
-  // Generated code looks every cart and order line up in BY; lines from plain
+  // Generated code looks every cart line up in BY; lines from plain
   // categories are hidden from it and rendered by renderVals instead.
   withKnownLines(fn) {
     const real = this.state,
       known = (x) => x.sub || BY[x.key];
-    if (real.cart.every(known) && (!real.order || real.order.items.every(known)))
-      return fn();
-    this.state = {
-      ...real,
-      cart: real.cart.filter(known),
-      order: real.order && {
-        ...real.order,
-        items: real.order.items.filter(known),
-      },
-    };
+    if (real.cart.every(known)) return fn();
+    this.state = { ...real, cart: real.cart.filter(known) };
     try {
       return fn();
     } finally {
@@ -338,7 +331,7 @@ export class Store extends CanvasLogic {
     v[name] = this._hidden;
   }
   navigate(to) {
-    const route = parseRoute(to, this.state);
+    const route = parseRoute(to);
     if (route.product && validSelection(this._choices[route.product]))
       Object.assign(route, this._choices[route.product]);
     this.stopPlay();
@@ -470,8 +463,6 @@ export class Store extends CanvasLogic {
         },
       };
     if (tag === "main") return { ...props, id: "contenido", tabIndex: -1 };
-    if (tag === "input" && this.state.screen === "checkout")
-      return { ...props, autoComplete: "off" };
     if (
       props.style?.boxShadow &&
       !String(props.style.boxShadow).includes("focus-ring")
@@ -479,74 +470,34 @@ export class Store extends CanvasLogic {
       return { ...props, style: { ...props.style, boxShadow: "none" } };
     return props;
   }
+  // The generated simulated checkout never renders; orders are created by live/Checkout.jsx.
   confirm(ev) {
-    ev?.preventDefault();
-    const s = this.state;
-    const fail = (msg) => {
-      this.setState({ tried: true, checkoutError: msg });
-    };
-    if (Object.keys(this.errors()).length || !s.cart.length) {
-      fail(
-        !s.cart.length
-          ? "Tu carrito está vacío."
-          : "Revisa los campos marcados.",
-      );
-      return;
+    ev?.preventDefault?.();
+  }
+  clearCheckoutDraft(then) {
+    this.setState({ form: { ...EMPTY_FORM } }, then);
+  }
+  clearCart() {
+    if (this.state.cart.length) this.setState({ cart: [] });
+  }
+  notFound() {
+    this.setState({ screen: "notfound" });
+  }
+  // Lowers each variant's lines to what the server says is left, across grinds.
+  adjustCart(limits) {
+    const left = {};
+    for (const d of limits ?? []) left[d.variantId] = d.available;
+    const cart = [];
+    for (const line of this.state.cart) {
+      if (!(line.variantId in left)) {
+        cart.push(line);
+        continue;
+      }
+      const qty = Math.min(line.qty, Math.max(0, left[line.variantId]));
+      left[line.variantId] -= qty;
+      if (qty > 0) cart.push(qty === line.qty ? line : { ...line, qty });
     }
-    if (!s.accepted) {
-      fail("Revisa y acepta el resumen de tu pedido.");
-      return;
-    }
-    const now = new Date(),
-      no = crypto.randomUUID(),
-      city = { ...this.city() },
-      totals = this.totals();
-    const order = {
-      no,
-      items: s.cart.map((x) => ({
-        ...x,
-        sub: x.sub ? { ...x.sub } : undefined,
-        unitPrice: this.priceOfLine(x),
-        name: this.lineName(x),
-      })),
-      city,
-      total: totals.total,
-      totals,
-      delivery: s.delivery,
-      status: "approved",
-      created: now.toISOString(),
-      name: s.profile?.name || "Tu",
-      email: "",
-    };
-    const subscriptions =
-      order.status === "approved"
-        ? order.items
-            .filter((x) => x.sub)
-            .map((x, i) => ({
-              id: no + "-" + i,
-              config: { ...x.sub },
-              qty: x.qty,
-              city,
-              delivery: s.delivery,
-              status: "activa",
-              next: advanceDate(x.sub.freq, now),
-            }))
-        : [];
-    this.setState({
-      order,
-      orders: [order, ...s.orders],
-      subscriptions: [...subscriptions, ...s.subscriptions],
-      cart: [],
-      screen: "confirmacion",
-      tried: false,
-      checkoutError: "",
-      orderStage: 0,
-      accepted: false,
-      form: { name: "", email: "", phone: "", address: "", detail: "" },
-    });
-    clearTimeout(this._orderT);
-    if (order.status === "approved")
-      this._orderT = setTimeout(() => this.setState({ orderStage: 1 }), 900);
+    this.setState({ cart });
   }
   // Generated data is swapped only while the generated renderVals runs: live prices for
   // sorting, the chosen variant's process on the product page and mood targets that are on sale.
@@ -763,34 +714,8 @@ export class Store extends CanvasLogic {
       v.cardsEmpty = !v.cards.length;
       v.cardsCount = v.cards.length + " cafés";
     }
-    if (s.checkoutError) {
-      v.hasFormError = true;
-      v.formError = s.checkoutError;
-    }
-    if (s.order) {
-      v.order.line =
-        s.order.status === "pending"
-          ? "Tu pago está pendiente. Te contamos apenas se confirme."
-          : "Recibimos tu pedido.";
-      if (s.order.status === "pending")
-        v.order.steps = [
-          {
-            title: "Esperando la confirmación del pago",
-            when: "No hay entrega programada",
-          },
-        ];
-      if (FEATURES.passport)
-        v.order.stamps = v.order.stamps.map((stamp) => ({
-          ...stamp,
-          toggle: () => {
-            if (!this.state.profile) {
-              this.setState({ screen: "pasaporte" });
-              return;
-            }
-            stamp.toggle();
-          },
-        }));
-    }
+    v.is.checkout = false;
+    v.is.confirmacion = false;
     return v;
   }
   render() {
