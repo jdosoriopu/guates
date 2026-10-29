@@ -7,9 +7,17 @@ export default defineConfig({
   workers: 2,
   use: { baseURL: "http://127.0.0.1:4174", trace: "retain-on-failure" },
   projects: [
-    { name: "desktop", use: { ...devices["Desktop Chrome"] } },
+    { name: "desktop", testIgnore: "equipo.spec.js", use: { ...devices["Desktop Chrome"] } },
     {
       name: "mobile",
+      testIgnore: "equipo.spec.js",
+      use: { ...devices["iPhone 13"], defaultBrowserType: "chromium" },
+    },
+    // The dashboard edits shared shipping rates, so it runs on a phone after the store specs finish.
+    {
+      name: "equipo",
+      testMatch: "equipo.spec.js",
+      dependencies: ["desktop", "mobile"],
       use: { ...devices["iPhone 13"], defaultBrowserType: "chromium" },
     },
   ],
