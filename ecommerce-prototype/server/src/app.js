@@ -2,6 +2,7 @@ import Fastify from "fastify";
 import { CatalogUnavailable } from "./catalog.js";
 import { listPlaces, placeByCode } from "./places.js";
 import { OrderError } from "./orders.js";
+import { verifyEvent } from "./wompi.js";
 import { shippingFor, PACKAGING_G } from "./shipping.js";
 
 export function buildApp(deps) {
@@ -60,9 +61,26 @@ export function buildApp(deps) {
   });
 
   app.get("/api/orders/:no", async (req, reply) => {
-    const view = deps.orders.publicView(req.params.no, req.query?.t);
+    const view = await deps.orders.publicView(req.params.no, req.query?.t);
     if (!view) return reply.code(404).send({ error: "No encontramos ese pedido." });
     return view;
+  });
+
+  app.post("/api/webhook/payments", async (req, reply) => {
+    const body = req.body;
+    if (!verifyEvent(body, deps.config.wompi.eventsSecret, req.headers["x-event-checksum"])) {
+      return reply.code(401).send({ error: "Firma inválida." });
+    }
+    const tx = body.event === "transaction.updated" ? body.data?.transaction : null;
+    if (!tx?.reference) return reply.send({ ok: true, ignored: true });
+    const order = await deps.orders.applyPayment({
+      reference: tx.reference,
+      transactionId: tx.id,
+      status: tx.status,
+      amountInCents: tx.amount_in_cents,
+    });
+    if (!order) req.log.info({ reference: tx.reference }, "wompi event for unknown reference ignored");
+    return reply.send({ ok: true });
   });
 
   return app;

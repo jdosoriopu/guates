@@ -73,7 +73,21 @@ function validate(input) {
   };
 }
 
-export function createOrders({ db, catalog, pulso, wompi, notify, config, now = Date.now }) {
+const REGISTER_BACKOFF_MS = [1000, 4000];
+const ATTENTION = {
+  insufficient_stock: "Pulso: sin stock suficiente",
+  product_unavailable: "Pulso: producto no disponible",
+  not_found: "Pulso: producto no disponible",
+  auth: "Pulso rechazó la llave",
+  unavailable: "Pulso no respondió",
+};
+const FINAL_STATUSES = ["APPROVED", "DECLINED", "VOIDED", "ERROR"];
+const SETTLE_AFTER_MS = 10_000;
+const RECONCILE_MIN_AGE_MS = 2 * 60_000;
+const RECONCILE_MAX_AGE_MS = 48 * 3600_000;
+const defaultSleep = (ms) => new Promise((r) => setTimeout(r, ms));
+
+export function createOrders({ db, catalog, pulso, wompi, notify, config, now = Date.now, sleep = defaultSleep }) {
   const iso = () => new Date(now()).toISOString();
 
   // Increments and reads inside the caller's transaction so numbers never repeat.
@@ -152,10 +166,104 @@ export function createOrders({ db, catalog, pulso, wompi, notify, config, now = 
     return { no, token, checkoutUrl: checkoutUrl({ config, order }) };
   }
 
-  function publicView(no, token) {
+  const getOrder = (no) => db.prepare("SELECT * FROM orders WHERE no = ?").get(no);
+
+  // A failing notifier must never undo or block payment handling.
+  async function tell(event) {
+    try {
+      await notify?.notifyOwner(event);
+    } catch {}
+  }
+
+  function setStatus(no, status, extra = {}) {
+    db.prepare("UPDATE orders SET status = ?, wompi_tx = COALESCE(?, wompi_tx), pulso_sale_id = COALESCE(?, pulso_sale_id), attention_reason = ?, updated_at = ? WHERE no = ?")
+      .run(status, extra.tx ?? null, extra.saleId ?? null, extra.reason ?? null, iso(), no);
+    return getOrder(no);
+  }
+
+  async function registerInPulso(o) {
+    const items = db.prepare("SELECT variant_id, qty, unit_price FROM order_items WHERE order_no = ? ORDER BY id").all(o.no)
+      .map((i) => ({ id: i.variant_id, quantity: i.qty, unit_price: i.unit_price }));
+    const payload = { orderId: o.no, items, customer: { name: o.customer_name, email: o.customer_email, phone: o.customer_phone } };
+    let result;
+    for (let attempt = 0; attempt <= REGISTER_BACKOFF_MS.length; attempt++) {
+      result = await pulso.registerOrder(payload);
+      if (result.ok || result.code !== "unavailable") break;
+      if (attempt < REGISTER_BACKOFF_MS.length) await sleep(REGISTER_BACKOFF_MS[attempt]);
+    }
+    return result;
+  }
+
+  // Webhook, reconcile and the confirmation page can all deliver the same payment. Calls for one order
+  // run one at a time, and only pendiente_pago / pago_fallido orders move, so Pulso is registered once.
+  const locks = new Map();
+  function withLock(no, fn) {
+    const run = (locks.get(no) ?? Promise.resolve()).then(fn);
+    const tail = run.catch(() => {});
+    locks.set(no, tail);
+    tail.then(() => locks.get(no) === tail && locks.delete(no));
+    return run;
+  }
+
+  function applyPayment({ reference, transactionId, status, amountInCents }) {
+    return withLock(reference, async () => {
+      const o = getOrder(reference);
+      if (!o || (o.status !== "pendiente_pago" && o.status !== "pago_fallido")) return o ?? null;
+      const tx = transactionId ?? null;
+
+      if (status === "DECLINED" || status === "VOIDED" || status === "ERROR") {
+        return o.status === "pago_fallido" ? o : setStatus(o.no, "pago_fallido", { tx });
+      }
+      if (status !== "APPROVED") return o;
+
+      if (amountInCents !== o.total * 100) {
+        const updated = setStatus(o.no, "requiere_atencion", { tx, reason: "El monto pagado no coincide" });
+        await tell({ type: "attention", order: updated });
+        return updated;
+      }
+      const result = await registerInPulso(o);
+      if (result.ok) {
+        const updated = setStatus(o.no, "pagado", { tx, saleId: result.saleId });
+        await tell({ type: "paid", order: updated });
+        return updated;
+      }
+      const updated = setStatus(o.no, "requiere_atencion", { tx, reason: ATTENTION[result.code] ?? ATTENTION.unavailable });
+      await tell({ type: "attention", order: updated });
+      return updated;
+    });
+  }
+
+  async function settleFromWompi(no) {
+    const tx = await wompi?.findByReference(no);
+    if (!tx || !FINAL_STATUSES.includes(tx.status)) return false;
+    await applyPayment({ reference: no, transactionId: tx.id, status: tx.status, amountInCents: tx.amountInCents });
+    return true;
+  }
+
+  async function reconcile() {
+    const t = now();
+    const from = new Date(t - RECONCILE_MAX_AGE_MS).toISOString();
+    const to = new Date(t - RECONCILE_MIN_AGE_MS).toISOString();
+    const pending = db.prepare("SELECT no FROM orders WHERE status = 'pendiente_pago' AND created_at >= ? AND created_at <= ?").all(from, to);
+    let settled = 0;
+    for (const { no } of pending) {
+      try {
+        if (await settleFromWompi(no)) settled++;
+      } catch {}
+    }
+    return settled;
+  }
+
+  async function publicView(no, token) {
     if (typeof no !== "string" || typeof token !== "string") return null;
-    const o = db.prepare("SELECT * FROM orders WHERE no = ? AND token = ?").get(no, token);
+    let o = db.prepare("SELECT * FROM orders WHERE no = ? AND token = ?").get(no, token);
     if (!o) return null;
+    if (o.status === "pendiente_pago" && now() - Date.parse(o.created_at) > SETTLE_AFTER_MS) {
+      try {
+        await settleFromWompi(no);
+      } catch {}
+      o = getOrder(no);
+    }
     const items = db
       .prepare("SELECT category_name, variant_name, grind, qty, unit_price FROM order_items WHERE order_no = ? ORDER BY id")
       .all(no)
@@ -163,5 +271,5 @@ export function createOrders({ db, catalog, pulso, wompi, notify, config, now = 
     return { no: o.no, status: o.status, items, subtotal: o.subtotal, shipping: o.shipping, total: o.total, municipio: o.municipio };
   }
 
-  return { create, publicView };
+  return { create, publicView, applyPayment, reconcile };
 }

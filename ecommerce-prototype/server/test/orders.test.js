@@ -149,10 +149,10 @@ test("checkout URL carries amount in cents and signature", async () => {
 test("publicView requires the token and hides contact data", async () => {
   const { orders } = setup();
   const { no, token } = await orders.create(input());
-  assert.equal(orders.publicView(no, "wrong"), null);
-  assert.equal(orders.publicView(no, undefined), null);
-  assert.equal(orders.publicView("WEB-9999", token), null);
-  const v = orders.publicView(no, token);
+  assert.equal(await orders.publicView(no, "wrong"), null);
+  assert.equal(await orders.publicView(no, undefined), null);
+  assert.equal(await orders.publicView("WEB-9999", token), null);
+  const v = await orders.publicView(no, token);
   assert.deepEqual(Object.keys(v).sort(), ["items", "municipio", "no", "shipping", "status", "subtotal", "total"]);
   assert.deepEqual(v.items, [{ category: "El Elegante", variant: "GEISHA FERIA 250 GR", grind: "media", qty: 1, unitPrice: 65000 }]);
   assert.equal(v.total, 80000);
