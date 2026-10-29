@@ -33,7 +33,7 @@ test('category and process filters stay independent across reloads', async ({ pa
   await expect(page.locator('main')).toContainText('0 cafés');
   await page.getByRole('button', { name: 'Limpiar filtros' }).click();
   await expect(categories.getByRole('button', { name: 'Todas', exact: true })).toHaveAttribute('aria-pressed', 'true');
-  await processes.getByRole('button', { name: 'Regional', exact: true }).click();
+  await processes.getByRole('button', { name: 'Lavado', exact: true }).click();
   await expect(page.locator('main')).toContainText('1 café');
-  await expect(page.getByRole('heading', { name: 'Chigüiro', exact: true })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Nutria', exact: true })).toBeVisible();
 });

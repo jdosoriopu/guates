@@ -5,10 +5,14 @@ import {
   CITIES,
   SIZES,
   GRINDS,
-  priceOf,
   money,
 } from "../generated/logic.js";
 import { paths, dateText, advanceDate, STORE_KEY } from "./state.js";
+import { defaultVariant, liveFor, plainCategories, plainCategory } from "./live/catalog.js";
+const fromPrice = (variants) => {
+  const prices = variants.map((x) => x.price);
+  return (new Set(prices).size > 1 ? "Desde " : "") + money(Math.min(...prices));
+};
 const G = window.Guates;
 const Link = ({ to, children, ...props }) => (
   <a data-route href={to} {...props}>
@@ -191,9 +195,11 @@ function Catalog({ controller }) {
                   </tr>
                 ))}
                 <tr>
-                  <th>250 g · precio de muestra</th>
+                  <th>Precio</th>
                   {s.compare.map((k) => (
-                    <td key={k}>{money(BY[k].price)}</td>
+                    <td key={k}>
+                      {liveFor(k) ? fromPrice(liveFor(k).variants) : money(BY[k].price)}
+                    </td>
                   ))}
                 </tr>
               </tbody>
@@ -201,7 +207,98 @@ function Catalog({ controller }) {
           </div>
         )}
       </Panel>
+      <PlainCards />
     </div>
+  );
+}
+function PlainCards() {
+  const list = plainCategories();
+  if (!list.length) return null;
+  return (
+    <div className="extension-grid">
+      {list.map((c) => (
+        <Panel key={c.key}>
+          <G.Pattern name="formas" width="100%" height={120} />
+          <h2>
+            <Link to={"/cafes/" + c.slug}>{c.name}</Link>
+          </h2>
+          <p>
+            {c.variants.every((x) => x.available <= 0)
+              ? "Agotado"
+              : fromPrice(c.variants)}
+          </p>
+        </Panel>
+      ))}
+    </div>
+  );
+}
+function PlainCategory({ controller, category }) {
+  const first = defaultVariant(category.key);
+  const [variantId, setVariant] = useState(first?.id);
+  const [grind, setGrind] = useState("grano");
+  const [qty, setQty] = useState(1);
+  const variant =
+    category.variants.find((x) => x.id === variantId) || first;
+  const out = !variant || variant.available <= 0;
+  return (
+    <>
+      <Intro title={category.name} />
+      <Panel>
+        <G.Pattern name="formas" width="100%" height={160} />
+        <div
+          className="extension-row extension-choices"
+          role="group"
+          aria-label="Presentación"
+        >
+          {category.variants.map((x) => (
+            <button
+              type="button"
+              key={x.id}
+              className="extension-choice"
+              aria-pressed={x.id === variant?.id}
+              disabled={x.available <= 0}
+              onClick={() => setVariant(x.id)}
+            >
+              <strong>
+                {x.name} · {x.process}
+              </strong>
+              <span>
+                {money(x.price)} ·{" "}
+                {x.available > 0 ? x.available + " disponibles" : "agotado"}
+              </span>
+            </button>
+          ))}
+        </div>
+        <div className="extension-row">
+          <Field label="Molienda">
+            <select value={grind} onChange={(e) => setGrind(e.target.value)}>
+              {GRINDS.map((g) => (
+                <option key={g.key} value={g.key}>
+                  {g.label} · {g.hint}
+                </option>
+              ))}
+            </select>
+          </Field>
+          <Field label="Cantidad">
+            <input
+              type="number"
+              min="1"
+              max="20"
+              value={qty}
+              onChange={(e) =>
+                setQty(Math.min(20, Math.max(1, Math.floor(Number(e.target.value)) || 1)))
+              }
+            />
+          </Field>
+        </div>
+        <Button
+          disabled={out || !controller.canBuy()}
+          onClick={() => controller.addVariant(category.key, variant.id, grind, qty)}
+        >
+          Agregar a tu bolsa
+        </Button>
+      </Panel>
+    </>
   );
 }
 function Passport({ controller }) {
@@ -708,6 +805,12 @@ export function Extension({ controller, values, placement }) {
     );
   return (
     <>
+      {s.catalogError && !s.catalog && (
+        <p className="extension-wrap extension-banner" role="alert">
+          No pudimos consultar la disponibilidad. Intenta de nuevo en un
+          momento.
+        </p>
+      )}
       {s.storageError && (
         <p className="extension-wrap" role="alert">
           No pudimos guardar tus cambios. Se conservarán solo durante esta
@@ -769,7 +872,14 @@ export function Extension({ controller, values, placement }) {
             </Panel>
           </>
         )}
-        {s.screen === "notfound" && (
+        {s.screen === "categoria" && plainCategory(s.plain) && (
+          <PlainCategory
+            key={s.plain}
+            controller={controller}
+            category={plainCategory(s.plain)}
+          />
+        )}
+        {s.screen === "notfound" && (s.catalog || s.catalogError) && (
           <>
             <Intro title="Este camino aún no está en el mapa." />
             <Link to="/cafes">Volver a los cafés</Link>
@@ -850,15 +960,11 @@ export function Extension({ controller, values, placement }) {
           <span>
             {values.p.name} · {values.lineTotal}
             <small>
-              {SIZES[s.size].label} ·{" "}
-              {GRINDS.find((g) => g.key === s.grind).label} · dato de muestra
+              {controller.variantFor(s.product)?.name ?? SIZES[s.size].label} ·{" "}
+              {GRINDS.find((g) => g.key === s.grind).label}
             </small>
           </span>
-          <Button
-            onClick={() =>
-              controller.addProduct(s.product, s.size, s.grind, s.qty)
-            }
-          >
+          <Button disabled={!controller.canBuy()} onClick={values.addCurrent}>
             Agregar este café
           </Button>
         </aside>

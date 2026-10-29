@@ -1,4 +1,6 @@
 import { BY, PRODUCTS, CITIES, SIZES, GRINDS } from "../generated/logic.js";
+import { FEATURES } from "./live/features.js";
+import { isOnSale, keyForSlug, slugFor, plainCategories } from "./live/catalog.js";
 export const STORE_KEY = "guates.canvas-store.v1";
 export const paths = {
   home: "/",
@@ -38,25 +40,32 @@ export function validSelection(x) {
   );
 }
 export function validLine(x) {
+  if (!x || !Number.isInteger(x.qty) || x.qty <= 0 || x.qty > 20) return false;
+  if (x.sub)
+    return (
+      FEATURES.subscriptions &&
+      validSelection(x.sub) &&
+      ["fijo", "explora"].includes(x.sub.mode) &&
+      [2, 4].includes(x.sub.freq) &&
+      !!BY[x.sub.product]
+    );
   return (
-    x &&
-    Number.isInteger(x.qty) &&
-    x.qty > 0 &&
-    x.qty <= 20 &&
-    (x.sub
-      ? validSelection(x.sub) &&
-        ["fijo", "explora"].includes(x.sub.mode) &&
-        [2, 4].includes(x.sub.freq) &&
-        !!BY[x.sub.product]
-      : validSelection(x) && !!BY[x.key])
+    typeof x.key === "string" &&
+    typeof x.variantId === "string" &&
+    x.variantId !== "" &&
+    x.size === 0 &&
+    validSelection(x) &&
+    x.id === x.variantId + "|" + x.grind
   );
 }
 export function restore(storage) {
   try {
     const s = JSON.parse(storage.getItem(STORE_KEY));
-    if (!s || !Array.isArray(s.cart) || !s.cart.every(validLine)) return {};
+    if (!s || !Array.isArray(s.cart)) return {};
+    const cart = s.cart.filter(validLine);
     return {
-      cart: s.cart,
+      cart,
+      staleLines: s.cart.length - cart.length,
       city: CITIES.some((c) => c.key === s.city) ? s.city : "bogota",
       stamps: s.stamps || {},
       orders: Array.isArray(s.orders) ? s.orders : [],
@@ -79,8 +88,11 @@ export function parseRoute(url, state = {}) {
   let screen =
     Object.keys(paths).find((k) => paths[k] === u.pathname) || "notfound";
   const result = { screen };
-  const product = u.pathname.match(/^\/cafes\/([^/]+)$/)?.[1];
-  if (product && BY[product])
+  const slug = u.pathname.match(/^\/cafes\/([^/]+)$/)?.[1];
+  const product = slug && keyForSlug(slug);
+  const plain = slug && plainCategories().find((c) => c.slug === slug);
+  if (plain) Object.assign(result, { screen: "categoria", plain: plain.key });
+  if (product && isOnSale(product))
     Object.assign(result, {
       screen: "producto",
       product,
@@ -110,7 +122,12 @@ export function parseRoute(url, state = {}) {
   return result;
 }
 export function routeFor(s) {
-  let path = s.screen === "producto" ? "/cafes/" + s.product : paths[s.screen];
+  let path =
+    s.screen === "producto"
+      ? "/cafes/" + slugFor(s.product)
+      : s.screen === "categoria"
+        ? "/cafes/" + slugFor(s.plain)
+        : paths[s.screen];
   if (!path) return null;
   const q = new URLSearchParams();
   if (s.screen === "producto") q.set("etapa", s.stage);

@@ -164,18 +164,10 @@ test("storage corruption fails safely, with original variants validated", () => 
     }),
     {},
   );
-  assert.equal(
-    validLine({ key: "regional", size: 2, grind: "grano", qty: 1 }),
-    true,
-  );
-  assert.equal(
-    validLine({ key: "regional", size: 9, grind: "grano", qty: 1 }),
-    false,
-  );
-  assert.equal(
-    validLine({ key: "regional", size: 2, grind: "grano", qty: -1 }),
-    false,
-  );
+  const line = { id: "v1|grano", key: "regional", variantId: "v1", size: 0, grind: "grano" };
+  assert.equal(validLine({ ...line, qty: 1 }), true);
+  assert.equal(validLine({ ...line, size: 9, qty: 1 }), false);
+  assert.equal(validLine({ ...line, qty: -1 }), false);
   assert.equal(
     advanceDate(2, "2026-12-25T12:00:00Z"),
     "2027-01-08T12:00:00.000Z",

@@ -253,3 +253,38 @@ details summary {
     scroll-behavior: auto !important;
   }
 }
+.extension-banner {
+  margin: 16px auto;
+  padding: 12px 16px;
+  border-radius: var(--radius-md);
+  background: var(--luz-de-manana);
+  color: var(--cafe-de-origen);
+  font: 500 16px/1.5 var(--font-sans);
+}
+.extension-choices {
+  margin: 16px 0;
+}
+.extension-choice {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  min-height: 44px;
+  padding: 6px 18px;
+  border: 2px solid var(--cafe-de-origen);
+  border-radius: var(--radius-pill);
+  background: transparent;
+  color: var(--cafe-de-origen);
+  font: 400 13px/18px var(--font-sans);
+  cursor: pointer;
+}
+.extension-choice strong {
+  font-size: 15px;
+}
+.extension-choice[aria-pressed="true"] {
+  background: var(--cafe-de-origen);
+  color: var(--crema-de-papel);
+}
+.extension-choice:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
