@@ -9,7 +9,7 @@ const EMAIL = /^[^@\s]+@[^@\s]+\.[^@\s]+$/;
 const MAX_LINES = 50;
 const FIRST_SEQ = 1001;
 
-const STATUS = { invalid: 422, stock: 409, unavailable: 409, not_covered: 422, catalog_down: 503 };
+const STATUS = { invalid: 422, stock: 409, unavailable: 409, not_covered: 422, catalog_down: 503, conflict: 409, not_found: 404, pulso: 502 };
 
 export class OrderError extends Error {
   constructor(code, message, detail) {
@@ -81,6 +81,7 @@ const ATTENTION = {
   auth: "Pulso rechazó la llave",
   unavailable: "Pulso no respondió",
 };
+const AMOUNT_MISMATCH = "El monto pagado no coincide";
 const FINAL_STATUSES = ["APPROVED", "DECLINED", "VOIDED", "ERROR"];
 const SETTLE_AFTER_MS = 10_000;
 const RECONCILE_MIN_AGE_MS = 2 * 60_000;
@@ -217,7 +218,7 @@ export function createOrders({ db, catalog, pulso, wompi, notify, config, now = 
       if (status !== "APPROVED") return o;
 
       if (amountInCents !== o.total * 100) {
-        const updated = setStatus(o.no, "requiere_atencion", { tx, reason: "El monto pagado no coincide" });
+        const updated = setStatus(o.no, "requiere_atencion", { tx, reason: AMOUNT_MISMATCH });
         await tell({ type: "attention", order: updated });
         return updated;
       }
@@ -271,5 +272,89 @@ export function createOrders({ db, catalog, pulso, wompi, notify, config, now = 
     return { no: o.no, status: o.status, items, subtotal: o.subtotal, shipping: o.shipping, total: o.total, municipio: o.municipio };
   }
 
-  return { create, publicView, applyPayment, reconcile };
+  const LIST_STATUSES = ["pendiente_pago", "pagado", "pago_fallido", "requiere_atencion", "despachado", "entregado", "anulado"];
+
+  function list(status) {
+    if (status !== undefined && !LIST_STATUSES.includes(status)) throw new OrderError("invalid", "Estado desconocido.");
+    const where = status ? "o.status = ?" : "o.status NOT IN ('pendiente_pago', 'pago_fallido')";
+    return db
+      .prepare(
+        `SELECT o.no, o.created_at AS created, o.status, o.customer_name AS name, o.municipio, o.total, o.attention_reason,
+           (SELECT COALESCE(SUM(qty), 0) FROM order_items WHERE order_no = o.no) AS bags
+         FROM orders o WHERE ${where}
+         ORDER BY (o.status = 'requiere_atencion') DESC, o.created_at DESC, o.no DESC`,
+      )
+      .all(...(status ? [status] : []))
+      .map((r) => ({ ...r }));
+  }
+
+  function detail(no) {
+    const o = getOrder(no);
+    if (!o) return null;
+    const items = db
+      .prepare("SELECT category_name, variant_name, grind, qty, unit_price FROM order_items WHERE order_no = ? ORDER BY id")
+      .all(no)
+      .map((r) => ({ category: r.category_name, variant: r.variant_name, grind: r.grind, qty: r.qty, unitPrice: r.unit_price }));
+    return {
+      no: o.no, created: o.created_at, updated: o.updated_at, status: o.status, attention_reason: o.attention_reason,
+      name: o.customer_name, phone: o.customer_phone, email: o.customer_email,
+      municipio: o.municipio, departamento: o.departamento, address: o.address, notes: o.notes,
+      items, bags: items.reduce((n, i) => n + i.qty, 0), subtotal: o.subtotal, shipping: o.shipping, total: o.total,
+      wompi_tx: o.wompi_tx, pulso_sale_id: o.pulso_sale_id, tracking: o.tracking,
+      utm_source: o.utm_source, utm_medium: o.utm_medium, utm_campaign: o.utm_campaign, utm_content: o.utm_content, landing: o.landing,
+    };
+  }
+
+  // Runs `fn(order)` under the order's lock after checking the current status allows the move.
+  function transition(no, from, label, fn) {
+    return withLock(no, async () => {
+      const o = getOrder(no);
+      if (!o) throw new OrderError("not_found", "No encontramos ese pedido.");
+      if (!from.includes(o.status)) throw new OrderError("conflict", `No se puede ${label} un pedido en estado ${o.status}.`);
+      await fn(o);
+      return detail(no);
+    });
+  }
+
+  const despachar = (no, tracking) => {
+    const code = typeof tracking === "string" ? tracking.trim().slice(0, 120) : "";
+    return transition(no, ["pagado"], "despachar", (o) => {
+      if (!code) throw invalid("Escribe el número de guía.");
+      setStatus(o.no, "despachado");
+      db.prepare("UPDATE orders SET tracking = ? WHERE no = ?").run(code, o.no);
+    });
+  };
+
+  const entregar = (no) => transition(no, ["despachado"], "entregar", (o) => void setStatus(o.no, "entregado"));
+
+  async function anular(no, reason) {
+    const why = typeof reason === "string" ? reason.trim().slice(0, 300) : "";
+    let refundHint = false;
+    const order = await transition(no, ["pagado", "requiere_atencion", "despachado"], "anular", async (o) => {
+      if (!why) throw invalid("Escribe el motivo de la anulación.");
+      if (o.pulso_sale_id) {
+        const res = await pulso.cancelOrder(o.no, why);
+        if (!res.ok && res.code !== "not_found") throw new OrderError("pulso", "Pulso no pudo anular el pedido. Intenta de nuevo.");
+      }
+      refundHint = Boolean(o.wompi_tx);
+      setStatus(o.no, "anulado");
+    });
+    return { ...order, refundHint };
+  }
+
+  const retryPulso = (no) =>
+    transition(no, ["requiere_atencion"], "reintentar en Pulso", async (o) => {
+      if (!o.wompi_tx || o.attention_reason === AMOUNT_MISMATCH) {
+        throw new OrderError("conflict", "Este pedido no se puede reintentar: revisa el pago en Wompi.");
+      }
+      const result = await registerInPulso(o);
+      if (!result.ok) {
+        setStatus(o.no, "requiere_atencion", { reason: ATTENTION[result.code] ?? ATTENTION.unavailable });
+        throw new OrderError("pulso", "Pulso todavía no acepta el pedido.");
+      }
+      setStatus(o.no, "pagado", { saleId: result.saleId });
+      await tell({ type: "paid", order: getOrder(o.no) });
+    });
+
+  return { create, publicView, applyPayment, reconcile, list, detail, despachar, entregar, anular, retryPulso };
 }

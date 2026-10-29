@@ -1,4 +1,7 @@
 import Fastify from "fastify";
+import cookie from "@fastify/cookie";
+import { equipoRoutes } from "./equipo-routes.js";
+import { setOwner } from "./auth.js";
 import { CatalogUnavailable } from "./catalog.js";
 import { listPlaces, placeByCode } from "./places.js";
 import { OrderError } from "./orders.js";
@@ -8,6 +11,16 @@ import { shippingFor, PACKAGING_G } from "./shipping.js";
 export function buildApp(deps) {
   const app = Fastify({ logger: deps.logger ?? false });
   app.decorate("deps", deps);
+  app.register(cookie);
+  app.register(equipoRoutes, { prefix: "/api/equipo" });
+
+  if (deps.config.env === "test") {
+    app.post("/api/test/owner", async (req, reply) => {
+      const { email, password } = req.body ?? {};
+      setOwner(deps.db, email, password);
+      return reply.code(204).send();
+    });
+  }
 
   app.get("/api/health", async () => ({ ok: true }));
 
