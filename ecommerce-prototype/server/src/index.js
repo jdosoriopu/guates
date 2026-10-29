@@ -6,6 +6,8 @@ import { createPulso } from "./pulso.js";
 import { createCatalog } from "./catalog.js";
 import { createWompi } from "./wompi.js";
 import { createOrders } from "./orders.js";
+import webpush from "web-push";
+import { createNotifier, pushChannel } from "./notify.js";
 import { buildApp } from "./app.js";
 
 const config = loadConfig();
@@ -15,7 +17,8 @@ const pulso = createPulso({ config, fetch });
 const catalog = createCatalog({ pulso, db, ttlMs: config.catalogTtlMs });
 
 const wompi = createWompi({ config, fetch });
-const orders = createOrders({ db, catalog, pulso, wompi, config });
+const notify = createNotifier({ channels: [pushChannel({ db, vapid: config.vapid, webpush })] });
+const orders = createOrders({ db, catalog, pulso, wompi, notify, config });
 const app = buildApp({ config, db, pulso, catalog, orders, wompi, logger: true });
 setInterval(() => orders.reconcile().catch((err) => app.log.error(err, "reconcile failed")), 5 * 60_000).unref();
 await app.listen({ port: config.port, host: "127.0.0.1" });
