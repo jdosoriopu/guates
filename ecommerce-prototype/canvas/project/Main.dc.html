@@ -27,6 +27,8 @@ a{color:#81164b}a:hover{color:#6a1240}
 .gq-quick-choices button[aria-pressed=true]{background:var(--cafe-de-origen);color:var(--crema-de-papel)}
 .gq-quick-confirm{background:var(--cereza-profunda);color:var(--crema-de-papel);border-color:var(--cereza-profunda);align-self:flex-start}
 .gq-quick-confirm:disabled{background:var(--crema-de-papel);color:var(--cafe-de-origen);border-style:dashed;cursor:not-allowed}
+.gq-flavor-section{position:relative;isolation:isolate}
+.gq-flavor-wallpaper{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;opacity:.12;z-index:-1}
 .gq-recommendation{display:grid;grid-template-columns:minmax(0,1fr) 260px;background:var(--crema-de-papel);color:var(--cafe-de-origen);scroll-margin-top:100px}
 .gq-recommendation-copy{min-width:0;padding:var(--space-8);display:flex;flex-direction:column;gap:var(--space-6)}
 .gq-recommendation-art{padding:var(--space-6);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:var(--space-6)}
@@ -209,7 +211,20 @@ a{color:#81164b}a:hover{color:#6a1240}
 </section>
 
 <div aria-hidden="true" style="line-height: 0; background: #F6F3ED; border-radius: 16px"><svg viewBox="0 0 1440 48" preserveAspectRatio="none" style="display: block; width: 100%; height: 40px"><path d="M0 48 L0 30 C 180 6 360 6 540 22 C 720 38 900 40 1080 24 C 1240 10 1340 8 1440 18 L1440 48 Z" fill="{{emo.band}}"></path></svg></div>
-<section style="background: {{emo.band}}; transition: background-color 300ms ease">
+<section class="gq-flavor-section" style="background: {{emo.band}}; transition: background-color 300ms ease">
+<svg class="gq-flavor-wallpaper" aria-hidden="true" focusable="false" xmlns="http://www.w3.org/2000/svg">
+<defs>
+<pattern id="gq-flavor-animals" width="320" height="280" patternUnits="userSpaceOnUse">
+<g transform="translate(12 8) rotate(-14 60 60)">
+<x-import component-from-global-scope="Guates.Illustration" name="{{emo.art}}" color="{{emo.artToken}}" size="{{sz.wallpaperArt}}"></x-import>
+</g>
+<g transform="translate(172 148) rotate(12 60 60)">
+<x-import component-from-global-scope="Guates.Illustration" name="{{emo.art}}" color="{{emo.artToken}}" size="{{sz.wallpaperArt}}"></x-import>
+</g>
+</pattern>
+</defs>
+<rect width="100%" height="100%" fill="url(#gq-flavor-animals)"></rect>
+</svg>
 <div style="max-width: 1280px; margin: 0 auto; padding: 64px clamp(16px, 4vw, 48px) 72px; display: flex; flex-direction: column; gap: 32px">
 <div style="display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: 20px 40px">
 <div style="flex: 1 1 420px; min-width: 0; max-width: 640px; display: flex; flex-direction: column; gap: 10px">
@@ -1629,7 +1644,7 @@ class Component extends DCLogic {
       cart, fields, deliveries, pays, formError, hasFormError: !!formError, hasToast: !!s.toast,
       order, sub: subView,
       refs: { top: this.setTop, car: this.setCar, journey: this.setJourney, walk: this.setWalk, trail: this.setTrail, trailCanvas: this.sceneRef('trailCanvas', 'trail'), hero: this.sceneRef('hero', 'route'), cupIdea: this.sceneRef('cupIdea', 'cup'), terrain: this.sceneRef('terrain', 'terrain'), route: this.sceneRef('route', 'route'), bean: this.sceneRef('bean', 'bean'), cup: this.sceneRef('cup', 'cup'), cartMap: this.sceneRef('cartMap', 'route'), orderRoute: this.sceneRef('orderRoute', 'route') },
-      sz: { cupArt: 220, moodArt2: 220, moodArt: 200, portrait: 240, heroArt: 240, logo: 48, footerLogo: 56, tilt: -3, recArt: 140, cardArt: 168, label: 360, marker: 88, bean: 20, disc: 150, cartArt: 80, stamp: 96, subArt: 72, seal: 96, pattern: 56 },
+      sz: { cupArt: 220, wallpaperArt: 120, moodArt2: 220, moodArt: 200, portrait: 240, heroArt: 240, logo: 48, footerLogo: 56, tilt: -3, recArt: 140, cardArt: 168, label: 360, marker: 88, bean: 20, disc: 150, cartArt: 80, stamp: 96, subArt: 72, seal: 96, pattern: 56 },
       goHome: () => this.go('home'), goCatalog: () => this.go('catalogo'), goCart: () => this.go('carrito'), goCheckout: () => this.go('checkout'), goSub: () => this.go('suscripcion'),
       followCup: () => this.open('lavado', true),
       onCity: (e) => this.setState({ city: e.target.value }),

@@ -687,7 +687,7 @@ export class CanvasLogic extends React.Component {
       cart, fields, deliveries, pays, formError, hasFormError: !!formError, hasToast: !!s.toast,
       order, sub: subView,
       refs: { top: this.setTop, car: this.setCar, journey: this.setJourney, walk: this.setWalk, trail: this.setTrail, trailCanvas: this.sceneRef('trailCanvas', 'trail'), hero: this.sceneRef('hero', 'route'), cupIdea: this.sceneRef('cupIdea', 'cup'), terrain: this.sceneRef('terrain', 'terrain'), route: this.sceneRef('route', 'route'), bean: this.sceneRef('bean', 'bean'), cup: this.sceneRef('cup', 'cup'), cartMap: this.sceneRef('cartMap', 'route'), orderRoute: this.sceneRef('orderRoute', 'route') },
-      sz: { cupArt: 220, moodArt2: 220, moodArt: 200, portrait: 240, heroArt: 240, logo: 48, footerLogo: 56, tilt: -3, recArt: 140, cardArt: 168, label: 360, marker: 88, bean: 20, disc: 150, cartArt: 80, stamp: 96, subArt: 72, seal: 96, pattern: 56 },
+      sz: { cupArt: 220, wallpaperArt: 120, moodArt2: 220, moodArt: 200, portrait: 240, heroArt: 240, logo: 48, footerLogo: 56, tilt: -3, recArt: 140, cardArt: 168, label: 360, marker: 88, bean: 20, disc: 150, cartArt: 80, stamp: 96, subArt: 72, seal: 96, pattern: 56 },
       goHome: () => this.go('home'), goCatalog: () => this.go('catalogo'), goCart: () => this.go('carrito'), goCheckout: () => this.go('checkout'), goSub: () => this.go('suscripcion'),
       followCup: () => this.open('lavado', true),
       onCity: (e) => this.setState({ city: e.target.value }),

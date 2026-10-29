@@ -13,6 +13,8 @@ a{color:#81164b}a:hover{color:#6a1240}
 .gq-quick-choices button[aria-pressed=true]{background:var(--cafe-de-origen);color:var(--crema-de-papel)}
 .gq-quick-confirm{background:var(--cereza-profunda);color:var(--crema-de-papel);border-color:var(--cereza-profunda);align-self:flex-start}
 .gq-quick-confirm:disabled{background:var(--crema-de-papel);color:var(--cafe-de-origen);border-style:dashed;cursor:not-allowed}
+.gq-flavor-section{position:relative;isolation:isolate}
+.gq-flavor-wallpaper{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;opacity:.12;z-index:-1}
 .gq-recommendation{display:grid;grid-template-columns:minmax(0,1fr) 260px;background:var(--crema-de-papel);color:var(--cafe-de-origen);scroll-margin-top:100px}
 .gq-recommendation-copy{min-width:0;padding:var(--space-8);display:flex;flex-direction:column;gap:var(--space-6)}
 .gq-recommendation-art{padding:var(--space-6);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:var(--space-6)}

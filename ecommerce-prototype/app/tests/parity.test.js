@@ -48,7 +48,7 @@ test("generated provenance matches the current working canvas, including pre-exi
     crypto.createHash("sha256").update(source).digest("hex"),
   );
   assert.equal(manifest.nodes["sc-for"], 44);
-  assert.equal(manifest.nodes["sc-if"], 38);
+  assert.equal(manifest.nodes["sc-if"], 39);
   assert.equal(manifest.nodes["canvas"], 7);
   assert.equal(manifest.nodes["x-import"], 37);
   const generated = fs.readFileSync(
