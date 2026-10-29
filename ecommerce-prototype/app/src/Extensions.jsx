@@ -8,7 +8,14 @@ import {
   money,
 } from "../generated/logic.js";
 import { paths, dateText, advanceDate, STORE_KEY } from "./state.js";
-import { defaultVariant, liveFor, plainCategories, plainCategory } from "./live/catalog.js";
+import {
+  defaultVariant,
+  isOnSale,
+  liveFor,
+  plainCategories,
+  plainCategory,
+} from "./live/catalog.js";
+import { FEATURES } from "./live/features.js";
 const fromPrice = (variants) => {
   const prices = variants.map((x) => x.price);
   return (new Set(prices).size > 1 ? "Desde " : "") + money(Math.min(...prices));
@@ -166,9 +173,7 @@ function Catalog({ controller }) {
         {s.compare.length === 2 && (
           <div className="table-scroll">
             <table>
-              <caption>
-                Sensaciones, altitudes y precios: datos de muestra
-              </caption>
+              <caption>Sensaciones: datos de muestra</caption>
               <thead>
                 <tr>
                   <th>Tu café</th>
@@ -184,7 +189,6 @@ function Catalog({ controller }) {
                   ["Sensación", "feel"],
                   ["Productor", "producer"],
                   ["Origen", "place"],
-                  ["Proceso", "process"],
                   ["Variedad o mezcla", "variety"],
                 ].map(([label, key]) => (
                   <tr key={key}>
@@ -195,10 +199,22 @@ function Catalog({ controller }) {
                   </tr>
                 ))}
                 <tr>
+                  <th>Proceso</th>
+                  {s.compare.map((k) => (
+                    <td key={k}>
+                      {liveFor(k)
+                        ? [...new Set(liveFor(k).variants.map((x) => x.process))].join(" · ")
+                        : BY[k].process}
+                    </td>
+                  ))}
+                </tr>
+                <tr>
                   <th>Precio</th>
                   {s.compare.map((k) => (
                     <td key={k}>
-                      {liveFor(k) ? fromPrice(liveFor(k).variants) : money(BY[k].price)}
+                      {liveFor(k)?.variants.length
+                        ? fromPrice(liveFor(k).variants)
+                        : "No disponible"}
                     </td>
                   ))}
                 </tr>
@@ -207,12 +223,19 @@ function Catalog({ controller }) {
           </div>
         )}
       </Panel>
-      <PlainCards />
+      <PlainCards controller={controller} />
     </div>
   );
 }
-function PlainCards() {
-  const list = plainCategories();
+// Plain categories carry no personality data, so only the process filter can match them.
+function PlainCards({ controller }) {
+  const s = controller.state;
+  const list =
+    s.category !== "todos" || s.feeling
+      ? []
+      : plainCategories().filter(
+          (c) => s.filter === "todos" || c.variants.some((x) => x.process === s.filter),
+        );
   if (!list.length) return null;
   return (
     <div className="extension-grid">
@@ -762,34 +785,48 @@ function Account({ controller }) {
     </>
   );
 }
+const PENDING = "Texto por confirmar con Guates.";
 const info = {
-  nosotros: [
-    "Sobre Guates",
-    "Guates nace en los Llanos y mira otros orígenes con curiosidad. Donde empieza otro mapa del café.",
-  ],
-  ayuda: [
-    "Ayuda y contacto",
-    "Instagram, WhatsApp, correo y horarios: por confirmar. Este prototipo no envía mensajes.",
-  ],
-  envios: [
-    "Envíos y devoluciones",
-    "Las ciudades, tarifas y plazos del prototipo son datos de muestra. La cobertura y las condiciones comerciales de envíos y devoluciones están por confirmar.",
-  ],
-  privacidad: [
-    "Privacidad",
-    "Este prototipo guarda datos de prueba en este navegador. No hay autenticación ni sincronización. Las notas no se publican; cualquier persona con acceso al navegador puede consultarlas. Usa datos ficticios. Puedes borrarlos desde Mi cuenta. Política de la tienda real: por confirmar.",
-  ],
-  terminos: [
-    "Términos",
-    "No se realizan pagos, reservas, envíos ni cobros recurrentes. Precios, fechas y condiciones son datos de muestra. Los términos comerciales de la tienda real están por confirmar.",
-  ],
+  nosotros: {
+    title: "Sobre Guates",
+    body: [
+      "Guates nace en los Llanos y mira otros orígenes con curiosidad. Donde empieza otro mapa del café.",
+    ],
+  },
+  ayuda: {
+    title: "Ayuda y contacto",
+    body: [
+      "Pagas en línea y recibes la confirmación de tu pedido apenas se aprueba el pago.",
+      "Instagram, WhatsApp, correo y horarios: por confirmar.",
+    ],
+  },
+  envios: {
+    title: "Envíos y devoluciones",
+    body: [
+      "Enviamos con Interrapidísimo. El costo del envío lo calculamos según tu municipio al finalizar tu compra, antes de que pagues, y es gratis desde $90.000.",
+      "Tiempos de entrega: por confirmar.",
+      "Si tu café llega con algún problema, escríbenos y lo resolvemos. Las condiciones de devolución están por confirmar.",
+    ],
+  },
+  privacidad: {
+    title: "Privacidad",
+    body: ["Usamos tus datos solo para procesar y entregar tu pedido. No los vendemos."],
+    pending: true,
+  },
+  terminos: {
+    title: "Términos",
+    body: [
+      "Los precios están en pesos colombianos y la disponibilidad se consulta en vivo.",
+    ],
+    pending: true,
+  },
 };
 export function Extension({ controller, values, placement }) {
   const s = controller.state;
   if (placement === "header")
     return (
       <nav className="extension-utility" aria-label="Tu espacio">
-        <Link to="/cuenta">Mi cuenta</Link>
+        {FEATURES.accounts && <Link to="/cuenta">Mi cuenta</Link>}
         <Link to="/bolsa">Tu bolsa ({values.cartCount})</Link>
       </nav>
     );
@@ -798,7 +835,7 @@ export function Extension({ controller, values, placement }) {
       <nav className="extension-footer" aria-label="Información">
         {Object.keys(info).map((k) => (
           <Link key={k} to={paths[k]}>
-            {info[k][0]}
+            {info[k].title}
           </Link>
         ))}
       </nav>
@@ -829,7 +866,7 @@ export function Extension({ controller, values, placement }) {
               mapas, receta y transformaciones.
             </Intro>
             <div className="extension-grid journey-grid">
-              {PRODUCTS.map((p) => (
+              {PRODUCTS.filter((p) => isOnSale(p.key)).map((p) => (
                 <Panel key={p.key}>
                   <G.Illustration
                     name={p.bagArt}
@@ -851,9 +888,16 @@ export function Extension({ controller, values, placement }) {
         )}
         {info[s.screen] && (
           <>
-            <Intro title={info[s.screen][0]} />
+            <Intro title={info[s.screen].title} />
             <Panel>
-              <p>{info[s.screen][1]}</p>
+              {info[s.screen].body.map((text) => (
+                <p key={text}>{text}</p>
+              ))}
+              {info[s.screen].pending && (
+                <p className="extension-pending" role="note">
+                  {PENDING}
+                </p>
+              )}
               {s.screen === "ayuda" && (
                 <>
                   <h2>Elige tu molienda</h2>
@@ -861,11 +905,6 @@ export function Extension({ controller, values, placement }) {
                     En grano para moler en casa; fina para greca y espresso;
                     media para filtrado; gruesa para prensa francesa. Son puntos
                     de partida: ajusta a tu método.
-                  </p>
-                  <h2>Tu suscripción</h2>
-                  <p>
-                    Elige café fijo o explorador. Pausa, salta o cancela desde
-                    Mi cuenta. Todas las entregas son simuladas.
                   </p>
                 </>
               )}
@@ -891,15 +930,6 @@ export function Extension({ controller, values, placement }) {
         {s.screen === "checkout" && (
           <Panel>
             <h2>Antes de confirmar</h2>
-            <p>
-              Compra única como invitado. Usa datos ficticios; no se enviarán
-              correos ni productos.
-            </p>
-            {s.cart.some((x) => x.sub) && !s.profile ? (
-              <Profile controller={controller} />
-            ) : (
-              s.profile && <p>Perfil de prueba: {s.profile.name}</p>
-            )}
             <label className="extension-check">
               <input
                 type="checkbox"
@@ -908,47 +938,18 @@ export function Extension({ controller, values, placement }) {
                   controller.setState({ accepted: e.target.checked })
                 }
               />
-              Revisé el total de hoy y, si aplica, las condiciones y próximos
-              cobros de muestra.
+              Revisé mi pedido y el total de hoy.
             </label>
-            <details>
-              <summary>Escenarios de prueba</summary>
-              <Field label="Resultado del pago simulado">
-                <select
-                  value={s.paymentResult}
-                  onChange={(e) =>
-                    controller.setState({ paymentResult: e.target.value })
-                  }
-                >
-                  <option value="approved">Aprobado</option>
-                  <option value="pending">Pendiente</option>
-                  <option value="failed">Fallido</option>
-                </select>
-              </Field>
-              <Field label="Disponibilidad de prueba">
-                <select
-                  value={s.scenario}
-                  onChange={(e) =>
-                    controller.setState({ scenario: e.target.value })
-                  }
-                >
-                  <option value="normal">Normal</option>
-                  <option value="soldout">Café agotado</option>
-                  <option value="coverage">Destino sin cobertura</option>
-                </select>
-              </Field>
-            </details>
           </Panel>
         )}
         {s.screen === "confirmacion" && (
           <Panel>
             <h1>
               {s.order?.status === "pending"
-                ? "Pago simulado pendiente"
-                : "Tu pedido de prueba"}
+                ? "Tu pago está pendiente"
+                : "Tu pedido"}
             </h1>
-            <Link to="/cuenta/pedidos">Tus pedidos</Link> ·{" "}
-            <Link to="/cuenta/pasaporte">Tu pasaporte</Link>
+            <Link to="/cafes">Seguir explorando cafés</Link>
           </Panel>
         )}
       </div>

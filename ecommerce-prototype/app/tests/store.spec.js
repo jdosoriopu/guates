@@ -8,20 +8,6 @@ async function add(page, key = "lavado") {
     .getByRole("button", { name: "Agregar este café", exact: true })
     .click();
 }
-async function checkout(page) {
-  await page.goto("/checkout");
-  await page
-    .getByRole("textbox", { name: "Nombre", exact: true })
-    .fill("Cliente de prueba");
-  await page.getByRole("textbox", { name: /Correo/ }).fill("demo@example.test");
-  await page
-    .getByRole("textbox", { name: /Dirección/ })
-    .fill("Dirección ficticia 123");
-  await page.getByRole("checkbox", { name: /Revisé/ }).check();
-}
-async function confirm(page) {
-  await page.getByRole("button", { name: /Confirmar pedido simulado/ }).click();
-}
 test("original home and recommendation flows survive, including illustrated steps", async ({
   page,
 }) => {
@@ -86,134 +72,30 @@ test("catalog filters, comparison and empty state are URL-addressable", async ({
     page.getByRole("checkbox", { name: "Nutria", exact: true }),
   ).toBeChecked();
 });
-test("guest checkout preserves original delivery costs and recovers from simulated failures", async ({
+test("guest checkout confirms without simulation copy or test scenarios", async ({
   page,
 }) => {
   await add(page);
-  await checkout(page);
-  await page.getByText("Escenarios de prueba", { exact: true }).click();
+  await page.goto("/checkout");
   await page
-    .getByRole("combobox", { name: "Disponibilidad de prueba" })
-    .selectOption("coverage");
-  await confirm(page);
-  await expect(page.getByRole("alert")).toContainText("sin cobertura");
+    .getByRole("textbox", { name: "Nombre", exact: true })
+    .fill("Cliente de prueba");
+  await page.getByRole("textbox", { name: /Correo/ }).fill("demo@example.test");
   await page
-    .getByRole("combobox", { name: "Disponibilidad de prueba" })
-    .selectOption("soldout");
-  await confirm(page);
-  await expect(page.getByRole("alert")).toContainText("agotado");
-  await page
-    .getByRole("combobox", { name: "Disponibilidad de prueba" })
-    .selectOption("normal");
-  await page
-    .getByRole("combobox", { name: "Resultado del pago simulado" })
-    .selectOption("failed");
-  await confirm(page);
-  await expect(page.getByRole("alert")).toContainText("falló");
-  await page.reload();
-  await expect(page.getByRole("textbox", { name: /Dirección/ })).toHaveValue(
-    "Dirección ficticia 123",
-  );
+    .getByRole("textbox", { name: /Dirección/ })
+    .fill("Dirección ficticia 123");
+  await expect(page.getByText("Escenarios de prueba")).toHaveCount(0);
+  await page.getByRole("button", { name: /Confirmar pedido/ }).click();
+  await expect(page.getByRole("alert")).toContainText("Revisa");
   await page.getByRole("checkbox", { name: /Revisé/ }).check();
-  await confirm(page);
+  await page.getByRole("button", { name: /Confirmar pedido/ }).click();
   await expect(page).toHaveURL(/pedido\/confirmacion/);
+  expect(await page.locator("body").innerText()).not.toMatch(/simulad|prototipo|Tu pasaporte/i);
   const s = await page.evaluate(() =>
     JSON.parse(localStorage.getItem("guates.canvas-store.v1")),
   );
   expect(s.orders[0].total).toBe(30000);
-  expect(s.orders[0].items[0].unitPrice).toBe(30000);
   expect(s.cart).toHaveLength(0);
-  expect(s.stamps).toEqual({});
-  expect(s.profile).toBeNull();
-});
-// Subscriptions are off (FEATURES.subscriptions) so validLine rejects sub lines; Task 9 removes this spec.
-test.skip("original subscription selection supports mixed checkout and management", async ({
-  page,
-}) => {
-  await add(page);
-  await page.goto("/suscripcion");
-  await page
-    .getByRole("button", { name: /Explorador: un origen distinto/ })
-    .click();
-  await page
-    .getByRole("button", { name: "Agregar suscripción al carrito" })
-    .click();
-  await checkout(page);
-  await page
-    .getByRole("textbox", { name: "Nombre para tu perfil" })
-    .fill("Explorador");
-  await page.getByRole("button", { name: "Crear perfil de prueba" }).click();
-  await confirm(page);
-  await expect(page).toHaveURL(/confirmacion/);
-  await page.goto("/cuenta/suscripciones");
-  await page.getByRole("button", { name: "Pausar", exact: true }).click();
-  await expect(page.locator("main")).toContainText("pausada");
-  await page.getByRole("button", { name: "Reanudar", exact: true }).click();
-  await page.getByRole("button", { name: "Saltar entrega" }).click();
-  await page.getByRole("button", { name: "Cambiar configuración" }).click();
-  await page
-    .getByRole("combobox", { name: "Frecuencia", exact: true })
-    .selectOption("4");
-  await page.getByRole("button", { name: "Guardar configuración" }).click();
-  await expect(page.locator("main")).toContainText("cada 4 semanas");
-  await page
-    .getByRole("button", { name: "Cancelar suscripción", exact: true })
-    .click();
-  await page.getByRole("button", { name: "Sí, cancelar" }).click();
-  await expect(page.locator("main")).toContainText("cancelada");
-});
-// Subscriptions are off (FEATURES.subscriptions); Task 9 removes this spec.
-test.skip("pending payment never activates subscriptions", async ({ page }) => {
-  await page.goto("/suscripcion");
-  await page
-    .getByRole("button", { name: "Agregar suscripción al carrito" })
-    .click();
-  await checkout(page);
-  await page
-    .getByRole("textbox", { name: "Nombre para tu perfil" })
-    .fill("Demo");
-  await page.getByRole("button", { name: "Crear perfil de prueba" }).click();
-  await page.getByText("Escenarios de prueba", { exact: true }).click();
-  await page
-    .getByRole("combobox", { name: "Resultado del pago simulado" })
-    .selectOption("pending");
-  await confirm(page);
-  await expect(page.getByRole("heading", { level: 1 })).toHaveText(
-    "Pago simulado pendiente",
-  );
-  await page.goto("/cuenta/suscripciones");
-  await expect(page.locator("main")).toContainText(
-    "Todavía no tienes suscripciones",
-  );
-});
-test("passport stores externally tried coffees, edits and removes notes", async ({
-  page,
-}) => {
-  await page.goto("/cuenta/pasaporte");
-  await page
-    .getByRole("textbox", { name: "Nombre para tu perfil" })
-    .fill("Demo");
-  await page.getByRole("button", { name: "Crear perfil de prueba" }).click();
-  await page
-    .getByRole("combobox", { name: "Café que probaste" })
-    .selectOption("platea");
-  await page
-    .getByRole("textbox", { name: "Tu nota personal" })
-    .fill("Una taza con amigos.");
-  await page.getByRole("button", { name: "Ya lo probé", exact: true }).click();
-  await page.reload();
-  await expect(page.locator(".personal-note")).toHaveText(
-    "Una taza con amigos.",
-  );
-  await page.getByRole("button", { name: "Editar El Elegante" }).click();
-  await page
-    .getByRole("textbox", { name: "Tu nota personal" })
-    .fill("Para repetir.");
-  await page.getByRole("button", { name: "Guardar nota" }).click();
-  await expect(page.locator(".personal-note")).toHaveText("Para repetir.");
-  await page.getByRole("button", { name: "Quitar El Elegante" }).click();
-  await page.getByRole("button", { name: "Sí, quitar registro" }).click();
-  await expect(page.locator(".personal-note")).toHaveCount(0);
 });
 test("routes work directly with reduced motion and no horizontal overflow", async ({
   page,
@@ -225,10 +107,8 @@ test("routes work directly with reduced motion and no horizontal overflow", asyn
     "/cafes",
     "/cafes/regional",
     "/recorrido",
-    "/suscripcion",
     "/bolsa",
     "/checkout",
-    "/cuenta",
     "/sobre-guates",
     "/ayuda",
     "/envios-y-devoluciones",

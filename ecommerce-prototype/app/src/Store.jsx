@@ -24,6 +24,7 @@ import {
   variantsFor,
 } from "./live/catalog.js";
 import { fetchCatalog } from "./live/api.js";
+import { FEATURES } from "./live/features.js";
 import { Template } from "../generated/Template.jsx";
 import {
   STORE_KEY,
@@ -34,11 +35,16 @@ import {
   validLine,
   validSelection,
   advanceDate,
+  screenOn,
 } from "./state.js";
 export const CATALOG_ERROR =
   "No pudimos consultar la disponibilidad. Intenta de nuevo en un momento.";
 const CATALOG_REFRESH_MS = 60000;
 const NO_PRICE = "precio por confirmar";
+const weightText = (g) =>
+  !g ? "" : g >= 1000 && g % 1000 === 0 ? g / 1000 + " kg" : g + " g";
+const weightsOf = (variants) =>
+  [...new Set(variants.map((x) => weightText(x.weightG)).filter(Boolean))].join(" · ");
 export class Store extends CanvasLogic {
   constructor(props) {
     super(props);
@@ -54,8 +60,6 @@ export class Store extends CanvasLogic {
       profile: null,
       feeling: "",
       compare: [],
-      paymentResult: "approved",
-      scenario: "normal",
       accepted: false,
       storageError: false,
       catalog: null,
@@ -72,6 +76,7 @@ export class Store extends CanvasLogic {
       this._choices[k] = { ...this._choices[k], size: 0 };
     this._buyFns = new WeakSet();
     this._disabled = new WeakSet();
+    this._hidden = () => {};
     const route = parseRoute(location.href, this.state);
     this.state = { ...this.state, ...route };
     if (route.product && validSelection(this._choices[route.product]))
@@ -323,6 +328,15 @@ export class Store extends CanvasLogic {
     this._motion?.removeEventListener("change", this.onMotion);
     clearInterval(this._catalogT);
   }
+  go(screen, extra) {
+    super.go(screenOn(screen) ? screen : "notfound", extra);
+  }
+  feature(name) {
+    return !!FEATURES[name];
+  }
+  hideAction(v, name) {
+    v[name] = this._hidden;
+  }
   navigate(to) {
     const route = parseRoute(to, this.state);
     if (route.product && validSelection(this._choices[route.product]))
@@ -366,12 +380,6 @@ export class Store extends CanvasLogic {
   add(item, msg) {
     if (!validLine(item)) {
       this.toast("Revisa la presentación y la cantidad.");
-      return;
-    }
-    if (this.state.scenario === "soldout") {
-      this.toast(
-        "Café agotado en este escenario de prueba. La disponibilidad real está por confirmar.",
-      );
       return;
     }
     const found = this.state.cart.find((x) => x.id === item.id);
@@ -426,6 +434,8 @@ export class Store extends CanvasLogic {
     return this._refs[key];
   }
   adaptProps(tag, props) {
+    if (props.onClick && props.onClick === this._hidden)
+      return { ...props, hidden: true };
     if (
       typeof props.onClick === "function" &&
       (this._disabled.has(props.onClick) ||
@@ -483,28 +493,8 @@ export class Store extends CanvasLogic {
       );
       return;
     }
-    if (s.scenario === "soldout") {
-      fail("Hay un café agotado en este escenario. Revisa tu bolsa.");
-      return;
-    }
-    if (s.scenario === "coverage" && s.delivery === "envio") {
-      fail(
-        "Destino sin cobertura en este escenario de prueba. Puedes conservar tu bolsa o elegir recoger.",
-      );
-      return;
-    }
-    if (s.cart.some((x) => x.sub) && !s.profile) {
-      fail("Crea tu perfil de prueba para administrar la suscripción.");
-      return;
-    }
     if (!s.accepted) {
-      fail("Revisa y acepta el resumen de esta compra simulada.");
-      return;
-    }
-    if (s.paymentResult === "failed") {
-      fail(
-        "El pago simulado falló. Conservamos tus datos y tu bolsa para volver a intentarlo.",
-      );
+      fail("Revisa y acepta el resumen de tu pedido.");
       return;
     }
     const now = new Date(),
@@ -523,7 +513,7 @@ export class Store extends CanvasLogic {
       total: totals.total,
       totals,
       delivery: s.delivery,
-      status: s.paymentResult,
+      status: "approved",
       created: now.toISOString(),
       name: s.profile?.name || "Tu",
       email: "",
@@ -568,7 +558,13 @@ export class Store extends CanvasLogic {
       obj[key] = value;
     };
     for (const p of PRODUCTS)
-      if (p.live) swap(p, "price", Math.min(...p.live.variants.map((x) => x.price)));
+      if (p.live) {
+        swap(p, "price", Math.min(...p.live.variants.map((x) => x.price)));
+        if (s.screen === "catalogo" && s.filter !== "todos") {
+          const processes = p.live.variants.map(toProcess);
+          swap(p, "process", processes.includes(s.filter) ? s.filter : processes[0]);
+        }
+      }
     for (const m of [...MOODS, ...TASTES]) {
       const target = this.moodTarget(m.product).key;
       if (target !== m.product) swap(m, "product", target);
@@ -626,13 +622,16 @@ export class Store extends CanvasLogic {
       const variants = p && liveFor(p.key)?.variants;
       if (!variants?.length)
         return catalogApplied()
-          ? { ...card, price: "Agotado", quick: this.disabled(() => {}) }
-          : { ...card, price: NO_PRICE, quick: this.buy(card.quick) };
+          ? { ...card, price: "Agotado", weight: "", quick: this.disabled(() => {}) }
+          : { ...card, price: NO_PRICE, weight: "", quick: this.buy(card.quick) };
+      const first = defaultVariant(p.key);
       const prices = variants.map((x) => x.price),
         out = variants.every((x) => x.available <= 0);
       return {
         ...card,
         process: [...new Set(variants.map((x) => x.process))].join(" · "),
+        weight: weightsOf(variants),
+        quickAria: `Agregar ${card.name} · ${first.name} en grano al carrito`,
         price: out
           ? "Agotado"
           : (new Set(prices).size > 1 ? "Desde " : "") + money(Math.min(...prices)),
@@ -657,6 +656,8 @@ export class Store extends CanvasLogic {
     );
     if (!preferred) {
       v.emo.price = NO_PRICE;
+      v.emo.priceLine = NO_PRICE;
+      v.emo.weight = "";
       v.emo.selectedPrice = NO_PRICE;
       v.emo.sizes = [];
       if (catalogApplied()) {
@@ -667,6 +668,8 @@ export class Store extends CanvasLogic {
     }
     v.mood.quickAria = `Agregar ${v.mood.name} · ${preferred.name} en grano al carrito`;
     v.emo.price = money(preferred.price);
+    v.emo.weight = weightText(preferred.weightG);
+    v.emo.priceLine = v.emo.price + (v.emo.weight ? " / " + v.emo.weight : "");
     v.emo.process = preferred.process;
     v.emo.facts = v.emo.facts.map((f) =>
       f.k === "Variedad" ? { ...f, v: preferred.name } : f.k === "Proceso" ? { ...f, v: preferred.process } : f,
@@ -745,9 +748,13 @@ export class Store extends CanvasLogic {
     this.liveCards(v);
     this.liveMood(v);
     this.liveCart(v);
-    v.nav = v.nav.map((n) =>
-      n.label === "El recorrido" ? { ...n, go: () => this.go("recorrido") } : n,
-    );
+    v.nav = v.nav
+      .filter((n) => n.label !== "Suscripción" || FEATURES.subscriptions)
+      .map((n) =>
+        n.label === "El recorrido" ? { ...n, go: () => this.go("recorrido") } : n,
+      );
+    if (!FEATURES.subscriptions)
+      for (const name of ["subThis", "goSub", "addSub"]) this.hideAction(v, name);
     if (s.feeling) {
       v.cards = v.cards.filter((card) => {
         const p = PRODUCTS.find((x) => x.name === card.name);
@@ -763,25 +770,26 @@ export class Store extends CanvasLogic {
     if (s.order) {
       v.order.line =
         s.order.status === "pending"
-          ? "Pago simulado pendiente. No se activaron suscripciones ni se ha enviado un pedido."
-          : "Pedido confirmado en la simulación. No hubo cobros, envíos ni correos reales.";
+          ? "Tu pago está pendiente. Te contamos apenas se confirme."
+          : "Recibimos tu pedido.";
       if (s.order.status === "pending")
         v.order.steps = [
           {
-            title: "Esperando confirmación simulada del pago",
+            title: "Esperando la confirmación del pago",
             when: "No hay entrega programada",
           },
         ];
-      v.order.stamps = v.order.stamps.map((stamp, i) => ({
-        ...stamp,
-        toggle: () => {
-          if (!this.state.profile) {
-            this.setState({ screen: "pasaporte" });
-            return;
-          }
-          stamp.toggle();
-        },
-      }));
+      if (FEATURES.passport)
+        v.order.stamps = v.order.stamps.map((stamp) => ({
+          ...stamp,
+          toggle: () => {
+            if (!this.state.profile) {
+              this.setState({ screen: "pasaporte" });
+              return;
+            }
+            stamp.toggle();
+          },
+        }));
     }
     return v;
   }

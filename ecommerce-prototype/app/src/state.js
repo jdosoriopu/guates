@@ -20,6 +20,16 @@ export const paths = {
   privacidad: "/privacidad",
   terminos: "/terminos",
 };
+// Screens that stay off the map while any feature they need is off.
+const SCREEN_FEATURES = {
+  suscripcion: ["subscriptions"],
+  cuenta: ["accounts"],
+  pedidos: ["accounts"],
+  suscripciones: ["accounts", "subscriptions"],
+  pasaporte: ["accounts", "passport"],
+};
+export const screenOn = (screen) =>
+  (SCREEN_FEATURES[screen] ?? []).every((f) => FEATURES[f]);
 export const dateText = (d) =>
   new Date(d).toLocaleDateString("es-CO", {
     day: "numeric",
@@ -87,6 +97,7 @@ export function parseRoute(url, state = {}) {
     q = u.searchParams;
   let screen =
     Object.keys(paths).find((k) => paths[k] === u.pathname) || "notfound";
+  if (!screenOn(screen)) screen = "notfound";
   const result = { screen };
   const slug = u.pathname.match(/^\/cafes\/([^/]+)$/)?.[1];
   const product = slug && keyForSlug(slug);

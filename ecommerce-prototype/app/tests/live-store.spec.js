@@ -190,3 +190,82 @@ test("with only a plain category published, it still sells", async ({ page }) =>
   expect(cart).toMatchObject([{ key: "cafe_de_temporada", variantId: "var-plain", qty: 1 }]);
   expect(errors).toEqual([]);
 });
+
+const HIDDEN_COPY = /simulad|Prototipo de tienda|Mi cuenta|Suscripción/;
+
+async function visibleText(page) {
+  await expect(page.getByRole("link", { name: /Tu bolsa/ })).toBeVisible();
+  await page.waitForLoadState("networkidle");
+  return page.locator("body").innerText();
+}
+
+test("subscriptions and accounts are not on the map yet", async ({ page }) => {
+  for (const path of ["/suscripcion", "/cuenta", "/cuenta/pedidos", "/cuenta/suscripciones", "/cuenta/pasaporte"]) {
+    await page.goto(path);
+    await expect(page.getByRole("heading", { level: 1 }), path).toHaveText("Este camino aún no está en el mapa.");
+  }
+});
+
+test("no simulation, account or subscription copy is visible", async ({ page }) => {
+  await page.goto("/cafes/nutria");
+  await page.getByRole("button", { name: /Agregar al carrito/ }).click();
+  for (const path of ["/", "/cafes", "/cafes/nutria", "/bolsa", "/ayuda", "/envios-y-devoluciones"]) {
+    await page.goto(path);
+    const text = await visibleText(page);
+    expect(text, path).not.toMatch(HIDDEN_COPY);
+    expect(text, path).not.toMatch(/precio de muestra|Precios y envío de muestra|Tu pasaporte cafetero/);
+  }
+});
+
+test("prices sit next to the real bag weight, not a sample label", async ({ page }) => {
+  await page.route("**/api/catalog", async (route) => {
+    const res = await route.fetch();
+    const body = await res.json();
+    for (const v of body.categories.find((c) => c.key === "nutria").variants) v.weightG = 340;
+    await route.fulfill({ response: res, json: body });
+  });
+  await page.goto("/cafes");
+  const card = page.locator("main article").filter({ hasText: "Nutria" });
+  await expect(card).toContainText("340 g");
+  await expect(card).toContainText("$30.000");
+  await expect(card).not.toContainText("muestra");
+  await page.goto("/");
+  await page.getByRole("tab", { name: "Por costumbre", exact: true }).click();
+  await page.getByRole("tab", { name: /Con leche/ }).click();
+  const panel = page.locator("#gq-mood-panel");
+  await expect(panel).not.toContainText("dato de muestra");
+});
+
+test("the process filter matches any live variant's process", async ({ page }) => {
+  await page.goto("/cafes?proceso=Honey");
+  await expect(page.getByRole("heading", { name: "El Elegante", exact: true })).toBeVisible();
+  await expect(page.locator("main")).toContainText("1 café");
+});
+
+test("the comparison never shows a sample price", async ({ page }) => {
+  await serveCatalog(page, []);
+  await page.goto("/cafes?comparar=lavado,natural");
+  const price = page.getByRole("row", { name: /Precio/ });
+  await expect(price).toContainText("No disponible");
+  await expect(price).not.toContainText("$");
+});
+
+test("the journey index lists only coffees on sale", async ({ page }) => {
+  await page.goto("/recorrido");
+  await expect(page.locator("main .journey-grid h2")).toHaveText(["Colibrí", "El Elegante", "Nutria"]);
+});
+
+test("information pages carry launch copy", async ({ page }) => {
+  await page.goto("/envios-y-devoluciones");
+  const main = page.locator("main");
+  await expect(main).toContainText("Interrapidísimo");
+  await expect(main).toContainText("$90.000");
+  await expect(main).toContainText("municipio");
+  await expect(main).toContainText("por confirmar");
+  for (const path of ["/privacidad", "/terminos"]) {
+    await page.goto(path);
+    await expect(page.getByText("Texto por confirmar con Guates.")).toBeVisible();
+  }
+  await page.goto("/ayuda");
+  await expect(main).not.toContainText(/suscripci|prototipo/i);
+});
