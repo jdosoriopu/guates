@@ -466,3 +466,20 @@ test("missing fields are announced before anything is sent", async ({ page }) =>
   await expect(page.getByLabel("Celular", { exact: true })).toHaveAttribute("aria-invalid", "true");
   expect(seen.orderPosts).toBe(0);
 });
+
+test("coming back from Wompi through the back/forward cache lets you pay again", async ({ page }) => {
+  let wompi = 0;
+  // A 204 keeps the checkout document in place, like a page restored from the back/forward cache.
+  await page.route("https://checkout.wompi.co/**", (route) => {
+    wompi++;
+    return route.fulfill({ status: 204 });
+  });
+  await addFeria(page, 1);
+  await page.goto("/checkout");
+  await fillCheckout(page);
+  await page.getByRole("button", { name: "Pagar $80.000 con Wompi" }).click();
+  await expect.poll(() => wompi).toBe(1);
+  await expect(page.getByRole("button", { name: "Preparando tu pago…" })).toBeDisabled();
+  await page.evaluate(() => window.dispatchEvent(new PageTransitionEvent("pageshow", { persisted: true })));
+  await expect(page.getByRole("button", { name: "Pagar $80.000 con Wompi" })).toBeEnabled();
+});

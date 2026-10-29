@@ -24,7 +24,6 @@ import {
   variantsFor,
 } from "./live/catalog.js";
 import { fetchCatalog } from "./live/api.js";
-import { captureAttribution } from "./live/attribution.js";
 import { EMPTY_FORM } from "./live/Checkout.jsx";
 import { FEATURES } from "./live/features.js";
 import { Template } from "../generated/Template.jsx";
@@ -77,7 +76,6 @@ export class Store extends CanvasLogic {
     this._buyFns = new WeakSet();
     this._disabled = new WeakSet();
     this._hidden = () => {};
-    captureAttribution(location);
     const route = parseRoute(location.href);
     this.state = { ...this.state, ...route };
     if (route.product && validSelection(this._choices[route.product]))

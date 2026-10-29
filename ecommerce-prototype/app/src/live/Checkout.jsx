@@ -74,6 +74,7 @@ export function Checkout({ controller }) {
   const [failure, setFailure] = useState(null);
   const paying = useRef(false);
   const formRef = useRef(null);
+  const sentDraft = useRef(null);
 
   const lines = s.cart.filter((l) => !l.sub).map((l) => ({ variantId: l.variantId, grind: l.grind, qty: l.qty }));
   const quoteKey = form.dane + JSON.stringify(lines);
@@ -87,6 +88,20 @@ export function Checkout({ controller }) {
     return () => {
       live = false;
     };
+  }, []);
+
+  // Back from Wompi, browsers may restore this page from the back/forward cache with the
+  // payment still marked in flight; reopen it and put back the draft wiped before leaving.
+  useEffect(() => {
+    const restored = (e) => {
+      if (!e.persisted || !paying.current) return;
+      paying.current = false;
+      setBusy(false);
+      if (sentDraft.current) controller.setState({ form: sentDraft.current });
+      sentDraft.current = null;
+    };
+    addEventListener("pageshow", restored);
+    return () => removeEventListener("pageshow", restored);
   }, []);
 
   useEffect(() => {
@@ -170,6 +185,7 @@ export function Checkout({ controller }) {
       try {
         localStorage.setItem(LAST_ORDER_KEY, JSON.stringify({ no: res.no, token: res.token }));
       } catch {}
+      sentDraft.current = form;
       // The draft is wiped and saved before leaving, so nothing personal stays in this browser.
       controller.clearCheckoutDraft(() => location.assign(res.checkoutUrl));
     } catch (err) {
