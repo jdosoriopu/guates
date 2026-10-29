@@ -2,7 +2,7 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Turn the prototype store in `ecommerce-prototype/app` into the live Guates store: Pulso catalog and stock, Wompi payment, Pulso order registration, table-based shipping with free shipping from $90.000, an owner dashboard with push notices, search/agent-readable pages, deployed to staging and production on Guates's DigitalOcean server.
+**Goal:** Turn the prototype store in `ecommerce-prototype/app` into the live Guates store: Pulso catalog and stock, Wompi payment, Pulso order registration, table-based shipping with free shipping from $90.000, an owner dashboard with push notices, search/agent-readable pages, deployed directly to guatescoffeeroasters.co on Guates's DigitalOcean server.
 
 **Architecture:** A new Node service (`ecommerce-prototype/server/`, Fastify + `node:sqlite`) is the only holder of secrets. It proxies a sanitized Pulso catalog, prices orders, builds the signed Wompi Web Checkout URL, receives Wompi events, registers paid orders in Pulso, serves the owner dashboard API, and serves the built app with server-rendered SEO content injected into the HTML. The React app keeps its generated canvas code untouched; live data is applied by mutating the shared `PRODUCTS`/`BY` data and post-processing `renderVals()` in `src/Store.jsx`, and new screens (checkout, confirmation, dashboard) are new React components mounted through the existing `Extension` slot or a second Vite entry.
 
@@ -21,7 +21,7 @@
 - Guates design system rules (`AGENTS.md`): tokens only, approved text pairs, no shadows/gradients/emoji, Roboto Slab titles / Roboto text, `radius-lg` panels, `radius-md` chips, `radius-sm` inputs, pill buttons, visible `focus-ring`, reduced motion respected.
 - Copy in Colombian Spanish, *tú*, sentence case. Sample data keeps *dato de muestra* / *por confirmar*.
 - Order statuses (exact strings): `pendiente_pago`, `pagado`, `pago_fallido`, `requiere_atencion`, `despachado`, `entregado`, `anulado`.
-- Pulso is production-only. Automated tests never call it; they use the stub (`PULSO_MODE=stub`). Staging runs with `PULSO_MODE=stub` for orders.
+- Pulso is production-only. Automated tests never call it; they use the stub (`PULSO_MODE=stub`). Until go-live, production runs with `PULSO_MODE=stub-orders`, Wompi sandbox keys and `INDEXING=off`.
 - The server at `159.89.158.17` hosts other apps: only add nginx server blocks/systemd units; back up any file before editing; `sudo nginx -t` before every reload.
 - Comment only complex code.
 
@@ -89,9 +89,9 @@ ecommerce-prototype/
 
 **Interfaces:**
 - Produces:
-  - `loadConfig(env = process.env) -> Config` with `{ storeId, storeApiKey, pulsoBaseUrl: 'https://api.pulsoapp.co', pulsoMode: 'live'|'stub'|'stub-orders', wompi: { publicKey, privateKey, eventsSecret, integritySecret, apiBase }, orderPrefix: 'WEB', publicUrl, port, dbPath, distDir, catalogTtlMs: 60000, vapid: { publicKey, privateKey, subject } }`. `wompi.apiBase` is `https://sandbox.wompi.co/v1` when `publicKey` starts with `pub_test_`, else `https://production.wompi.co/v1`. Throws `Error('Falta la variable X')` naming the first missing required var (`STORE_ID`, `STORE_API_KEY` unless stub, all four Wompi vars).
+  - `loadConfig(env = process.env) -> Config` with `{ storeId, storeApiKey, pulsoBaseUrl: 'https://api.pulsoapp.co', pulsoMode: 'live'|'stub'|'stub-orders', wompi: { publicKey, privateKey, eventsSecret, integritySecret, apiBase }, orderPrefix: 'WEB', indexing: boolean (env `INDEXING=on|off`, default `off`), publicUrl, port, dbPath, distDir, catalogTtlMs: 60000, vapid: { publicKey, privateKey, subject } }`. `wompi.apiBase` is `https://sandbox.wompi.co/v1` when `publicKey` starts with `pub_test_`, else `https://production.wompi.co/v1`. Throws `Error('Falta la variable X')` naming the first missing required var (`STORE_ID`, `STORE_API_KEY` unless stub, all four Wompi vars).
   - `openDb(path) -> DatabaseSync` (`node:sqlite`), runs idempotent migrations creating tables: `orders`, `order_items`, `rates`, `settings`, `aliases (catalog_key PK, content_key)`, `owner`, `sessions`, `push_subscriptions`, `order_seq`. Later tasks add columns only through this migration list.
-  - `createPulso({ config, fetch }) -> { getCatalog(), registerOrder({ orderId, items: [{ id, quantity, unit_price }], customer }), cancelOrder(orderId, reason) }`. `registerOrder` and `cancelOrder` return `{ ok: true, saleId, duplicate }` or `{ ok: false, code: 'insufficient_stock'|'product_unavailable'|'not_found'|'auth'|'unavailable', detail }` (409→insufficient_stock, 422→product_unavailable, 404→not_found, 401/403→auth, network/5xx→unavailable). `stub` serves `test/fixtures/catalog.json` and accepts orders/cancels in memory (duplicate `orderId` → `duplicate: true`); `stub-orders` reads the live catalog but stubs orders/cancels (staging).
+  - `createPulso({ config, fetch }) -> { getCatalog(), registerOrder({ orderId, items: [{ id, quantity, unit_price }], customer }), cancelOrder(orderId, reason) }`. `registerOrder` and `cancelOrder` return `{ ok: true, saleId, duplicate }` or `{ ok: false, code: 'insufficient_stock'|'product_unavailable'|'not_found'|'auth'|'unavailable', detail }` (409→insufficient_stock, 422→product_unavailable, 404→not_found, 401/403→auth, network/5xx→unavailable). `stub` serves `test/fixtures/catalog.json` and accepts orders/cancels in memory (duplicate `orderId` → `duplicate: true`); `stub-orders` reads the live catalog but stubs orders/cancels (pre-launch).
   - `createCatalog({ pulso, db, ttlMs, now = Date.now }) -> { get({ fresh = false }) -> Promise<StoreCatalog>, variant(id) -> Promise<Variant|null> }`
   - `StoreCatalog = { asOf, stale: boolean, categories: [{ key, name, slug, content: string|null, variants: [{ id, name, process, weightG, price, available }] }] }`. `slug` = `catalog_key` with `_` → `-`. `process` maps `PROCESO LAVADO|NATURAL|HONEY` → `Lavado|Natural|Honey`, anything else → title-cased word after `PROCESO`. `content` = `catalog_key` if it is one of `chiguiro, nutria, colibri, perezoso, el_elegante`, else the `aliases` row, else `null`. Categories with zero variants are dropped.
   - `buildApp(deps) -> FastifyInstance` with `GET /api/health` → `{ ok: true }` and `GET /api/catalog` → `StoreCatalog`. `deps = { config, db, pulso, catalog, ... }` (later tasks add keys).
@@ -312,7 +312,7 @@ test("reconcile settles a pending order from Wompi", async () => {});
   - Category page content: `h1` name, idea, scene, personality, emotion, each variant (`name · proceso · 250 g · $65.000 · Disponible|Agotado`), the journey summarised in prose from cup to farm, origin facts with *dato de muestra* where the content is sample data, link to buy.
   - `productJsonLd(category, content, baseUrl, freeShippingFrom) -> object`: `@type: Product`, `name`, `description`, `brand: { @type: Brand, name: 'Guates Coffee Roasters' }`, `image`, `url`, `offers: [{ @type: Offer, sku: variant.id, name, price, priceCurrency: 'COP', availability: 'https://schema.org/InStock'|'OutOfStock', url, shippingDetails: { @type: OfferShippingDetails, shippingDestination: { addressCountry: 'CO' }, shippingRate: { value: 0, currency: 'COP' }, ... } }]`. Express the free-shipping rule in the description text too ("Envío gratis desde $90.000").
   - `/` also emits `Organization` (name, url, logo, sameAs: Instagram/WhatsApp links — leave empty array until Guates gives the URLs) and `BreadcrumbList` on category pages.
-  - `robotsTxt(baseUrl)`: `User-agent: *` `Allow: /`, `Disallow: /equipo`, `/checkout`, `/pedido`, `/bolsa`, `/api/` with `Allow: /api/catalog`; explicit `User-agent` groups allowing `GPTBot`, `OAI-SearchBot`, `ChatGPT-User`, `ClaudeBot`, `Claude-User`, `PerplexityBot`, `Google-Extended`, `Applebot-Extended`; `Sitemap:` line. Staging (`publicUrl` contains `staging.`) answers `Disallow: /` for all and adds `<meta name="robots" content="noindex">`.
+  - `robotsTxt(baseUrl)`: `User-agent: *` `Allow: /`, `Disallow: /equipo`, `/checkout`, `/pedido`, `/bolsa`, `/api/` with `Allow: /api/catalog`; explicit `User-agent` groups allowing `GPTBot`, `OAI-SearchBot`, `ChatGPT-User`, `ClaudeBot`, `Claude-User`, `PerplexityBot`, `Google-Extended`, `Applebot-Extended`; `Sitemap:` line. With `indexing` off it answers `User-agent: *` `Disallow: /` and every page carries `<meta name="robots" content="noindex">`.
   - `sitemapXml(catalog, baseUrl)`, `llmsTxt(catalog, content, baseUrl)` (Markdown: who Guates is, each coffee with one line of personality, variants with price and availability, how to buy, shipping rule, link to `/api/catalog` as JSON feed).
   - Routes: `GET /robots.txt`, `/sitemap.xml`, `/llms.txt`; static files from `config.distDir` (`@fastify/static`, `index: false`, long cache for `/assets/` and `/og/`); `GET *` (non-API, non-file) → `renderPage`.
   - `/equipo*` serves `dist/equipo.html` (no SEO injection, `noindex`).
@@ -329,7 +329,7 @@ test("category page is readable without JavaScript", async () => {
 });
 test("JSON-LD has one Offer per variant with live availability", async () => { /* parse ld+json; offers.length 2; Nutria at stock 0 in a fixture variant → OutOfStock */ });
 test("robots allows AI crawlers and hides private paths", async () => { /* contains 'User-agent: GPTBot' and 'Disallow: /equipo' */ });
-test("staging robots disallows everything", async () => {});
+test("with indexing off, robots disallows everything and pages are noindex", async () => {});
 test("sitemap lists home, catalog and every category", async () => {});
 test("llms.txt names each coffee and the free shipping rule", async () => {});
 test("unknown slug returns 404 with the app shell", async () => {});
@@ -467,47 +467,46 @@ test("validLine rejects old size-based lines", () => { assert.equal(validLine({ 
 
 ---
 
-### Task 12: Server inventory and staging deploy
+### Task 12: Deploy to guatescoffeeroasters.co and go live
+
+No staging: everything is tested on the production domain while Wompi keys are sandbox, Pulso orders are stubbed and indexing is off; go-live flips those three.
 
 **Files:**
-- Create: `deploy/README.md`, `deploy/nginx/guates-staging.conf`, `deploy/nginx/guates-prod.conf`, `deploy/systemd/guates-store@.service`, `deploy/deploy.sh`, `deploy/backup.sh`
+- Create: `deploy/README.md`, `deploy/nginx/guates-store.conf`, `deploy/systemd/guates-store.service`, `deploy/deploy.sh`, `deploy/backup.sh`, `server/test/cli.test.js`
+- Modify: `server/cli.js` (command `purge-orders --prefix <P>`)
 
 **Interfaces:**
 - Produces:
-  - Layout on the server: `/srv/guates/<env>/{releases/<timestamp>, current -> releases/…, shared/{store.env, store.db, backups/}}`, `<env>` ∈ `staging`, `prod`, owned by a new system user `guates`.
-  - `guates-store@.service` (template unit): `User=guates`, `WorkingDirectory=/srv/guates/%i/current/server`, `EnvironmentFile=/srv/guates/%i/shared/store.env`, `ExecStart=/usr/bin/node src/index.js`, `Restart=on-failure`.
-  - `deploy.sh <staging|prod>`: runs tests, `npm ci && npm run build` in `app`, rsyncs `app/dist` and `server` (no `node_modules`, no `.env`) to a new release dir over SSH, `npm ci --omit=dev` there, swaps `current`, `sudo systemctl restart guates-store@<env>`, curls `/api/health`, rolls `current` back on failure. Keeps last 5 releases.
-  - `backup.sh <env>`: `sqlite3 store.db ".backup backups/store-$(date +%F).db"`, keeps 14; cron daily 03:15.
-  - nginx: one server block per hostname, `proxy_pass http://127.0.0.1:<port>;` for everything, `client_max_body_size 256k`, HTTPS via existing certbot setup.
-  - Env per environment (`store.env`): all Task 1 vars + `PUBLIC_URL`, `PORT`, `DB_PATH`, `DIST_DIR`, `PULSO_MODE` (`stub-orders` on staging, `live` on prod), `VAPID_*`, `ORDER_PREFIX` (`STG` on staging, `WEB` on prod).
+  - Layout on the server: `/srv/guates/store/{releases/<timestamp>, current -> releases/…, shared/{store.env, store.db, backups/}}`, owned by a new system user `guates`.
+  - `guates-store.service`: `User=guates`, `WorkingDirectory=/srv/guates/store/current/server`, `EnvironmentFile=/srv/guates/store/shared/store.env`, `ExecStart=<node path> src/index.js`, `Restart=on-failure`.
+  - `deploy.sh`: runs server and app tests, `npm ci && npm run build` in `app`, rsyncs `app/dist` and `server` (no `node_modules`, no `.env`) to a new release dir over SSH, `npm ci --omit=dev` there, swaps `current`, `sudo systemctl restart guates-store`, curls `/api/health`, rolls `current` back on failure. Keeps last 5 releases.
+  - `backup.sh`: `sqlite3 store.db ".backup backups/store-$(date +%F).db"`, keeps 14; cron daily 03:15.
+  - nginx: the existing `guatescoffeeroasters.co` server block proxies everything to `127.0.0.1:<port>`, `client_max_body_size 256k`, its TLS lines untouched.
+  - `store.env`: all Task 1 vars + `PUBLIC_URL=https://guatescoffeeroasters.co`, `PORT`, `DB_PATH`, `DIST_DIR`, `PULSO_MODE`, `INDEXING`, `ORDER_PREFIX`, `VAPID_*`.
+  - `node cli.js purge-orders --prefix TEST` deletes orders (and their items) whose `no` starts with `TEST-`, prints the count, refuses any other prefix unless `--force`.
 
-- [ ] **Step 1: Inventory, read-only.** `ssh` to `159.89.158.17` and record in `deploy/README.md`: OS/Node version, `sudo nginx -T` server names and roots, `ss -ltnp` ports, `systemctl list-units --type=service --state=running`, certbot certificates, disk/memory. Pick two free ports (proposed 8710 prod, 8711 staging). **Do not change anything in this step.**
-- [ ] **Step 2:** Ask the user to create DNS `A staging.guatescoffeeroasters.co → 159.89.158.17` at GoDaddy (nameservers `domaincontrol.com`) and wait until `dig +short staging.guatescoffeeroasters.co` returns the IP.
-- [ ] **Step 3:** Install Node 24 LTS from NodeSource if the server's Node is < 22.13 (doesn't affect other apps unless they use the system `node`; if they do, install to `/opt/node24` and point the unit there instead). Create user `guates`, directories, `store.env` (mode 600) from the root `.env` with Wompi **sandbox** keys, `PUBLIC_URL=https://staging.guatescoffeeroasters.co`, `PULSO_MODE=stub-orders`, `ORDER_PREFIX=STG`, fresh VAPID keys.
-- [ ] **Step 4:** Back up `/etc/nginx` (`sudo tar czf /root/nginx-backup-$(date +%F).tgz /etc/nginx`), add `guates-staging.conf`, `sudo certbot --nginx -d staging.guatescoffeeroasters.co`, `sudo nginx -t && sudo systemctl reload nginx`. Check every other site from Step 1 still answers with the same status code.
-- [ ] **Step 5:** `deploy/deploy.sh staging`; `node cli.js set-owner <owner email>` on the server (ask the user for the email; the owner types the password).
-- [ ] **Step 6:** In the Wompi dashboard (user action, sandbox environment), set the events URL to `https://staging.guatescoffeeroasters.co/api/webhook/payments`.
-- [ ] **Step 7:** Verify on staging with a phone: buy with Wompi sandbox test card (APPROVED) and PSE test bank (DECLINED); the dashboard receives both, push arrives on the owner's phone, `curl https://staging.guatescoffeeroasters.co/robots.txt` disallows all.
-- [ ] **Step 8: Commit** `git commit -m "Add deploy scripts and staging environment"`
+| Setting | Pre-launch | Live |
+|---|---|---|
+| Wompi keys | sandbox (`pub_test_…`) | production |
+| `PULSO_MODE` | `stub-orders` | `live` |
+| `INDEXING` | `off` | `on` |
+| `ORDER_PREFIX` | `TEST` | `WEB` |
 
----
-
-### Task 13: Production deploy and go-live
-
-**Files:**
-- Modify: `deploy/README.md` (go-live checklist and rollback)
-
-- [ ] **Step 1:** Read the existing nginx block serving `guatescoffeeroasters.co` (the placeholder). Back it up, replace its `root`/`location` with the proxy to the prod port, keep its TLS lines, `sudo nginx -t`, reload. Re-check the other sites.
-- [ ] **Step 2:** Create `/srv/guates/prod/shared/store.env` with `PULSO_MODE=live`, `ORDER_PREFIX=WEB`, `PUBLIC_URL=https://guatescoffeeroasters.co`, Wompi keys (sandbox until the user provides production keys), own VAPID keys. `deploy/deploy.sh prod`. Set owner.
-- [ ] **Step 3:** Pulso smoke test, with the user watching: register one real order through the API for **1 × Geisha Honey** (most stock; not Nutria), confirm it appears in Pulso, then cancel it from the dashboard and confirm stock returns in `/api/catalog` (`available` back to its previous value). Record ids in `deploy/README.md`.
-- [ ] **Step 4:** SEO checks: Google Rich Results Test on `/cafes/el-elegante` (valid Product), `curl -A GPTBot https://guatescoffeeroasters.co/cafes/nutria` shows the content, share a link in WhatsApp and see the preview.
-- [ ] **Step 5:** Go-live (user actions listed in `deploy/README.md`): put Wompi **production** keys in prod `store.env`, register `https://guatescoffeeroasters.co/api/webhook/payments` as the production events URL in Wompi, restart, buy one real low-value order and cancel/refund it, submit `sitemap.xml` in Google Search Console, owner enables push on their phone.
-- [ ] **Step 6: Commit** `git commit -m "Document production deploy and go-live"`
+- [ ] **Step 1: Write failing test** `test/cli.test.js`: `purge-orders --prefix TEST` removes `TEST-1001` and keeps `WEB-1001`; `--prefix WEB` without `--force` exits non-zero. Run → FAIL, implement, run → PASS.
+- [ ] **Step 2: Inventory, read-only.** `ssh` to `159.89.158.17` and record in `deploy/README.md`: OS/Node version, `sudo nginx -T` server names and roots, `ss -ltnp` ports, `systemctl list-units --type=service --state=running`, certbot certificates, disk/memory, and the current HTTP status of every other hosted site. Pick a free port (proposed 8710). **Do not change anything in this step.**
+- [ ] **Step 3:** Install Node 24 LTS if the server's Node is < 22.13. If other apps use the system `node`, install to `/opt/node24` instead and point the unit there. Create user `guates`, directories, `store.env` (mode 600) with the **Pre-launch** column, the root `.env` values and fresh VAPID keys.
+- [ ] **Step 4:** Back up `/etc/nginx` (`sudo tar czf /root/nginx-backup-$(date +%F).tgz /etc/nginx`). Edit only the `guatescoffeeroasters.co` block to proxy to the store port, keep its TLS lines, `sudo nginx -t && sudo systemctl reload nginx`. Re-check every site from Step 2 answers with the same status code.
+- [ ] **Step 5:** `deploy/deploy.sh`; `node cli.js set-owner <owner email>` on the server (ask the user for the email; the owner types the password). Install the backup cron.
+- [ ] **Step 6:** User action: in the Wompi dashboard, sandbox environment, set the events URL to `https://guatescoffeeroasters.co/api/webhook/payments`.
+- [ ] **Step 7: Pre-launch verification on a phone:** buy with a Wompi sandbox test card (APPROVED) and the PSE test bank (DECLINED); the dashboard shows `TEST-…` orders, push arrives on the owner's phone, `curl https://guatescoffeeroasters.co/robots.txt` shows `Disallow: /` and pages carry `noindex`. Google Rich Results Test (code-paste mode, since indexing is off) on the HTML of `/cafes/el-elegante` shows a valid Product. Share a link in WhatsApp and check the preview.
+- [ ] **Step 8: Pulso smoke test, with the user watching:** set `PULSO_MODE=live` temporarily, register one real order through the API for **1 × Geisha Honey** (most stock; not Nutria), confirm it in Pulso, cancel it from the dashboard and confirm `available` returns to its previous value in `/api/catalog`. Set `PULSO_MODE=stub-orders` back. Record ids in `deploy/README.md`.
+- [ ] **Step 9: Go-live** (user provides Wompi production keys and registers `https://guatescoffeeroasters.co/api/webhook/payments` as the production events URL): back up the db, `node cli.js purge-orders --prefix TEST`, switch `store.env` to the **Live** column, restart. Buy one real low-value order, see it in Pulso and the dashboard, then cancel it and refund it in Wompi. `curl -A GPTBot https://guatescoffeeroasters.co/cafes/nutria` shows the content and `robots.txt` allows crawlers. User submits `sitemap.xml` in Google Search Console; owner enables push on their phone.
+- [ ] **Step 10: Commit** `git add deploy server/cli.js server/test/cli.test.js && git commit -m "Deploy the store to guatescoffeeroasters.co"`
 
 ---
 
 ## Self-review notes
 
-- Spec coverage: catalog (T1, T8), variants/journey by process (T8), grind stored not sent (T3), hidden features (T9), checkout/consent/utm (T10), shipping table/threshold/coverage (T2, T6, T10), Wompi signature/webhook/reconcile (T3, T4), Pulso register/cancel/attention (T4, T6), dashboard/statuses/wa.me/aliases (T6, T11), push now / WhatsApp later (T5), invoice via Pulso (no fields; T3 sends name/email/phone), SEO/agents/robots/llms/sitemap/OG/JSON-LD (T7), staging/stub/other apps/backups (T12), production smoke test (T13), no customer email (nothing built), secrets check (T10 Step 5).
-- `PULSO_MODE` has three values: `live`, `stub`, `stub-orders` (Task 1 implements all three; Task 12 relies on `stub-orders`).
+- Spec coverage: catalog (T1, T8), variants/journey by process (T8), grind stored not sent (T3), hidden features (T9), checkout/consent/utm (T10), shipping table/threshold/coverage (T2, T6, T10), Wompi signature/webhook/reconcile (T3, T4), Pulso register/cancel/attention (T4, T6), dashboard/statuses/wa.me/aliases (T6, T11), push now / WhatsApp later (T5), invoice via Pulso (no fields; T3 sends name/email/phone), SEO/agents/robots/llms/sitemap/OG/JSON-LD (T7), pre-launch mode/other apps/backups/smoke test/go-live (T12), no customer email (nothing built), secrets check (T10 Step 5).
+- `PULSO_MODE` has three values: `live`, `stub`, `stub-orders` (Task 1 implements all three; Task 12 relies on `stub-orders` before go-live).
 - Same approach applies to `verifyEvent` in Task 4: its test uses the signed-event example from docs.wompi.co → "Eventos".
