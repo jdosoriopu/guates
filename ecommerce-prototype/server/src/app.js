@@ -13,7 +13,7 @@ import { shippingFor, freeShippingFrom, PACKAGING_G } from "./shipping.js";
 import { renderPage, robotsTxt, sitemapXml, llmsTxt, loadSeoAssets } from "./seo.js";
 
 export function buildApp(deps) {
-  const app = Fastify({ logger: deps.logger ?? false });
+  const app = Fastify({ logger: deps.logger ?? false, trustProxy: deps.config.trustProxy ? "127.0.0.1" : false });
   app.decorate("deps", deps);
   app.register(cookie);
   app.register(equipoRoutes, { prefix: "/api/equipo" });

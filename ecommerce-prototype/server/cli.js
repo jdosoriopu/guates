@@ -60,7 +60,29 @@ if (command === "vapid-keys") {
   if (dbPath !== ":memory:") mkdirSync(dirname(dbPath), { recursive: true });
   setOwner(openDb(dbPath), email, password);
   console.log(`Listo: ${email} ya puede entrar al equipo.`);
+} else if (command === "purge-orders") {
+  const prefixAt = args.indexOf("--prefix");
+  const prefix = prefixAt >= 0 ? args[prefixAt + 1] : undefined;
+  const force = args.includes("--force");
+  if (!prefix || prefix.startsWith("--")) {
+    console.error("Uso: node cli.js purge-orders --prefix <PREFIJO> [--force]");
+    process.exit(1);
+  }
+  if (prefix !== "TEST" && !force) {
+    console.error(`Solo se borran pedidos TEST sin --force; "${prefix}" no está permitido.`);
+    process.exit(1);
+  }
+  const { loadConfig } = await import("./src/config.js");
+  const { openDb } = await import("./src/db.js");
+  const db = openDb(loadConfig().dbPath);
+  // Escape LIKE wildcards so the prefix is matched literally.
+  const like = `${prefix}-`.replace(/[\\%_]/g, "\\$&") + "%";
+  db.exec("BEGIN");
+  db.prepare("DELETE FROM order_items WHERE order_no IN (SELECT no FROM orders WHERE no LIKE ? ESCAPE '\\')").run(like);
+  const { changes } = db.prepare("DELETE FROM orders WHERE no LIKE ? ESCAPE '\\'").run(like);
+  db.exec("COMMIT");
+  console.log(`Pedidos ${prefix}- borrados: ${changes}`);
 } else {
-  console.error("Uso: node cli.js vapid-keys | set-owner <correo>");
+  console.error("Uso: node cli.js vapid-keys | set-owner <correo> | purge-orders --prefix <PREFIJO>");
   process.exit(1);
 }

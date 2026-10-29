@@ -1,0 +1,21 @@
+[Unit]
+Description=Guates store (Fastify + SQLite)
+After=network.target
+
+[Service]
+User=guates
+Group=guates
+WorkingDirectory=/srv/guates/store/current/server
+EnvironmentFile=/srv/guates/store/shared/store.env
+Environment=NODE_ENV=production
+ExecStart=/usr/bin/node --disable-warning=ExperimentalWarning src/index.js
+Restart=on-failure
+RestartSec=3
+# The droplet is shared with other apps; keep the store from starving them.
+MemoryMax=300M
+NoNewPrivileges=true
+ProtectSystem=full
+ReadWritePaths=/srv/guates/store/shared
+
+[Install]
+WantedBy=multi-user.target
