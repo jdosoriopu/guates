@@ -190,18 +190,38 @@ test("anular cancels in Pulso with the reason, hints refund, and survives a fail
   assert.equal((await s.api("POST", `/orders/${no}/anular`, { reason: "otra vez" })).statusCode, 409);
 });
 
-test("anular treats Pulso not_found as cancelled and skips Pulso without a sale id", async () => {
+test("anular treats Pulso not_found as cancelled", async () => {
   const s = await setup({ pulsoOverrides: { cancel: () => ({ ok: false, code: "not_found" }) } });
   const no = await s.newOrder();
   assert.equal((await s.api("POST", `/orders/${no}/anular`, { reason: "r" })).json().status, "anulado");
+});
 
-  const s2 = await setup({ pulsoOverrides: { register: () => ({ ok: false, code: "insufficient_stock" }) } });
-  const stuck = await s2.newOrder();
-  assert.equal(s2.status(stuck), "requiere_atencion");
-  const res = await s2.api("POST", `/orders/${stuck}/anular`, { reason: "sin stock" });
+test("anular cancels in Pulso when registration was attempted even without a sale id", async () => {
+  const s = await setup({ pulsoOverrides: { register: () => ({ ok: false, code: "unavailable" }) } });
+  const no = await s.newOrder();
+  assert.equal(s.status(no), "requiere_atencion");
+  assert.equal(s.db.prepare("SELECT pulso_sale_id FROM orders WHERE no = ?").get(no).pulso_sale_id, null);
+  const res = await s.api("POST", `/orders/${no}/anular`, { reason: "sin stock" });
   assert.equal(res.json().status, "anulado");
-  assert.equal(s2.calls.cancel.length, 0);
   assert.equal(res.json().refundHint, true);
+  assert.deepEqual(s.calls.cancel, [{ no, reason: "sin stock" }]);
+
+  const s2 = await setup({
+    pulsoOverrides: { register: () => ({ ok: false, code: "unavailable" }), cancel: () => ({ ok: false, code: "not_found" }) },
+  });
+  const lost = await s2.newOrder();
+  assert.equal((await s2.api("POST", `/orders/${lost}/anular`, { reason: "r" })).json().status, "anulado");
+  assert.equal(s2.calls.cancel.length, 1);
+});
+
+test("anular skips Pulso for an order with neither a sale id nor a Wompi transaction", async () => {
+  const s = await setup({ pulsoOverrides: { register: () => ({ ok: false, code: "unavailable" }) } });
+  const no = await s.newOrder();
+  s.db.prepare("UPDATE orders SET wompi_tx = NULL WHERE no = ?").run(no);
+  const res = await s.api("POST", `/orders/${no}/anular`, { reason: "r" });
+  assert.equal(res.json().status, "anulado");
+  assert.equal(res.json().refundHint, false);
+  assert.equal(s.calls.cancel.length, 0);
 });
 
 test("reintentar-pulso re-registers a paid order that needs attention", async () => {

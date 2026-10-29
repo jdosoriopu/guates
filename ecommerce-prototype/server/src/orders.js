@@ -332,7 +332,8 @@ export function createOrders({ db, catalog, pulso, wompi, notify, config, now = 
     let refundHint = false;
     const order = await transition(no, ["pagado", "requiere_atencion", "despachado"], "anular", async (o) => {
       if (!why) throw invalid("Escribe el motivo de la anulación.");
-      if (o.pulso_sale_id) {
+      // A lost response can leave a real sale in Pulso with no id saved, so any paid order is cancelled there too.
+      if (o.pulso_sale_id || o.wompi_tx) {
         const res = await pulso.cancelOrder(o.no, why);
         if (!res.ok && res.code !== "not_found") throw new OrderError("pulso", "Pulso no pudo anular el pedido. Intenta de nuevo.");
       }
