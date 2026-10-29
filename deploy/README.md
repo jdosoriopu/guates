@@ -4,7 +4,8 @@ Target: DigitalOcean droplet `159.89.158.17`, domain `guatescoffeeroasters.co`. 
 
 - `deploy.sh`: tests, local build, rsync a release, `npm ci --omit=dev` on the server, swap `current`, restart, health check, rollback, keep 5 releases. Env: `DEPLOY_HOST` (default `159.89.158.17`), `DEPLOY_USER` (default `root`), `SKIP_TESTS=1`. The port is read from the server's `store.env`. The root `.env` is never copied.
 - `backup.sh`: daily snapshot of `store.db`, keeps 14 (uses `sqlite3` if present, otherwise Node's `node:sqlite` backup, because the server has no `sqlite3`). Cron for user `guates`: `15 3 * * * /srv/guates/store/shared/backup.sh`.
-- `store.env.example`: every variable, Pre-launch values, Live values in comments.
+- `store.env.example`: every variable with the Pre-launch values. Copy-ready: copy as-is to `store.env` and replace the `<placeholders>`. Comments sit on their own lines because systemd keeps inline text as part of a value.
+- `remote-activate.sh`: uploaded by `deploy.sh` to `shared/`; validates `store.env`/PORT/unit, swaps `current`, restarts, checks health and rolls back (or stops the service on a failed first deploy).
 - `systemd/guates-store.service`: runs as `guates` with `NODE_ENV=production` (the `/api/test/*` routes return 404).
 - `nginx/guates-store.conf`: location block to paste into the existing `guatescoffeeroasters.co` server block.
 

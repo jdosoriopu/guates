@@ -14,8 +14,10 @@ RestartSec=3
 # The droplet is shared with other apps; keep the store from starving them.
 MemoryMax=300M
 NoNewPrivileges=true
-ProtectSystem=full
+ProtectSystem=strict
 ReadWritePaths=/srv/guates/store/shared
+PrivateTmp=true
+ProtectHome=true
 
 [Install]
 WantedBy=multi-user.target
