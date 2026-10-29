@@ -18,7 +18,7 @@ npm run dev
 | Trabajo existente | Implementación conservada | Adaptación |
 | --- | --- | --- |
 | Inicio y carrusel de personalidades | Plantilla de Main, SVG, animales, textos y controlador | React; pausa por movimiento reducido |
-| Recomendación por ánimo y costumbre | MOODS, TASTES, emo, mood y perfiles de Main | Sin cambiar cafés ni recomendaciones |
+| Recomendación por ánimo y costumbre | MOODS, TASTES, emo, mood y perfiles de Main | Identidad del café separada del proceso; recomendaciones de muestra |
 | Hilo ilustrado del inicio | Ilustraciones SVG y lógica de scroll de Main | Mismos nodos, etapas y composición |
 | Catálogo | Filtros por proceso, orden, tarjetas y compra rápida | URL, filtro adicional por rasgos existentes y comparación |
 | Ficha | Presentaciones, molienda, precio, personalidad, receta, finca y etiqueta | URL propia y compra accesible durante el recorrido |
@@ -60,7 +60,7 @@ Para repetir la importación: `python3 scripts/import_animations.py "/ruta/al/ex
 
 `/`, `/cafes`, `/cafes/:slug`, `/recorrido`, `/suscripcion`, `/bolsa`, `/checkout`, `/pedido/confirmacion?pedido=…`, `/cuenta`, `/cuenta/pedidos`, `/cuenta/suscripciones`, `/cuenta/pasaporte`, `/sobre-guates`, `/ayuda`, `/envios-y-devoluciones`, `/privacidad`, `/terminos`.
 
-Catálogo: `proceso`, `orden`, `sensacion`, `comparar`. Ficha: `etapa`. Ciudad: `ciudad`. El almacenamiento local usa `guates.canvas-store.v1`, separado de otros prototipos. Guarda bolsa, selección, ciudad, perfil, pedidos, suscripciones y notas. Los borradores de entrega se conservan al volver y se eliminan al confirmar; no se guardan dirección, teléfono ni correo en los pedidos.
+Catálogo: `categoria`, `proceso`, `orden`, `sensacion`, `comparar`. Ficha: `etapa`. Ciudad: `ciudad`. El almacenamiento local usa `guates.canvas-store.v1`, separado de otros prototipos. Guarda bolsa, selección, ciudad, perfil, pedidos, suscripciones y notas. Los borradores de entrega se conservan al volver y se eliminan al confirmar; no se guardan dirección, teléfono ni correo en los pedidos.
 
 Una compra no marca automáticamente un café como probado. El perfil es obligatorio para gestionar una suscripción o conservar notas, y opcional para compra única. Es un perfil local de demostración: no autentica personas ni aísla información entre usuarios del mismo navegador. Usa datos ficticios. Mi cuenta permite borrar los datos locales.
 
@@ -84,3 +84,9 @@ npm run build
 Las pruebas de equivalencia ejecutan el controlador original y el migrado: comparan todos los datos, precios, nueve etapas por café/ciudad, recetas por método/cantidad y totales por entrega. Las pruebas de navegador cubren escritorio y móvil, recomendaciones, escenas, variantes, rutas, persistencia, compra invitada/mixta, errores, suscripciones y pasaporte.
 
 Las capturas de la aplicación migrada se revisan a 1440 y 390 px. El runtime privado del editor no está incluido en el repositorio; no se afirma una comparación pixel a pixel contra un canvas ejecutado externamente. La conservación se verifica además mediante la conversión íntegra de nodos y la equivalencia del controlador original.
+
+## Categoría y proceso
+
+La categoría identifica la marca o tipo de café; el proceso pertenece a cada variante. El prototipo separa ambos campos y permite combinar los filtros de categoría y proceso, conservándolos en la URL. Los identificadores históricos (`lavado`, `natural`, etc.) se mantienen para conservar rutas y bolsas guardadas; no representan la categoría del inventario.
+
+Nutria, Colibrí y El Elegante usan las claves de categoría observadas en Pulso (`nutria`, `colibri`, `el_elegante`). Chigüiro y Perezoso son categorías de muestra basadas en los animales existentes, por confirmar. Regional se incluye en la clasificación de procesos solicitada; no se afirma que sea una técnica de beneficio. Los datos y las recomendaciones siguen siendo de muestra: este cambio no conecta el inventario en vivo ni atribuye los lotes de muestra a los productos de Pulso.

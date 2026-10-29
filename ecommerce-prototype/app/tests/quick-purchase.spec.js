@@ -9,7 +9,7 @@ test('recommendation requires explicit grind and adds the selected variant', asy
   await expect(add).toBeDisabled();
   await options.getByRole('button', { name: '500 g', exact: true }).click();
   await options.getByRole('button', { name: /Gruesa/ }).click();
-  await expect(options.getByRole('status')).toHaveText('Lavado · 500 g · Gruesa');
+  await expect(options.getByRole('status')).toHaveText('Nutria · 500 g · Gruesa');
   await expect(add).toHaveText('Agregar al carrito · $78.000');
   await expect(add).toBeEnabled();
   await expect(page.locator('body')).toHaveJSProperty('scrollWidth', await page.evaluate(() => innerWidth));

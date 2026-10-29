@@ -47,7 +47,7 @@ test("generated provenance matches the current working canvas, including pre-exi
     manifest.sha256,
     crypto.createHash("sha256").update(source).digest("hex"),
   );
-  assert.equal(manifest.nodes["sc-for"], 44);
+  assert.equal(manifest.nodes["sc-for"], 45);
   assert.equal(manifest.nodes["sc-if"], 39);
   assert.equal(manifest.nodes["canvas"], 7);
   assert.equal(manifest.nodes["x-import"], 37);
@@ -133,6 +133,7 @@ test("route parameters preserve catalog and stage state and unknown URLs fail cl
   const s = {
     screen: "catalogo",
     city: "cali",
+    category: "perezoso",
     filter: "Honey",
     sort: "precio",
     feeling: "Suave",

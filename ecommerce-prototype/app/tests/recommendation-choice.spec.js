@@ -17,3 +17,23 @@ test('recommendation only claims a choice after a deliberate selection in that m
   await page.reload();
   await expect(panel).toContainText('Una taza para empezar');
 });
+
+test('category and process filters stay independent across reloads', async ({ page }) => {
+  await page.goto('/cafes');
+  const categories = page.getByRole('group', { name: 'Filtrar por categoría', exact: true });
+  const processes = page.getByRole('group', { name: 'Filtrar por proceso', exact: true });
+  await categories.getByRole('button', { name: 'Colibrí', exact: true }).click();
+  await processes.getByRole('button', { name: 'Natural', exact: true }).click();
+  await expect(page.locator('main')).toContainText('1 café');
+  await expect(page).toHaveURL(/categoria=colibri/);
+  await page.reload();
+  await expect(categories.getByRole('button', { name: 'Colibrí', exact: true })).toHaveAttribute('aria-pressed', 'true');
+  await expect(processes.getByRole('button', { name: 'Natural', exact: true })).toHaveAttribute('aria-pressed', 'true');
+  await processes.getByRole('button', { name: 'Honey', exact: true }).click();
+  await expect(page.locator('main')).toContainText('0 cafés');
+  await page.getByRole('button', { name: 'Limpiar filtros' }).click();
+  await expect(categories.getByRole('button', { name: 'Todas', exact: true })).toHaveAttribute('aria-pressed', 'true');
+  await processes.getByRole('button', { name: 'Regional', exact: true }).click();
+  await expect(page.locator('main')).toContainText('1 café');
+  await expect(page.getByRole('heading', { name: 'Chigüiro', exact: true })).toBeVisible();
+});

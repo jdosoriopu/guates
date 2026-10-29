@@ -36,11 +36,11 @@ test("original home and recommendation flows survive, including illustrated step
   ).toBeVisible();
   await page.getByRole("tab", { name: "Voy sin afán", exact: false }).click();
   await expect(
-    page.getByRole("heading", { name: "Honey", exact: true }),
+    page.getByRole("heading", { name: "Perezoso", exact: true }),
   ).toBeVisible();
   await page.getByRole("tab", { name: "Por costumbre", exact: true }).click();
   await expect(
-    page.getByRole("heading", { name: "Regional", exact: true }).first(),
+    page.getByRole("heading", { name: "Chigüiro", exact: true }).first(),
   ).toBeVisible();
   await expect(
     page.getByRole("heading", { name: "Sigue el hilo hasta tu taza" }),
@@ -53,7 +53,7 @@ test("product keeps nine-stage map, terrain, recipe, city and variant selection"
   const errors = [];
   page.on("pageerror", (e) => errors.push(e.message));
   await page.goto("/cafes/honey?etapa=8");
-  await expect(page.getByRole("heading", { level: 1 })).toHaveText("Honey");
+  await expect(page.getByRole("heading", { level: 1 })).toHaveText("Perezoso");
   await expect(page.locator("canvas")).toHaveCount(4);
   await page.getByRole("combobox").selectOption("medellin");
   await expect(page).toHaveURL(/ciudad=medellin/);
@@ -77,13 +77,13 @@ test("catalog filters, comparison and empty state are URL-addressable", async ({
   await page.goto("/cafes?proceso=Honey&sensacion=Claro");
   await expect(page.locator("main")).toContainText("0 cafés");
   await page.getByRole("button", { name: "Limpiar filtros" }).click();
-  await page.getByRole("checkbox", { name: "Lavado", exact: true }).check();
-  await page.getByRole("checkbox", { name: "Honey", exact: true }).check();
+  await page.getByRole("checkbox", { name: "Nutria", exact: true }).check();
+  await page.getByRole("checkbox", { name: "Perezoso", exact: true }).check();
   await expect(page.getByRole("table")).toBeVisible();
   await expect(page).toHaveURL(/comparar=lavado%2Choney/);
   await page.reload();
   await expect(
-    page.getByRole("checkbox", { name: "Lavado", exact: true }),
+    page.getByRole("checkbox", { name: "Nutria", exact: true }),
   ).toBeChecked();
 });
 test("guest checkout preserves original delivery costs and recovers from simulated failures", async ({
@@ -203,13 +203,13 @@ test("passport stores externally tried coffees, edits and removes notes", async 
   await expect(page.locator(".personal-note")).toHaveText(
     "Una taza con amigos.",
   );
-  await page.getByRole("button", { name: "Editar Honey" }).click();
+  await page.getByRole("button", { name: "Editar Perezoso" }).click();
   await page
     .getByRole("textbox", { name: "Tu nota personal" })
     .fill("Para repetir.");
   await page.getByRole("button", { name: "Guardar nota" }).click();
   await expect(page.locator(".personal-note")).toHaveText("Para repetir.");
-  await page.getByRole("button", { name: "Quitar Honey" }).click();
+  await page.getByRole("button", { name: "Quitar Perezoso" }).click();
   await page.getByRole("button", { name: "Sí, quitar registro" }).click();
   await expect(page.locator(".personal-note")).toHaveCount(0);
 });

@@ -129,6 +129,7 @@ function Catalog({ controller }) {
             onClick={() =>
               controller.setState({
                 filter: "todos",
+                category: "todos",
                 feeling: "",
                 sort: "altura",
                 compare: [],

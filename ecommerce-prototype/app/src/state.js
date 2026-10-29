@@ -1,4 +1,4 @@
-import { BY, CITIES, SIZES, GRINDS } from "../generated/logic.js";
+import { BY, PRODUCTS, CITIES, SIZES, GRINDS } from "../generated/logic.js";
 export const STORE_KEY = "guates.canvas-store.v1";
 export const paths = {
   home: "/",
@@ -88,7 +88,8 @@ export function parseRoute(url, state = {}) {
     });
   if (screen === "catalogo")
     Object.assign(result, {
-      filter: ["Lavado", "Natural", "Honey"].includes(q.get("proceso"))
+      category: PRODUCTS.some((p) => p.category === q.get("categoria")) ? q.get("categoria") : "todos",
+      filter: ["Regional", "Lavado", "Natural", "Honey"].includes(q.get("proceso"))
         ? q.get("proceso")
         : "todos",
       sort: q.get("orden") === "precio" ? "precio" : "altura",
@@ -114,6 +115,7 @@ export function routeFor(s) {
   const q = new URLSearchParams();
   if (s.screen === "producto") q.set("etapa", s.stage);
   if (s.screen === "catalogo") {
+    if (s.category && s.category !== "todos") q.set("categoria", s.category);
     if (s.filter !== "todos") q.set("proceso", s.filter);
     if (s.sort !== "altura") q.set("orden", s.sort);
     if (s.feeling) q.set("sensacion", s.feeling);
