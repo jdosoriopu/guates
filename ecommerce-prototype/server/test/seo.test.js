@@ -38,6 +38,10 @@ test("category page is readable without JavaScript", async () => {
   assert.match(res.body, /dato de muestra/);
   assert.match(res.body, /<div id="root"><main/);
   assert.doesNotMatch(res.body, /Preparando/);
+  // Same HTML for crawlers; people see it only if the app has not mounted in 4 s or JavaScript is off.
+  assert.match(res.body, /<main class="ssr">/);
+  assert.match(res.body, /\.ssr\{opacity:0;animation:ssr-show 0s 4s forwards\}/);
+  assert.match(res.body, /<noscript><style>\.ssr\{opacity:1;animation:none\}<\/style><\/noscript>/);
   assert.match(res.body, /<link rel="canonical" href="https:\/\/guatescoffeeroasters\.co\/cafes\/el-elegante">/);
   assert.match(res.body, /og:image" content="https:\/\/guatescoffeeroasters\.co\/og\/el-elegante\.png"/);
   assert.doesNotMatch(res.body, /noindex/);

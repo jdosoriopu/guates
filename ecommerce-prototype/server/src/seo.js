@@ -92,7 +92,12 @@ export function llmsTxt(catalog, content, baseUrl, freeShippingFrom = DEFAULT_FR
   ].join("\n\n") + "\n";
 }
 
-const pageShell = (h1, body) => `<main><h1>${esc(h1)}</h1>${body}</main>`;
+const pageShell = (h1, body) => `<main class="ssr"><h1>${esc(h1)}</h1>${body}</main>`;
+// Crawlers read the server HTML; people see the store once React mounts. The plain version only shows
+// if the app has not replaced it within 4 s, or when JavaScript is off.
+const SSR_STYLE =
+  "<style>.ssr{opacity:0;animation:ssr-show 0s 4s forwards}@keyframes ssr-show{to{opacity:1}}</style>" +
+  "<noscript><style>.ssr{opacity:1;animation:none}</style></noscript>";
 const para = (t) => `<p>${esc(t)}</p>`;
 
 function staticPages(settings) {
@@ -209,7 +214,8 @@ function headTags({ title, description, canonical, image, indexing, type = "webs
 function inject(template, head, ld, body) {
   let html = template.replace(/<title>[\s\S]*?<\/title>/i, "");
   const ldTags = ld.map((o) => `<script type="application/ld+json">${ldJson(o)}</script>`).join("\n");
-  html = html.replace(/<\/head>/i, () => `${head}\n${ldTags}\n</head>`);
+  const style = body == null ? "" : SSR_STYLE;
+  html = html.replace(/<\/head>/i, () => `${head}\n${ldTags}\n${style}\n</head>`);
   return body == null ? html : html.replace(/(<div id="root">)[\s\S]*?(<\/div>)/, (_m, a, b) => `${a}${body}${b}`);
 }
 
