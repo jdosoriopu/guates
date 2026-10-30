@@ -139,6 +139,34 @@ test("a Bogotá rate saved in settings is what the checkout quotes", async ({ pa
   }
 });
 
+test("a picked municipality stays visible and a $0 rate needs the price written", async ({ page }) => {
+  await login(page);
+  await expect(page).toHaveURL(/\/equipo$/);
+  const original = await (await page.request.get("/api/equipo/settings")).json();
+  try {
+    await page.getByRole("link", { name: "Ajustes", exact: true }).click();
+    await page.getByRole("button", { name: "Agregar tarifa" }).click();
+    const row = page.getByRole("group", { name: "Tarifa nueva" });
+    await row.getByLabel("Buscar municipio", { exact: true }).fill("Restrepo");
+    await row.getByRole("option", { name: "Restrepo · Meta" }).click();
+    await expect(row.getByLabel("Buscar municipio", { exact: true })).toHaveValue("Restrepo · Meta");
+    await expect(row.getByRole("option")).toHaveCount(0);
+    await expect(row).toContainText("Municipio: Restrepo, Meta");
+    await page.getByRole("button", { name: "Guardar ajustes" }).click();
+    await expect(page.getByText("Escribe el precio de cada tarifa; usa 0 si el envío es gratis.")).toBeVisible();
+    await row.getByLabel("Precio", { exact: true }).fill("0");
+    await page.getByRole("button", { name: "Guardar ajustes" }).click();
+    await expect(page.getByRole("status").filter({ hasText: "Guardamos los ajustes." })).toBeVisible();
+    const saved = await (await page.request.get("/api/equipo/settings")).json();
+    expect(saved.rates).toContainEqual(expect.objectContaining({ dane: "50606000", price: 0 }));
+  } finally {
+    const res = await page.request.put("/api/equipo/settings", {
+      data: { freeShippingFrom: original.freeShippingFrom, rates: original.rates.map(({ municipio, ...r }) => r) },
+    });
+    expect(res.status()).toBe(200);
+  }
+});
+
 test("a new Pulso category can borrow the content of a coffee", async ({ page }) => {
   await page.route("**/api/equipo/categories", (route) =>
     route.fulfill({ json: [{ key: "colibri", name: "Colibrí", content: "colibri" }, { key: "tostion_nueva", name: "Tostión nueva", content: null }] }),

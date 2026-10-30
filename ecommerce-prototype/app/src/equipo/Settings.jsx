@@ -16,15 +16,18 @@ const withIds = (rates) => rates.map((r) => ({ ...r, id: nextId++, price: String
 
 function PlaceSearch({ places, onPick }) {
   const [q, setQ] = useState("");
+  const [picked, setPicked] = useState(null);
   const id = useRef(`eq-mun-${nextId++}`).current;
   const matches = useMemo(() => {
     const term = fold(q.trim());
-    if (term.length < 2) return [];
+    if (term.length < 2 || q === picked) return [];
     return places.filter((p) => fold(p.municipio).includes(term)).slice(0, 8);
-  }, [q, places]);
+  }, [q, places, picked]);
   const pick = (p) => {
+    const label = `${p.municipio} · ${p.departamento}`;
     onPick(p);
-    setQ("");
+    setPicked(label);
+    setQ(label);
   };
   return (
     <div className="eq-field">
@@ -64,8 +67,8 @@ function RateRow({ rate, places, canRemove, onChange, onRemove }) {
       {!rate.confirmed && !rate.dirty && <span className="eq-tag">por confirmar</span>}
       {rate.isNew && (
         <>
-          <PlaceSearch places={places} onPick={(p) => set({ dane: p.code, municipio: p.municipio })} />
-          <p className="body-sm">{rate.dane ? `Municipio: ${rate.municipio}` : "Elige el municipio de esta tarifa."}</p>
+          <PlaceSearch places={places} onPick={(p) => set({ dane: p.code, municipio: p.municipio, departamento: p.departamento })} />
+          <p className="body-sm">{rate.dane ? `Municipio: ${rate.municipio}, ${rate.departamento}` : "Elige el municipio de esta tarifa."}</p>
         </>
       )}
       <div className="eq-rate-grid">
@@ -119,6 +122,7 @@ function Rates() {
     setError("");
     setNotice("");
     if (rates.some((r) => !r.dane)) return setError("Elige el municipio de la tarifa nueva.");
+    if (rates.some((r) => String(r.price).trim() === "")) return setError("Escribe el precio de cada tarifa; usa 0 si el envío es gratis.");
     setBusy(true);
     try {
       await api.saveSettings({
