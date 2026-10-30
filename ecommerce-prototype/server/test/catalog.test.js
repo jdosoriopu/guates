@@ -24,6 +24,8 @@ test("caches for ttl and refetches when fresh", async () => {
   clock.advance(61_000);
   await catalog.get();
   assert.equal(catalogCalls.n, 2);
+  await new Promise((r) => setImmediate(r)); // the background revalidation lands
+  clock.advance(6_000);
   await catalog.get({ fresh: true });
   assert.equal(catalogCalls.n, 3);
 });
@@ -108,4 +110,81 @@ test("loadConfig derives the Wompi API base, lookup flag and env", () => {
   assert.equal(prod.wompi.lookup, true);
   assert.equal(prod.indexing, true);
   assert.equal(loadConfig(baseEnv).indexing, false);
+});
+
+function controlledPulso(deps) {
+  const pending = [];
+  deps.pulso.getCatalog = () => {
+    deps.catalogCalls.n++;
+    return new Promise((resolve, reject) => pending.push({ resolve, reject }));
+  };
+  return pending;
+}
+
+test("concurrent reads share one Pulso call", async () => {
+  const deps = makeDeps();
+  deps.catalogCalls.n = 0;
+  const pending = controlledPulso(deps);
+  const reads = [deps.catalog.get(), deps.catalog.get(), deps.catalog.get({ fresh: true })];
+  assert.equal(deps.catalogCalls.n, 1);
+  pending[0].resolve(fixtureCatalog());
+  const results = await Promise.all(reads);
+  assert.ok(results.every((r) => r.categories.length === 3 && r.stale === false));
+});
+
+test("after the ttl, reads get the old catalog at once while one call revalidates", async () => {
+  const deps = makeDeps();
+  await deps.catalog.get();
+  const pending = controlledPulso(deps);
+  deps.catalogCalls.n = 0;
+  deps.clock.advance(61_000);
+  const [a, b] = await Promise.all([deps.catalog.get(), deps.catalog.get()]);
+  assert.equal(a.stale, true);
+  assert.equal(b.categories.length, 3);
+  assert.equal(deps.catalogCalls.n, 1);
+  pending[0].resolve(fixtureCatalog());
+  await new Promise((r) => setImmediate(r));
+  assert.equal((await deps.catalog.get()).stale, false);
+  assert.equal(deps.catalogCalls.n, 1);
+});
+
+test("a fresh read reuses a catalog younger than 5 s", async () => {
+  const deps = makeDeps();
+  await deps.catalog.get();
+  deps.catalogCalls.n = 0;
+  deps.clock.advance(4_000);
+  await deps.catalog.get({ fresh: true });
+  assert.equal(deps.catalogCalls.n, 0);
+  deps.clock.advance(1_001);
+  await deps.catalog.get({ fresh: true });
+  assert.equal(deps.catalogCalls.n, 1);
+});
+
+test("after a failure Pulso is left alone for 30 s", async () => {
+  const deps = makeDeps();
+  let calls = 0;
+  deps.pulso.getCatalog = async () => {
+    calls++;
+    throw new Error("boom");
+  };
+  await assert.rejects(deps.catalog.get(), CatalogUnavailable);
+  await assert.rejects(deps.catalog.get({ fresh: true }), CatalogUnavailable);
+  assert.equal(calls, 1);
+  deps.clock.advance(30_000);
+  await assert.rejects(deps.catalog.get(), CatalogUnavailable);
+  assert.equal(calls, 2);
+
+  const warm = makeDeps();
+  await warm.catalog.get();
+  let warmCalls = 0;
+  warm.pulso.getCatalog = async () => {
+    warmCalls++;
+    throw new Error("boom");
+  };
+  warm.clock.advance(5_001);
+  assert.equal((await warm.catalog.get({ fresh: true })).stale, true);
+  assert.equal((await warm.catalog.get({ fresh: true })).stale, true);
+  warm.clock.advance(61_000);
+  assert.equal((await warm.catalog.get()).stale, true);
+  assert.equal(warmCalls, 2); // the failed fresh read, then one retry after the 30 s pause
 });

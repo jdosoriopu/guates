@@ -7,6 +7,8 @@ import { checkoutUrl } from "./wompi.js";
 const GRINDS = ["grano", "fina", "media", "gruesa"];
 const EMAIL = /^[^@\s]+@[^@\s]+\.[^@\s]+$/;
 const MAX_LINES = 50;
+// Same limits as the checkout form's maxLength.
+const MAX = { name: 120, email: 160, address: 200 };
 const FIRST_SEQ = 1001;
 
 const STATUS = { invalid: 422, stock: 409, unavailable: 409, not_covered: 422, catalog_down: 503, conflict: 409, not_found: 404, pulso: 502 };
@@ -45,15 +47,17 @@ function validate(input) {
 
   const name = text(customer.name);
   if (name.length < 2) throw invalid("Escribe tu nombre.");
+  if (name.length > MAX.name) throw invalid(`Tu nombre puede tener hasta ${MAX.name} caracteres.`);
   const phone = text(customer.phone).replace(/\s+/g, "").replace(/^\+57/, "");
   if (!/^3\d{9}$/.test(phone)) throw invalid("Escribe un celular colombiano de 10 dígitos, por ejemplo 300 123 4567.");
   const email = text(customer.email);
-  if (!EMAIL.test(email)) throw invalid("Escribe un correo válido, por ejemplo nombre@correo.com.");
+  if (!EMAIL.test(email) || email.length > MAX.email) throw invalid("Escribe un correo válido, por ejemplo nombre@correo.com.");
 
   const place = placeByCode(destination.dane);
   if (!place) throw invalid("Elige un municipio de la lista.");
   const address = text(destination.address);
   if (address.length < 5) throw invalid("Escribe la dirección de entrega.");
+  if (address.length > MAX.address) throw invalid(`La dirección puede tener hasta ${MAX.address} caracteres.`);
   if (privacyAccepted !== true) throw invalid("Acepta el tratamiento de datos para continuar.");
 
   const attr = attribution && typeof attribution === "object" ? attribution : {};

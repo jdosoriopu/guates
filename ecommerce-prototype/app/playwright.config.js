@@ -32,6 +32,8 @@ export default defineConfig({
         NODE_ENV: "test",
         PULSO_MODE: "stub",
         WOMPI_LOOKUP: "off",
+        // The specs create many orders from one address; production keeps the default of 10 a minute.
+        ORDERS_PER_MINUTE: "1000",
         DB_PATH: ":memory:",
         PORT: STORE_SERVER_PORT,
         PUBLIC_URL: "http://127.0.0.1:4174",

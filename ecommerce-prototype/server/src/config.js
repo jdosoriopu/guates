@@ -83,6 +83,7 @@ export function loadConfig(env = process.env) {
     mixedMode: mixed,
     contactWhatsapp,
     trustProxy: env.TRUST_PROXY === "on",
+    ordersPerMinute: Number(env.ORDERS_PER_MINUTE) || 10,
     indexing: env.INDEXING === "on",
     publicUrl: env.PUBLIC_URL || "https://guatescoffeeroasters.co",
     port: Number(env.PORT) || 8010,

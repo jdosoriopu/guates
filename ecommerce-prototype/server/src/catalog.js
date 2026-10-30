@@ -36,9 +36,16 @@ function sanitize(raw) {
   return { asOf: raw.as_of, categories };
 }
 
+// A "fresh" read (order creation) accepts a catalog this young, so a burst of orders makes one Pulso call.
+export const FRESH_MS = 5_000;
+// After a failed call Pulso is left alone this long; reads get the last good catalog (or fail fast) meanwhile.
+export const BACKOFF_MS = 30_000;
+
 export function createCatalog({ pulso, db, ttlMs, now = Date.now }) {
   let cache = null;
   let fetchedAt = 0;
+  let failedAt = -Infinity;
+  let inflight = null;
   const aliasFor = db.prepare("SELECT content_key FROM aliases WHERE catalog_key = ?");
 
   // Aliases are applied on every read so a dashboard choice takes effect without waiting for the ttl.
@@ -53,11 +60,43 @@ export function createCatalog({ pulso, db, ttlMs, now = Date.now }) {
     };
   }
 
+  // Every caller during a Pulso call shares that one call.
+  function refresh() {
+    inflight ??= (async () => pulso.getCatalog())()
+      .then(
+        (raw) => {
+          cache = sanitize(raw);
+          fetchedAt = now();
+          failedAt = -Infinity;
+        },
+        (err) => {
+          failedAt = now();
+          throw err;
+        },
+      )
+      .finally(() => {
+        inflight = null;
+      });
+    return inflight;
+  }
+
+  const backingOff = () => now() - failedAt < BACKOFF_MS;
+
   async function get({ fresh = false } = {}) {
-    if (cache && !fresh && now() - fetchedAt < ttlMs) return present(false);
+    const age = now() - fetchedAt;
+    if (cache && age < (fresh ? FRESH_MS : ttlMs)) return present(false);
+
+    // Pages never wait on Pulso once something is cached: they get the old catalog while it revalidates.
+    if (cache && !fresh) {
+      if (!backingOff()) refresh().catch(() => {});
+      return present(true);
+    }
+    if (backingOff() && !inflight) {
+      if (cache) return present(true);
+      throw new CatalogUnavailable(new Error("Pulso en espera tras un fallo"));
+    }
     try {
-      cache = sanitize(await pulso.getCatalog());
-      fetchedAt = now();
+      await refresh();
       return present(false);
     } catch (err) {
       if (cache) return present(true);

@@ -41,10 +41,13 @@ test("create prices from fresh Pulso data and ignores client prices", async () =
   assert.equal(item.category_key, "el_elegante");
 });
 
-test("create uses a fresh catalog, not the cache", async () => {
-  const { orders, catalogCalls, catalog } = setup();
+test("create uses a fresh catalog, not the cache; a burst within 5 s shares one read", async () => {
+  const { orders, catalogCalls, catalog, clock } = setup();
   await catalog.get();
+  clock.advance(5_001);
   const before = catalogCalls.n;
+  await orders.create(input());
+  assert.equal(catalogCalls.n, before + 1);
   await orders.create(input());
   assert.equal(catalogCalls.n, before + 1);
 });
@@ -110,6 +113,9 @@ test("create validates input", async () => {
     input({ destination: { dane: "00000000", address: "Calle 1 # 2-3" } }),
     input({ destination: { dane: BOGOTA, address: "abc" } }),
     input({ privacyAccepted: false }),
+    input({ customer: { name: "A".repeat(121), phone: "3001234567", email: "ana@correo.com" } }),
+    input({ customer: { name: "Ana", phone: "3001234567", email: `${"a".repeat(150)}@correo.com` } }),
+    input({ destination: { dane: BOGOTA, address: "C".repeat(201) } }),
   ];
   for (const b of bad) await rejects(orders.create(b), "invalid");
 });
@@ -197,4 +203,27 @@ test("test-only order route returns the stored order with attribution, and is 40
   const prod = buildApp({ ...prodDeps, orders: prodOrders });
   const created = await prodOrders.create(input());
   assert.equal((await prod.inject({ method: "GET", url: `/api/test/orders/${created.no}` })).statusCode, 404);
+});
+
+test("create accepts fields at their maximum length", async () => {
+  const { orders } = setup();
+  await orders.create(input({
+    customer: { name: "A".repeat(120), phone: "3001234567", email: `${"a".repeat(149)}@correo.com` },
+    destination: { dane: BOGOTA, address: "C".repeat(200) },
+  }));
+});
+
+test("POST /api/orders allows a few orders per minute per IP, then answers 429", async () => {
+  const deps = makeDeps({ config: { ordersPerMinute: 3 } });
+  const clock = { t: 0 };
+  const app = buildApp({ ...deps, now: () => clock.t, orders: createOrders({ db: deps.db, catalog: deps.catalog, pulso: deps.pulso, config: deps.config, now: deps.clock.now }) });
+  const send = (ip) => app.inject({ method: "POST", url: "/api/orders", payload: input(), remoteAddress: ip });
+  for (let i = 0; i < 3; i++) assert.equal((await send("1.1.1.1")).statusCode, 201);
+  const limited = await send("1.1.1.1");
+  assert.equal(limited.statusCode, 429);
+  assert.match(limited.json().error, /Espera un minuto/);
+  assert.equal((await send("2.2.2.2")).statusCode, 201);
+  clock.t += 60_000;
+  assert.equal((await send("1.1.1.1")).statusCode, 201);
+  await app.close();
 });

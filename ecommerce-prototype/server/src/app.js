@@ -6,6 +6,7 @@ import { CatalogUnavailable } from "./catalog.js";
 import { listPlaces, placeByCode } from "./places.js";
 import { OrderError } from "./orders.js";
 import { verifyEvent } from "./wompi.js";
+import { createRateLimiter } from "./rate-limit.js";
 import { existsSync, readFileSync } from "node:fs";
 import { join, resolve } from "node:path";
 import fastifyStatic from "@fastify/static";
@@ -73,7 +74,12 @@ export function buildApp(deps) {
     return { subtotal, shipping: shippingFor({ subtotal, destinoDane, pesoG }, { db: deps.db }) };
   });
 
+  // Each order reads Pulso and takes an order number, so one client can't create them in bulk.
+  const orderLimiter = createRateLimiter({ max: deps.config.ordersPerMinute, now: deps.now });
   app.post("/api/orders", async (req, reply) => {
+    if (!orderLimiter.take(req.ip)) {
+      return reply.code(429).send({ error: "Hiciste muchos pedidos seguidos. Espera un minuto e intenta de nuevo.", code: "rate_limited" });
+    }
     try {
       return reply.code(201).send(await deps.orders.create(req.body ?? {}));
     } catch (err) {
