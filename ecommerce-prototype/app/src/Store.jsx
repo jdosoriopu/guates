@@ -52,6 +52,11 @@ function brandFor(coffee) {
   const light = !coffee ? "transparent" : bag === C.crema ? C.luz : bag;
   return { strong, on, light, band: bag };
 }
+function addedText(name, grind, qty) {
+  const how = (GRINDS.find((g) => g.key === grind)?.label ?? "").toLowerCase();
+  const what = `${name}${how ? `, ${how}` : ""}`;
+  return qty === 1 ? `Listo: ${what} va en tu carrito.` : `Listo: ${qty} bolsas de ${what} van en tu carrito.`;
+}
 export const CATALOG_ERROR =
   "No pudimos consultar la disponibilidad. Intenta de nuevo en un momento.";
 const CATALOG_REFRESH_MS = 60000;
@@ -247,7 +252,7 @@ export class Store extends CanvasLogic {
     }
     this.add(
       { id: variantId + "|" + grind, key, variantId, size: 0, grind, qty },
-      `Agregaste ${qty} × ${variant.name} al carrito.`,
+      addedText(variant.name, grind, qty),
     );
   }
   totals() {
@@ -439,7 +444,28 @@ export class Store extends CanvasLogic {
       };
     return this._refs[key];
   }
+  // Long enough to reach "Ver carrito"; held while the pointer or keyboard is on the notice.
+  toast(msg, ms = 6000) {
+    clearTimeout(this._toastT);
+    this.setState({ toast: msg });
+    this._toastT = setTimeout(() => this.setState({ toast: null }), ms);
+  }
+  holdToast = () => clearTimeout(this._toastT);
+  releaseToast = (event) => {
+    if (event.currentTarget.contains(event.relatedTarget)) return;
+    this.toast(this.state.toast, 3000);
+  };
   adaptProps(tag, props) {
+    if (tag === "div" && props.role === "status" && props.style?.position === "sticky")
+      return {
+        ...props,
+        className: "store-toast",
+        style: undefined,
+        onMouseEnter: this.holdToast,
+        onFocus: this.holdToast,
+        onMouseLeave: this.releaseToast,
+        onBlur: this.releaseToast,
+      };
     if (props.onClick && props.onClick === this._hidden)
       return { ...props, hidden: true };
     if (

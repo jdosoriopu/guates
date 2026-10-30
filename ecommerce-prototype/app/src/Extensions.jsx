@@ -125,8 +125,7 @@ function Recurring({ controller }) {
 }
 function CatalogTools({ controller }) {
   const s = controller.state;
-  const [comparing, setComparing] = useState(false);
-  const showCompare = comparing || s.compare.length > 0;
+  const showCompare = s.comparing || s.compare.length > 0;
   const active =
     s.filter !== "todos" ||
     s.category !== "todos" ||
@@ -153,38 +152,11 @@ function CatalogTools({ controller }) {
         aria-expanded={showCompare}
         aria-controls="catalog-compare"
         onClick={() => {
-          setComparing(!showCompare);
-          if (showCompare) controller.setState({ compare: [] });
+          controller.setState({ comparing: !showCompare, ...(showCompare && { compare: [] }) });
         }}
       >
         Comparar
       </button>
-      {showCompare && (
-        <div
-          id="catalog-compare"
-          className="catalog-compare"
-          role="group"
-          aria-label="Elige dos cafés para comparar"
-        >
-          {PRODUCTS.map((p) => (
-            <label className="extension-check" key={p.key}>
-              <input
-                type="checkbox"
-                checked={s.compare.includes(p.key)}
-                disabled={s.compare.length === 2 && !s.compare.includes(p.key)}
-                onChange={() =>
-                  controller.setState({
-                    compare: s.compare.includes(p.key)
-                      ? s.compare.filter((k) => k !== p.key)
-                      : [...s.compare, p.key],
-                  })
-                }
-              />
-              {p.name}
-            </label>
-          ))}
-        </div>
-      )}
       {active && (
         <button
           type="button"
@@ -196,12 +168,46 @@ function CatalogTools({ controller }) {
               feeling: "",
               sort: "altura",
               compare: [],
+              comparing: false,
             })
           }
         >
           Limpiar filtros
         </button>
       )}
+    </>
+  );
+}
+// Compare picks and table sit under the filter bar so the bar can stay one swipeable row on phones.
+function CatalogCompare({ controller }) {
+  const s = controller.state;
+  if (!s.comparing && !s.compare.length) return null;
+  return (
+    <>
+      <div
+        id="catalog-compare"
+        className="catalog-compare"
+        role="group"
+        aria-label="Elige dos cafés para comparar"
+      >
+        {PRODUCTS.map((p) => (
+          <label className="extension-check" key={p.key}>
+            <input
+              type="checkbox"
+              checked={s.compare.includes(p.key)}
+              disabled={s.compare.length === 2 && !s.compare.includes(p.key)}
+              onChange={() =>
+                controller.setState({
+                  compare: s.compare.includes(p.key)
+                    ? s.compare.filter((k) => k !== p.key)
+                    : [...s.compare, p.key],
+                })
+              }
+            />
+            {p.name}
+          </label>
+        ))}
+      </div>
       {s.compare.length === 2 && (
         <div className="table-scroll catalog-table">
           <table>
@@ -877,6 +883,7 @@ export function Extension({ controller, values, placement }) {
       </nav>
     ) : null;
   if (placement === "filters") return <CatalogTools controller={controller} />;
+  if (placement === "filters-after") return <CatalogCompare controller={controller} />;
   if (placement === "catalog-end") return <PlainCards controller={controller} />;
   if (placement === "footer")
     return (
