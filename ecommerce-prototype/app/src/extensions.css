@@ -620,3 +620,65 @@ article:has(.card-grind) {
 .card-grind-options small {
   font: 400 12px/1.2 var(--font-sans);
 }
+
+/* Floating WhatsApp button: verde moriche on crema, the brand's own green. Steps aside while a notice shows. */
+.whatsapp-float {
+  position: fixed;
+  right: 16px;
+  bottom: 16px;
+  z-index: 35;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 48px;
+  padding: 0 20px 0 16px;
+  border: 2px solid var(--crema-de-papel);
+  border-radius: var(--radius-pill);
+  background: var(--verde-moriche);
+  color: var(--crema-de-papel);
+  font: 600 15px/1 var(--font-sans);
+  text-decoration: none;
+  transition: transform 0.2s ease, opacity 0.2s ease, visibility 0.2s;
+}
+.whatsapp-float:hover {
+  transform: translateY(-2px);
+}
+body:has(.purchase-dock) .whatsapp-float {
+  bottom: 88px;
+}
+body:has(.store-toast) .whatsapp-float {
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(12px);
+}
+@media (max-width: 560px) {
+  .whatsapp-float {
+    padding: 0;
+    width: 52px;
+    height: 52px;
+    justify-content: center;
+  }
+  .whatsapp-float span {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+    white-space: nowrap;
+  }
+  .whatsapp-float svg {
+    width: 26px;
+    height: 26px;
+  }
+}
+@media (prefers-reduced-motion: no-preference) {
+  .whatsapp-float {
+    animation: whatsapp-in 0.4s ease-out 1.2s both;
+  }
+  @keyframes whatsapp-in {
+    from {
+      opacity: 0;
+      transform: translateY(16px);
+    }
+  }
+}

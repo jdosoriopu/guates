@@ -421,7 +421,11 @@ test("Pagar waits for the shipping quote and offers to recalculate when it fails
 
 test("with a WhatsApp number the contact copy links to wa.me; without one it stays plain", async ({ page }) => {
   await page.goto("/ayuda");
-  await expect(page.locator("main")).toContainText("Instagram, WhatsApp, correo y horarios: por confirmar.");
+  await expect(page.locator("main")).toContainText("WhatsApp, correo y horarios: por confirmar.");
+  await expect(page.locator("main").getByRole("link", { name: "@guates.coffeeroasters" })).toHaveAttribute(
+    "href",
+    "https://www.instagram.com/guates.coffeeroasters/",
+  );
   await expect(page.locator('a[href^="https://wa.me/"]')).toHaveCount(0);
 
   await page.route("**/api/catalog", async (route) => {
@@ -429,10 +433,16 @@ test("with a WhatsApp number the contact copy links to wa.me; without one it sta
     route.fulfill({ response: res, json: { ...(await res.json()), contact: { whatsapp: "573001234567" } } });
   });
   await page.goto("/ayuda");
-  const link = page.locator("main").getByRole("link", { name: "WhatsApp" });
+  const link = page.locator("main").getByRole("link", { name: "WhatsApp", exact: true });
   await expect(link).toHaveAttribute("href", "https://wa.me/573001234567");
   await expect(page.locator("main")).toContainText("¿Dudas con tu pedido? Escríbenos por WhatsApp.");
   await expect(page.getByRole("navigation", { name: "Información" }).getByRole("link", { name: "WhatsApp" })).toHaveAttribute("href", "https://wa.me/573001234567");
+  await expect(page.getByRole("link", { name: "Escríbenos por WhatsApp" })).toHaveAttribute(
+    "href",
+    "https://wa.me/573001234567?text=" + encodeURIComponent("Hola, Guates. Tengo una pregunta."),
+  );
+  await page.goto("/checkout");
+  await expect(page.getByRole("link", { name: "Escríbenos por WhatsApp" })).toHaveCount(0);
 });
 
 test("an unknown order or token shows the not-found page", async ({ page }) => {

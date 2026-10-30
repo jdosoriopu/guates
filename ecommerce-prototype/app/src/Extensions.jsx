@@ -16,7 +16,7 @@ import {
   plainCategory,
   whatsappUrl,
 } from "./live/catalog.js";
-import { WhatsApp } from "./live/WhatsApp.jsx";
+import { WhatsApp, WhatsAppFloat, Instagram, INSTAGRAM_URL } from "./live/WhatsApp.jsx";
 import { FEATURES } from "./live/features.js";
 import { Checkout } from "./live/Checkout.jsx";
 import { Confirmation } from "./live/Confirmation.jsx";
@@ -897,13 +897,19 @@ const info = {
     title: "Ayuda y contacto",
     get body() {
       const paid = "Pagas en línea con Wompi y recibes la confirmación de tu pedido apenas se aprueba el pago.";
-      if (!whatsappUrl()) return [paid, "Instagram, WhatsApp, correo y horarios: por confirmar."];
+      const instagram = (
+        <p key="instagram">
+          Síguenos en Instagram: <Instagram />.
+        </p>
+      );
+      if (!whatsappUrl()) return [paid, instagram, "WhatsApp, correo y horarios: por confirmar."];
       return [
         paid,
         <p key="whatsapp">
           ¿Dudas con tu pedido? Escríbenos por <WhatsApp />.
         </p>,
-        "Instagram, correo y horarios: por confirmar.",
+        instagram,
+        "Correo y horarios: por confirmar.",
       ];
     },
   },
@@ -964,6 +970,9 @@ export function Extension({ controller, values, placement, item }) {
             WhatsApp
           </a>
         )}
+        <a href={INSTAGRAM_URL} target="_blank" rel="noopener noreferrer">
+          Instagram
+        </a>
       </nav>
     );
   return (
@@ -1060,6 +1069,9 @@ export function Extension({ controller, values, placement, item }) {
           />
         )}
       </div>
+      {s.screen !== "checkout" && (
+        <WhatsAppFloat coffee={s.screen === "producto" ? values.p?.name : null} />
+      )}
       {s.screen === "producto" && (
         <aside
           className="purchase-dock"

@@ -235,7 +235,7 @@ export function renderPage(pathname, { catalog, content, settings, template, bas
 
   if (path === "/") {
     return render(200, { ...home, title: `${BRAND} · El recorrido de tu taza`, description: HOME_DESCRIPTION, canonical: `${baseUrl}/` },
-      [{ "@context": "https://schema.org", "@type": "Organization", name: BRAND, url: baseUrl, logo: `${baseUrl}/og/home.png`, sameAs: [] }],
+      [{ "@context": "https://schema.org", "@type": "Organization", name: BRAND, url: baseUrl, logo: `${baseUrl}/og/home.png`, sameAs: ["https://www.instagram.com/guates.coffeeroasters/"] }],
       pageShell(BRAND, homeBody(catalog, content, settings)));
   }
   if (path === "/cafes") {
