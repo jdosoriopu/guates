@@ -181,4 +181,7 @@ test("page colour and active link follow the coffee on screen, not the home mood
   await expect(stripe).toHaveCSS("background-color", "rgb(78, 113, 240)");
   await page.goto("/cafes");
   await expect(stripe).toHaveCSS("background-color", "rgb(98, 69, 50)");
+  const cafes = nav.getByRole("button", { name: "Cafés" });
+  await expect(cafes).toHaveCSS("background-color", "rgba(0, 0, 0, 0)");
+  await expect(cafes).toHaveCSS("outline-color", "rgb(98, 69, 50)");
 });

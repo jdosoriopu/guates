@@ -414,3 +414,8 @@ details summary {
     display: none;
   }
 }
+/* Active nav link on pages without a coffee colour (see brandFor in Store.jsx). */
+header nav button[aria-current="page"][style*="background: transparent"]:not(:focus-visible) {
+  outline: 2px solid var(--cafe-de-origen);
+  outline-offset: -2px;
+}

@@ -48,7 +48,9 @@ const BRAND_LINE = {
 function brandFor(coffee) {
   const [strong, on] = BRAND_LINE[coffee?.key] ?? BRAND_LINE.regional;
   const bag = coffee?.bag ?? C.crema;
-  return { strong, on, light: bag === C.crema ? C.luz : bag, band: bag };
+  // House pages get no fill: the active link is outlined in extensions.css.
+  const light = !coffee ? "transparent" : bag === C.crema ? C.luz : bag;
+  return { strong, on, light, band: bag };
 }
 export const CATALOG_ERROR =
   "No pudimos consultar la disponibilidad. Intenta de nuevo en un momento.";
