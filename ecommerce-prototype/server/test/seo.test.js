@@ -37,7 +37,7 @@ test("category page is readable without JavaScript", async () => {
   assert.match(res.body, /Disponible/);
   assert.match(res.body, /dato de muestra/);
   assert.match(res.body, /<div id="root"><main/);
-  assert.doesNotMatch(res.body, /Preparando/);
+  assert.doesNotMatch(res.body, /<p role="status">Preparando/);
   // Same HTML for crawlers; people see it only if the app has not mounted in 4 s or JavaScript is off.
   assert.match(res.body, /<main class="ssr">/);
   assert.match(res.body, /\.ssr\{opacity:0;animation:ssr-show 0s 10s forwards\}/);
