@@ -273,6 +273,17 @@ function CardGrind({ controller, card }) {
   const sizes = card.sizes ?? [];
   const [sizeId, setSizeId] = useState(card.variantId);
   const size = sizes.find((z) => z.id === sizeId);
+  // Radio-group keys: arrows move the selection and the focus together, skipping sold-out sizes.
+  const moveSize = (e) => {
+    const step = { ArrowRight: 1, ArrowDown: 1, ArrowLeft: -1, ArrowUp: -1 }[e.key];
+    if (!step) return;
+    e.preventDefault();
+    const open = sizes.filter((z) => !z.soldOut);
+    const next = open[(open.findIndex((z) => z.id === sizeId) + step + open.length) % open.length];
+    if (!next) return;
+    setSizeId(next.id);
+    e.currentTarget.querySelector(`[data-size="${next.id}"]`)?.focus();
+  };
   // Slide back down before unmounting; skip the wait when motion is reduced.
   const close = (then) => {
     const still = window.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
@@ -316,18 +327,20 @@ function CardGrind({ controller, card }) {
         </button>
       </div>
       {sizes.length > 1 && (
-        <div className="card-grind-sizes" role="radiogroup" aria-label="Tamaño de la bolsa">
-          {sizes.map((z, i) => (
+        <div className="card-grind-sizes" role="radiogroup" aria-label="Tamaño de la bolsa" onKeyDown={moveSize}>
+          {sizes.map((z) => (
             <button
               key={z.id}
               type="button"
               role="radio"
+              data-size={z.id}
               aria-checked={z.id === sizeId}
+              tabIndex={z.id === sizeId ? 0 : -1}
               disabled={z.soldOut}
-              ref={i === 0 ? first : undefined}
+              ref={z.id === sizeId ? first : undefined}
               onClick={() => setSizeId(z.id)}
             >
-              {z.label}
+              <strong>{z.label}</strong>
               <small>{z.soldOut ? "Agotado" : z.price}</small>
             </button>
           ))}

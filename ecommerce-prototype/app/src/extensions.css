@@ -596,35 +596,51 @@ article:has(.card-grind) {
 }
 .card-grind-sizes {
   display: flex;
-  gap: 8px;
-  margin-bottom: 10px;
+  gap: 4px;
+  margin-bottom: 12px;
+  padding: 4px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-pill);
 }
 .card-grind-sizes button {
   flex: 1;
   display: flex;
   align-items: baseline;
   justify-content: center;
-  gap: 6px;
-  min-height: 44px;
-  padding: 6px 12px;
-  border: 1px solid var(--line);
+  gap: 8px;
+  min-height: 40px;
+  padding: 0 12px;
+  border: 0;
   border-radius: var(--radius-pill);
-  background: var(--surface);
+  background: transparent;
   color: var(--ink);
-  font: 700 15px/1.2 var(--font-sans);
+  font: 700 15px/1 var(--font-sans);
   cursor: pointer;
-  transition: background-color 0.15s ease, color 0.15s ease;
+  transition: background-color 0.2s ease, color 0.2s ease;
 }
-.card-grind-sizes button small {
-  font: 500 13px/1.2 var(--font-sans);
+.card-grind-sizes button,
+.card-grind-sizes button > * {
+  align-self: center;
+}
+.card-grind-sizes small {
+  font: 500 13px/1 var(--font-sans);
+  color: var(--ink-muted, var(--ink));
+}
+@media (hover: hover) {
+  .card-grind-sizes button:not([aria-checked="true"]):not(:disabled):hover strong {
+    text-decoration: underline;
+    text-underline-offset: 4px;
+  }
 }
 .card-grind-sizes button[aria-checked="true"] {
-  border-color: var(--cafe-de-origen);
   background: var(--cafe-de-origen);
   color: var(--crema-de-papel);
 }
+.card-grind-sizes button[aria-checked="true"] small {
+  color: inherit;
+}
 .card-grind-sizes button:disabled {
-  opacity: 0.5;
+  opacity: 0.45;
   cursor: not-allowed;
 }
 .card-grind-options {
