@@ -268,23 +268,37 @@ function CardGrind({ controller, card }) {
   const first = React.useRef(null);
   const panel = React.useRef(null);
   const open = controller.state.grindFor === card.variantId;
-  const close = () => controller.setState({ grindFor: null });
+  const [leaving, setLeaving] = useState(false);
+  // Slide back down before unmounting; skip the wait when motion is reduced.
+  const close = (then) => {
+    const still = window.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
+    const done = () => {
+      setLeaving(false);
+      controller.setState({ grindFor: null });
+      then?.();
+    };
+    if (still) return done();
+    setLeaving(true);
+    setTimeout(done, 200);
+  };
   React.useEffect(() => {
     if (!open) return;
-    first.current?.focus();
+    // preventScroll: focusing a panel mid-slide would otherwise jump the page.
+    first.current?.focus({ preventScroll: true });
     const opener = panel.current?.closest("article")?.querySelector("button[aria-expanded]");
     return () => {
-      if (opener?.isConnected && panel.current?.contains(document.activeElement) !== false) opener.focus();
+      if (opener?.isConnected) opener.focus({ preventScroll: true });
     };
   }, [open]);
   if (!open) return null;
   return (
     <div
       ref={panel}
-      className="card-grind"
+      className={"card-grind" + (leaving ? " is-leaving" : "")}
       role="group"
       aria-label={`Molienda para ${card.name} · ${card.variantName}`}
       onKeyDown={(e) => e.key === "Escape" && close()}
+      inert={leaving || undefined}
     >
       <div className="card-grind-head">
         <span>
@@ -293,7 +307,7 @@ function CardGrind({ controller, card }) {
             {card.variantName} · {card.price}
           </small>
         </span>
-        <button type="button" className="card-grind-close" aria-label="Cerrar sin agregar" onClick={close}>
+        <button type="button" className="card-grind-close" aria-label="Cerrar sin agregar" onClick={() => close()}>
           ×
         </button>
       </div>
@@ -303,10 +317,7 @@ function CardGrind({ controller, card }) {
             key={g.key}
             type="button"
             ref={i === 0 ? first : undefined}
-            onClick={() => {
-              close();
-              controller.addVariant(card.key, card.variantId, g.key, 1);
-            }}
+            onClick={() => close(() => controller.addVariant(card.key, card.variantId, g.key, 1))}
           >
             <strong>{g.label}</strong>
             <small>{g.hint}</small>

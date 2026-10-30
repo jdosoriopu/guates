@@ -552,12 +552,23 @@ article:has(.card-grind) {
 }
 @media (prefers-reduced-motion: no-preference) {
   .card-grind {
-    animation: card-grind-up 240ms cubic-bezier(0.2, 0.8, 0.2, 1);
+    animation: card-grind-up 320ms cubic-bezier(0.22, 1, 0.36, 1) both;
+    will-change: transform;
+  }
+  .card-grind.is-leaving {
+    animation: card-grind-down 200ms cubic-bezier(0.4, 0, 1, 1) both;
   }
 }
 @keyframes card-grind-up {
   from {
     transform: translateY(100%);
+    opacity: 0.4;
+  }
+}
+@keyframes card-grind-down {
+  to {
+    transform: translateY(100%);
+    opacity: 0.4;
   }
 }
 .card-grind-head {
