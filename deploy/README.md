@@ -11,7 +11,22 @@ Target: DigitalOcean droplet `159.89.158.17`, domain `guatescoffeeroasters.co`. 
 
 Layout on the server: `/srv/guates/store/{releases/<timestamp>/{server,app/dist}, current, shared/{store.env, store.db, backups/}}`, owner `guates`.
 
-Server variables added for this deploy: `ORDER_PREFIX` (default `WEB`) and `TRUST_PROXY=on` (trusts `127.0.0.1` so `req.ip` is the real client behind nginx).
+Server variables added for this deploy: `ORDER_PREFIX` (default `WEB`) and `TRUST_PROXY=on` (trusts `127.0.0.1` so `req.ip` is the real client behind nginx). Later: `CONTACT_WHATSAPP` (optional, digits such as `573001234567`; turns the store's WhatsApp mentions into `wa.me` links), `ORDERS_PER_MINUTE` (default 10 per IP) and `ALLOW_MIXED_MODE` (see below).
+
+## Mode safety and the go-live checklist
+
+The server refuses to start, with a Spanish message and exit code 1, when the settings mix environments: production Wompi keys (`pub_prod_`/`prv_prod_`) with `PULSO_MODE` other than `live` or with `ORDER_PREFIX=TEST`; sandbox keys with `PULSO_MODE=live`; or a public and private key from different environments. The effective mode is logged at startup (`journalctl -u guates-store | grep Modo`), and the dashboard shows a *Modo prueba* chip while Wompi is in the sandbox. `ALLOW_MIXED_MODE=on` lifts the mode check (never the key-pair check) for the one-off Pulso smoke test; remove it right after.
+
+Local `npm start` reads the root `.env`, which has sandbox keys and no `PULSO_MODE` (default `live`), so it is refused: run it with `PULSO_MODE=stub-orders` (or `stub`).
+
+Go-live, in this order, in one sitting:
+
+1. Back up the database (`shared/backup.sh`).
+2. `node cli.js purge-orders --prefix TEST` (as `guates`, from `current/server`, env loaded).
+3. In the Wompi dashboard, production environment, register `https://guatescoffeeroasters.co/api/webhook/payments` as the events URL.
+4. In `shared/store.env`, change together: `WOMPI_PUBLIC_KEY`, `WOMPI_PRIVATE_KEY`, `WOMPI_EVENTS`, `WOMPI_INTEGRITY` to the production values; `PULSO_MODE=live`; `ORDER_PREFIX=WEB`; `INDEXING=on`; `CONTACT_WHATSAPP` if there is a number. Remove `ALLOW_MIXED_MODE` if present.
+5. `systemctl restart guates-store`; confirm the log says `Modo en vivo` and the dashboard no longer shows *Modo prueba*.
+6. Buy one real low-value order, see it in Pulso and the dashboard, then annul it and refund it in Wompi.
 
 ## Server inventory (read-only, 2026-10-29)
 
