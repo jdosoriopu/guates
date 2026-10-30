@@ -196,7 +196,7 @@ test("with only a plain category published, it still sells", async ({ page }) =>
 const HIDDEN_COPY = /simulad|Prototipo de tienda|Mi cuenta|Suscripción/;
 
 async function visibleText(page) {
-  await expect(page.getByRole("link", { name: /Tu bolsa/ })).toBeVisible();
+  await expect(page.getByRole("button", { name: /^Carrito, / })).toBeVisible();
   await page.waitForLoadState("networkidle");
   return page.locator("body").innerText();
 }

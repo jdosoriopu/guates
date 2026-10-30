@@ -121,39 +121,49 @@ function Recurring({ controller }) {
     </Panel>
   );
 }
-function Catalog({ controller }) {
+function CatalogTools({ controller }) {
   const s = controller.state;
+  const [comparing, setComparing] = useState(false);
+  const showCompare = comparing || s.compare.length > 0;
+  const active =
+    s.filter !== "todos" ||
+    s.category !== "todos" ||
+    s.feeling ||
+    s.sort !== "altura" ||
+    s.compare.length > 0;
   return (
-    <div className="extension-wrap">
-      <Panel>
-        <div className="extension-row">
-          <Field label="Sensación · perfiles de muestra">
-            <select
-              value={s.feeling}
-              onChange={(e) => controller.setState({ feeling: e.target.value })}
-            >
-              <option value="">Todas las sensaciones</option>
-              {[...new Set(PRODUCTS.flatMap((p) => p.traits))].map((t) => (
-                <option key={t}>{t}</option>
-              ))}
-            </select>
-          </Field>
-          <Button
-            onClick={() =>
-              controller.setState({
-                filter: "todos",
-                category: "todos",
-                feeling: "",
-                sort: "altura",
-                compare: [],
-              })
-            }
-          >
-            Limpiar filtros
-          </Button>
-        </div>
-        <h2>Compara dos cafés</h2>
-        <div className="extension-row">
+    <>
+      <label className="catalog-tool">
+        <span>Sensación</span>
+        <select
+          value={s.feeling}
+          onChange={(e) => controller.setState({ feeling: e.target.value })}
+        >
+          <option value="">Todas</option>
+          {[...new Set(PRODUCTS.flatMap((p) => p.traits))].map((t) => (
+            <option key={t}>{t}</option>
+          ))}
+        </select>
+      </label>
+      <button
+        type="button"
+        className="catalog-tool-button"
+        aria-expanded={showCompare}
+        aria-controls="catalog-compare"
+        onClick={() => {
+          setComparing(!showCompare);
+          if (showCompare) controller.setState({ compare: [] });
+        }}
+      >
+        Comparar
+      </button>
+      {showCompare && (
+        <div
+          id="catalog-compare"
+          className="catalog-compare"
+          role="group"
+          aria-label="Elige dos cafés para comparar"
+        >
           {PRODUCTS.map((p) => (
             <label className="extension-check" key={p.key}>
               <input
@@ -172,64 +182,79 @@ function Catalog({ controller }) {
             </label>
           ))}
         </div>
-        {s.compare.length === 2 && (
-          <div className="table-scroll">
-            <table>
-              <caption>Sensaciones: datos de muestra</caption>
-              <thead>
-                <tr>
-                  <th>Tu café</th>
-                  {s.compare.map((k) => (
-                    <th key={k}>
-                      <Link to={"/cafes/" + k}>{BY[k].name}</Link>
-                    </th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody>
-                {[
-                  ["Sensación", "feel"],
-                  ["Productor", "producer"],
-                  ["Origen", "place"],
-                  ["Variedad o mezcla", "variety"],
-                ].map(([label, key]) => (
-                  <tr key={key}>
-                    <th>{label}</th>
-                    {s.compare.map((k) => (
-                      <td key={k}>{BY[k][key]}</td>
-                    ))}
-                  </tr>
+      )}
+      {active && (
+        <button
+          type="button"
+          className="catalog-clear"
+          onClick={() =>
+            controller.setState({
+              filter: "todos",
+              category: "todos",
+              feeling: "",
+              sort: "altura",
+              compare: [],
+            })
+          }
+        >
+          Limpiar filtros
+        </button>
+      )}
+      {s.compare.length === 2 && (
+        <div className="table-scroll catalog-table">
+          <table>
+            <caption>Sensaciones: datos de muestra</caption>
+            <thead>
+              <tr>
+                <th>Tu café</th>
+                {s.compare.map((k) => (
+                  <th key={k}>
+                    <Link to={"/cafes/" + k}>{BY[k].name}</Link>
+                  </th>
                 ))}
-                <tr>
-                  <th>Proceso</th>
+              </tr>
+            </thead>
+            <tbody>
+              {[
+                ["Sensación", "feel"],
+                ["Productor", "producer"],
+                ["Origen", "place"],
+                ["Variedad o mezcla", "variety"],
+              ].map(([label, key]) => (
+                <tr key={key}>
+                  <th>{label}</th>
                   {s.compare.map((k) => (
-                    <td key={k}>
-                      {liveFor(k)
-                        ? [...new Set(liveFor(k).variants.map((x) => x.process))].join(" · ")
-                        : BY[k].process}
-                    </td>
+                    <td key={k}>{BY[k][key]}</td>
                   ))}
                 </tr>
-                <tr>
-                  <th>Precio</th>
-                  {s.compare.map((k) => (
-                    <td key={k}>
-                      {liveFor(k)?.variants.length
-                        ? fromPrice(liveFor(k).variants)
-                        : "No disponible"}
-                    </td>
-                  ))}
-                </tr>
-              </tbody>
-            </table>
-          </div>
-        )}
-      </Panel>
-      <PlainCards controller={controller} />
-    </div>
+              ))}
+              <tr>
+                <th>Proceso</th>
+                {s.compare.map((k) => (
+                  <td key={k}>
+                    {liveFor(k)
+                      ? [...new Set(liveFor(k).variants.map((x) => x.process))].join(" · ")
+                      : BY[k].process}
+                  </td>
+                ))}
+              </tr>
+              <tr>
+                <th>Precio</th>
+                {s.compare.map((k) => (
+                  <td key={k}>
+                    {liveFor(k)?.variants.length
+                      ? fromPrice(liveFor(k).variants)
+                      : "No disponible"}
+                  </td>
+                ))}
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      )}
+    </>
   );
 }
-// Plain categories carry no personality data, so only the process filter can match them.
 function PlainCards({ controller }) {
   const s = controller.state;
   const list =
@@ -825,13 +850,15 @@ const info = {
 };
 export function Extension({ controller, values, placement }) {
   const s = controller.state;
+  // The canvas Carrito button already opens the bag; only accounts add a header link.
   if (placement === "header")
-    return (
+    return FEATURES.accounts ? (
       <nav className="extension-utility" aria-label="Tu espacio">
-        {FEATURES.accounts && <Link to="/cuenta">Mi cuenta</Link>}
-        <Link to="/bolsa">Tu bolsa ({values.cartCount})</Link>
+        <Link to="/cuenta">Mi cuenta</Link>
       </nav>
-    );
+    ) : null;
+  if (placement === "filters") return <CatalogTools controller={controller} />;
+  if (placement === "catalog-end") return <PlainCards controller={controller} />;
   if (placement === "footer")
     return (
       <nav className="extension-footer" aria-label="Información">
@@ -856,7 +883,6 @@ export function Extension({ controller, values, placement }) {
           visita.
         </p>
       )}
-      {s.screen === "catalogo" && <Catalog controller={controller} />}
       <div className="extension-wrap">
         {["cuenta", "pedidos", "suscripciones", "pasaporte"].includes(
           s.screen,

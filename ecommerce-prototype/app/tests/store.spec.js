@@ -57,6 +57,8 @@ test("catalog filters, comparison and empty state are URL-addressable", async ({
   await page.goto("/cafes?proceso=Honey&sensacion=Claro");
   await expect(page.locator("main")).toContainText("0 cafés");
   await page.getByRole("button", { name: "Limpiar filtros" }).click();
+  await expect(page.getByRole("button", { name: "Limpiar filtros" })).toHaveCount(0);
+  await page.getByRole("button", { name: "Comparar", exact: true }).click();
   await page.getByRole("checkbox", { name: "Nutria", exact: true }).check();
   await page.getByRole("checkbox", { name: "Colibrí", exact: true }).check();
   await expect(page.getByRole("table")).toBeVisible();
@@ -117,7 +119,7 @@ test("scenes degrade to text when Canvas is unavailable", async ({ page }) => {
   await page
     .getByRole("button", { name: "Agregar este café", exact: true })
     .click();
-  await expect(page.getByRole("link", { name: "Tu bolsa (1)" })).toBeVisible();
+  await expect(page.getByRole("button", { name: "Carrito, 1 bolsa" })).toBeVisible();
 });
 
 test("scene instances are destroyed on navigation and recommendation tabs work with arrows", async ({

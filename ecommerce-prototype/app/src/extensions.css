@@ -297,3 +297,120 @@ details summary {
   border-radius: var(--radius-md);
   font-weight: 700;
 }
+/* Shop tools sit inside the canvas filter bar, sized like its pills. */
+.catalog-tool {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font: 500 14px/20px var(--font-sans);
+  color: var(--ink);
+}
+.catalog-tool select {
+  font: 500 15px/1.4 var(--font-sans);
+  min-height: 44px;
+  padding: 8px 12px;
+  border: 2px solid var(--ink);
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+  color: var(--ink);
+}
+.catalog-tool-button,
+.catalog-clear {
+  font: 500 15px/1.4 var(--font-sans);
+  min-height: 44px;
+  padding: 8px 16px;
+  border-radius: var(--radius-pill);
+  cursor: pointer;
+}
+.catalog-tool-button {
+  border: 2px solid var(--ink);
+  background: var(--surface);
+  color: var(--ink);
+}
+.catalog-tool-button[aria-expanded="true"] {
+  background: var(--ink);
+  color: var(--surface);
+}
+.catalog-clear {
+  border: 0;
+  background: none;
+  color: var(--link);
+  text-decoration: underline;
+  text-underline-offset: 4px;
+}
+.catalog-compare {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 16px;
+  font: 400 15px/1.4 var(--font-sans);
+  color: var(--ink);
+}
+.catalog-table {
+  flex-basis: 100%;
+  color: var(--ink);
+  font-family: var(--font-sans);
+}
+/* Phones: customers arrive from WhatsApp and Instagram, so the coffees must show on the first screen.
+   The canvas sets these with inline styles, hence !important. */
+@media (max-width: 640px) {
+  /* Header in two rows: logo and cart, then the nav and the city. */
+  header > div:nth-child(2) {
+    gap: 8px 10px !important;
+    padding-top: 6px !important;
+    padding-bottom: 6px !important;
+  }
+  header > div:nth-child(2) > div {
+    display: contents !important;
+  }
+  header > div:nth-child(2) > button:first-child {
+    order: 1;
+  }
+  header button.gq-pill {
+    order: 2;
+    margin-left: auto;
+  }
+  header nav {
+    order: 3;
+    flex-grow: 0 !important;
+  }
+  header > div:nth-child(2) label {
+    order: 4;
+  }
+  /* Shop: straight to the coffees; the cards carry the feeling. */
+  section:has([aria-label="Ordenar"]) {
+    padding-top: 16px !important;
+    gap: 16px !important;
+  }
+  section:has([aria-label="Ordenar"]) > div:first-child > p:last-child,
+  section:has([aria-label="Ordenar"]) > p {
+    display: none;
+  }
+  section:has([aria-label="Ordenar"]) > div:nth-child(2) {
+    gap: 8px 16px !important;
+    padding: 12px 0 !important;
+  }
+  header label > span:first-child {
+    display: none;
+  }
+  header button.gq-pill > span:not(:last-child) {
+    display: none;
+  }
+  [aria-label="Filtrar por categoría"],
+  [aria-label="Filtrar por proceso"],
+  [aria-label="Ordenar"] {
+    flex-wrap: nowrap !important;
+    overflow-x: auto;
+    width: 100%;
+    scrollbar-width: none;
+  }
+  [aria-label="Filtrar por categoría"] > *,
+  [aria-label="Filtrar por proceso"] > *,
+  [aria-label="Ordenar"] > * {
+    flex-shrink: 0;
+  }
+  [aria-label="Filtrar por categoría"]::-webkit-scrollbar,
+  [aria-label="Filtrar por proceso"]::-webkit-scrollbar,
+  [aria-label="Ordenar"]::-webkit-scrollbar {
+    display: none;
+  }
+}

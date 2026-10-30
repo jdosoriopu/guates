@@ -25,7 +25,7 @@ export async function addFeria(page, qty = 1) {
   const more = page.getByRole("button", { name: "Agregar una bolsa", exact: true });
   for (let i = 1; i < qty; i++) await more.click();
   await page.getByRole("button", { name: /Agregar al carrito/ }).click();
-  await expect(page.getByRole("link", { name: /Tu bolsa/ })).toContainText(String(qty));
+  await expect(page.getByRole("button", { name: new RegExp(`^Carrito, ${qty} bolsas?$`) })).toBeVisible();
 }
 
 export async function fillCheckout(page, { name = "Ana Pérez" } = {}) {
