@@ -4,7 +4,7 @@ import { fileURLToPath } from "node:url";
 import assert from "node:assert/strict";
 import { loadConfig, describeMode } from "../src/config.js";
 import { makeDeps, baseEnv } from "./helpers.js";
-import { buildApp } from "../src/app.js";
+import { buildApp, redactUrl } from "../src/app.js";
 
 test("ORDER_PREFIX defaults to WEB and can be set", () => {
   assert.equal(loadConfig(baseEnv).orderPrefix, "WEB");
@@ -87,4 +87,26 @@ test("the server exits non-zero with a Spanish message on an unsafe mix", () => 
   });
   assert.notEqual(run.status, 0);
   assert.match(run.stderr, /No se pudo arrancar la tienda: Configuración insegura/);
+});
+
+test("order tokens are redacted from logged URLs", () => {
+  assert.equal(redactUrl("/api/orders/WEB-1001?t=abc123"), "/api/orders/WEB-1001?t=[oculto]");
+  assert.equal(redactUrl("/pedido/confirmacion?pedido=WEB-1&t=abc&x=1"), "/pedido/confirmacion?pedido=WEB-1&t=[oculto]&x=1");
+  assert.equal(redactUrl("/cafes?tipo=lavado"), "/cafes?tipo=lavado");
+});
+
+test("unexpected errors answer generic Spanish copy, not the raw message", async () => {
+  const deps = makeDeps();
+  const app = buildApp(deps);
+  app.get("/api/test/boom", async () => {
+    throw new Error("SQLITE_CONSTRAINT: secret detail");
+  });
+  const res = await app.inject("/api/test/boom");
+  assert.equal(res.statusCode, 500);
+  assert.doesNotMatch(res.body, /SQLITE/);
+  assert.match(res.json().error, /Algo salió mal/);
+  const bad = await app.inject({ method: "POST", url: "/api/orders", headers: { "content-type": "application/json" }, payload: "{nope" });
+  assert.equal(bad.statusCode, 400);
+  assert.doesNotMatch(bad.body, /Unexpected|JSON/);
+  await app.close();
 });

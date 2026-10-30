@@ -13,9 +13,30 @@ import fastifyStatic from "@fastify/static";
 import { shippingFor, freeShippingFrom, PACKAGING_G } from "./shipping.js";
 import { renderPage, robotsTxt, sitemapXml, llmsTxt, loadSeoAssets } from "./seo.js";
 
+// Order tokens in ?t= unlock an order's view, so they never reach the access log.
+export const redactUrl = (url) => String(url).replace(/([?&]t=)[^&#]*/g, "$1[oculto]");
+
+function loggerOptions(logger) {
+  if (logger !== true) return logger ?? false;
+  return {
+    serializers: {
+      req: (req) => ({ method: req.method, url: redactUrl(req.url), remoteAddress: req.ip }),
+    },
+  };
+}
+
 export function buildApp(deps) {
-  const app = Fastify({ logger: deps.logger ?? false, trustProxy: deps.config.trustProxy ? "127.0.0.1" : false });
+  const app = Fastify({ logger: loggerOptions(deps.logger), trustProxy: deps.config.trustProxy ? "127.0.0.1" : false });
   app.decorate("deps", deps);
+
+  // Unexpected errors are logged in full but the client only gets generic copy.
+  app.setErrorHandler((err, req, reply) => {
+    const status = err.statusCode >= 400 && err.statusCode < 500 ? err.statusCode : 500;
+    if (status === 500) req.log.error(err);
+    return reply.code(status).send({
+      error: status === 500 ? "Algo salió mal de nuestro lado. Intenta de nuevo en un momento." : "La solicitud no es válida.",
+    });
+  });
   app.register(cookie);
   app.register(equipoRoutes, { prefix: "/api/equipo" });
 
