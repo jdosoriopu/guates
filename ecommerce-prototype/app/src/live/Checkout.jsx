@@ -212,8 +212,7 @@ export function Checkout({ controller }) {
       <div className="extension-intro">
         <h1>Ya casi llega a tu taza</h1>
         <p>
-          Cuéntanos a quién y a dónde lo enviamos. Pagas en Wompi, la pasarela de pagos que recibe tarjeta, PSE o Nequi,
-          y vuelves aquí a ver tu pedido.
+          Cuéntanos a quién y a dónde lo enviamos. Pagas en Wompi y vuelves aquí a ver tu pedido.
         </p>
       </div>
       <form ref={formRef} noValidate onSubmit={pay} className="live-checkout">
