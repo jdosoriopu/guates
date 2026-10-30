@@ -215,3 +215,30 @@ test("static files, cache headers and equipo.html are served from the dist folde
     rmSync(dist, { recursive: true, force: true });
   }
 });
+
+test("the trilla place is marked as sample data", async () => {
+  const { app } = setup({ indexing: true });
+  const body = (await app.inject("/cafes/el-elegante")).body;
+  assert.match(body, /pasó por la trilla en Ibagué, Tolima \(dato de muestra\)/);
+  await app.close();
+});
+
+test("help and shipping pages link to WhatsApp only when CONTACT_WHATSAPP is set", async () => {
+  const off = setup();
+  for (const path of ["/ayuda", "/envios-y-devoluciones"]) assert.doesNotMatch((await off.app.inject(path)).body, /wa\.me/, path);
+  await off.app.close();
+
+  const deps = makeDeps({ config: { distDir: "/nonexistent-dist", contactWhatsapp: "573001234567" } });
+  const app = buildApp({ ...deps, seo: { template: TEMPLATE, content: CONTENT } });
+  for (const path of ["/ayuda", "/envios-y-devoluciones"]) {
+    assert.match((await app.inject(path)).body, /<a href="https:\/\/wa\.me\/573001234567">WhatsApp<\/a>/, path);
+  }
+  assert.equal((await app.inject("/api/catalog")).json().contact.whatsapp, "573001234567");
+  await app.close();
+});
+
+test("the catalog response says no WhatsApp when none is set", async () => {
+  const { app } = setup();
+  assert.deepEqual((await app.inject("/api/catalog")).json().contact, { whatsapp: null });
+  await app.close();
+});

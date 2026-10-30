@@ -97,6 +97,7 @@ const para = (t) => `<p>${esc(t)}</p>`;
 
 function staticPages(settings) {
   const from = money(settings.freeShippingFrom);
+  const wa = settings.whatsapp ? `<a href="https://wa.me/${esc(settings.whatsapp)}">WhatsApp</a>` : "";
   return {
     "/sobre-guates": {
       title: "Sobre Guates",
@@ -110,14 +111,17 @@ function staticPages(settings) {
       description: `Enviamos a todo Colombia. Envío gratis desde ${from}.`,
       h1: "Envíos y devoluciones",
       body: para(`Enviamos a todo Colombia. Envío gratis desde ${from}; por debajo de ese valor, calculamos el costo según tu municipio y el peso del pedido antes de que pagues.`) +
-        para("Si tu café llega con algún problema, escríbenos y lo resolvemos. Las condiciones de devolución están por confirmar."),
+        (wa
+          ? `<p>Si tu café llega con algún problema, escríbenos por ${wa} y lo resolvemos. Las condiciones de devolución están por confirmar.</p>`
+          : para("Si tu café llega con algún problema, escríbenos y lo resolvemos. Las condiciones de devolución están por confirmar.")),
     },
     "/ayuda": {
       title: "Ayuda",
       description: "Resuelve tus dudas sobre pedidos, pagos, envíos y moliendas.",
       h1: "Ayuda",
       body: para("Pagas en línea con Wompi y recibes la confirmación de tu pedido apenas se aprueba el pago. Puedes pedir el café en grano o molido según cómo lo prepares.") +
-        para(`El envío es gratis desde ${from}.`),
+        para(`El envío es gratis desde ${from}.`) +
+        (wa ? `<p>¿Dudas con tu pedido? Escríbenos por ${wa}.</p>` : ""),
     },
     "/privacidad": {
       title: "Política de privacidad",
@@ -147,7 +151,7 @@ function categoryBody(category, info, settings) {
   if (info) {
     parts.push(
       `<h2>Del café a la taza, y de vuelta a la finca</h2>` +
-        para(`${info.emotion}. ${info.feel} Antes de llegar a tu taza, el grano se tostó en Villavicencio, pasó por la trilla${info.trilla ? ` en ${info.trilla}` : ""} y salió de la finca ${info.farm}, en ${info.place}${SAMPLE}.`),
+        para(`${info.emotion}. ${info.feel} Antes de llegar a tu taza, el grano se tostó en Villavicencio, pasó por la trilla${info.trilla ? ` en ${info.trilla}${SAMPLE}` : ""} y salió de la finca ${info.farm}, en ${info.place}${SAMPLE}.`),
       `<h2>Origen</h2><dl>` +
         [
           ["Productor", info.producer],

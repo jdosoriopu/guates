@@ -34,9 +34,10 @@ export function buildApp(deps) {
 
   app.get("/api/health", async () => ({ ok: true }));
 
+  // The store reads the contact channel from here, so it needs no build-time setting.
   app.get("/api/catalog", async (_req, reply) => {
     try {
-      return await deps.catalog.get();
+      return { ...(await deps.catalog.get()), contact: { whatsapp: deps.config.contactWhatsapp || null } };
     } catch (err) {
       if (!(err instanceof CatalogUnavailable)) throw err;
       return reply.code(503).send({ error: "No pudimos consultar la disponibilidad. Intenta de nuevo en un momento." });
@@ -133,7 +134,7 @@ function seoRoutes(app, deps) {
       return { categories: [] };
     }
   };
-  const settings = () => ({ freeShippingFrom: freeShippingFrom(deps.db) });
+  const settings = () => ({ freeShippingFrom: freeShippingFrom(deps.db), whatsapp: config.contactWhatsapp || null });
 
   app.get("/robots.txt", async (_req, reply) => text(reply, "text/plain; charset=utf-8", robotsTxt(baseUrl, { indexing: config.indexing })));
   app.get("/sitemap.xml", async (_req, reply) => text(reply, "application/xml; charset=utf-8", sitemapXml(await snapshot(), baseUrl)));
