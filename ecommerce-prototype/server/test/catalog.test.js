@@ -100,7 +100,10 @@ test("loadConfig derives the Wompi API base, lookup flag and env", () => {
   assert.equal(sandbox.wompi.apiBase, "https://sandbox.wompi.co/v1");
   assert.equal(sandbox.wompi.lookup, false);
   assert.equal(sandbox.env, "test");
-  const prod = loadConfig({ ...baseEnv, WOMPI_PUBLIC_KEY: "pub_prod_x", WOMPI_LOOKUP: undefined, INDEXING: "on" });
+  const prod = loadConfig({
+    ...baseEnv, WOMPI_PUBLIC_KEY: "pub_prod_x", WOMPI_PRIVATE_KEY: "prv_prod_x", WOMPI_EVENTS: "prod_events_x", WOMPI_INTEGRITY: "prod_integrity_x",
+    PULSO_MODE: "live", WOMPI_LOOKUP: undefined, INDEXING: "on",
+  });
   assert.equal(prod.wompi.apiBase, "https://production.wompi.co/v1");
   assert.equal(prod.wompi.lookup, true);
   assert.equal(prod.indexing, true);

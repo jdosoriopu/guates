@@ -1,6 +1,8 @@
 import { test } from "node:test";
+import { spawnSync } from "node:child_process";
+import { fileURLToPath } from "node:url";
 import assert from "node:assert/strict";
-import { loadConfig } from "../src/config.js";
+import { loadConfig, describeMode } from "../src/config.js";
 import { makeDeps, baseEnv } from "./helpers.js";
 import { buildApp } from "../src/app.js";
 
@@ -25,4 +27,64 @@ async function clientIp(trustProxy) {
 test("req.ip follows X-Forwarded-For from the local proxy only when trusted", async () => {
   assert.equal(await clientIp(true), "203.0.113.9");
   assert.equal(await clientIp(false), "127.0.0.1");
+});
+
+const sandbox = { ...baseEnv, WOMPI_PUBLIC_KEY: "pub_test_a", WOMPI_PRIVATE_KEY: "prv_test_a", WOMPI_EVENTS: "test_events_a", WOMPI_INTEGRITY: "test_integrity_a" };
+const production = { ...baseEnv, WOMPI_PUBLIC_KEY: "pub_prod_a", WOMPI_PRIVATE_KEY: "prv_prod_a", WOMPI_EVENTS: "prod_events_a", WOMPI_INTEGRITY: "prod_integrity_a" };
+
+test("pre-launch and live settings both start", () => {
+  const pre = loadConfig({ ...sandbox, PULSO_MODE: "stub-orders", ORDER_PREFIX: "TEST" });
+  assert.equal(pre.mode, "prueba");
+  assert.equal(pre.mixedMode, false);
+  const live = loadConfig({ ...production, PULSO_MODE: "live", ORDER_PREFIX: "WEB" });
+  assert.equal(live.mode, "live");
+  assert.equal(live.wompi.apiBase, "https://production.wompi.co/v1");
+  assert.equal(loadConfig({ ...production, PULSO_MODE: "live" }).orderPrefix, "WEB");
+  // Tests and local work run the sandbox with the stub and WEB numbers.
+  assert.equal(loadConfig({ ...sandbox, PULSO_MODE: "stub" }).mode, "prueba");
+});
+
+test("unsafe mixes of Wompi keys, PULSO_MODE and ORDER_PREFIX refuse to start", () => {
+  const refused = [
+    [{ ...production, PULSO_MODE: "stub-orders", ORDER_PREFIX: "WEB" }, /PULSO_MODE debe ser live/],
+    [{ ...production, PULSO_MODE: "stub", ORDER_PREFIX: "WEB" }, /PULSO_MODE debe ser live/],
+    [{ ...production, PULSO_MODE: "live", ORDER_PREFIX: "TEST" }, /ORDER_PREFIX no puede ser TEST/],
+    [{ ...production, PULSO_MODE: "stub-orders", ORDER_PREFIX: "TEST" }, /PULSO_MODE debe ser live.*ORDER_PREFIX no puede ser TEST/],
+    [{ ...sandbox, PULSO_MODE: "live", ORDER_PREFIX: "TEST" }, /sandbox.*PULSO_MODE no puede ser live/],
+    [{ ...sandbox, PULSO_MODE: undefined }, /sandbox.*PULSO_MODE no puede ser live/],
+    [{ ...sandbox, WOMPI_PRIVATE_KEY: "prv_prod_a", PULSO_MODE: "stub-orders" }, /ambientes distintos/],
+    [{ ...production, WOMPI_PRIVATE_KEY: "prv_test_a", PULSO_MODE: "live" }, /ambientes distintos/],
+    [{ ...production, WOMPI_EVENTS: "test_events_a", PULSO_MODE: "live" }, /WOMPI_EVENTS es de otro ambiente/],
+    [{ ...sandbox, WOMPI_PUBLIC_KEY: "abc", PULSO_MODE: "stub" }, /pub_test_/],
+    [{ ...sandbox, WOMPI_PRIVATE_KEY: "abc", PULSO_MODE: "stub" }, /prv_test_/],
+  ];
+  for (const [env, message] of refused) assert.throws(() => loadConfig(env), message, JSON.stringify(env.PULSO_MODE));
+});
+
+test("ALLOW_MIXED_MODE=on lifts only the mode checks, never mismatched keys", () => {
+  const smoke = loadConfig({ ...sandbox, PULSO_MODE: "live", ORDER_PREFIX: "TEST", ALLOW_MIXED_MODE: "on" });
+  assert.equal(smoke.mixedMode, true);
+  assert.match(describeMode(smoke), /ALLOW_MIXED_MODE=on/);
+  assert.throws(() => loadConfig({ ...sandbox, WOMPI_PRIVATE_KEY: "prv_prod_a", PULSO_MODE: "stub", ALLOW_MIXED_MODE: "on" }), /ambientes distintos/);
+  assert.throws(() => loadConfig({ ...sandbox, PULSO_MODE: "live", ALLOW_MIXED_MODE: "yes" }), /Configuración insegura/);
+});
+
+test("describeMode names the effective mode", () => {
+  assert.match(describeMode(loadConfig({ ...sandbox, PULSO_MODE: "stub-orders", ORDER_PREFIX: "TEST" })), /^Modo prueba: Wompi sandbox, PULSO_MODE=stub-orders, ORDER_PREFIX=TEST/);
+  assert.match(describeMode(loadConfig({ ...production, PULSO_MODE: "live" })), /^Modo en vivo: Wompi producción, PULSO_MODE=live, ORDER_PREFIX=WEB/);
+});
+
+test("CONTACT_WHATSAPP is optional, digits only", () => {
+  assert.equal(loadConfig(baseEnv).contactWhatsapp, "");
+  assert.equal(loadConfig({ ...baseEnv, CONTACT_WHATSAPP: "+57 300 123 4567" }).contactWhatsapp, "573001234567");
+  assert.throws(() => loadConfig({ ...baseEnv, CONTACT_WHATSAPP: "wa.me/573001234567" }), /CONTACT_WHATSAPP/);
+});
+
+test("the server exits non-zero with a Spanish message on an unsafe mix", () => {
+  const env = { PATH: process.env.PATH, ...production, PULSO_MODE: "stub-orders", ORDER_PREFIX: "TEST", DB_PATH: ":memory:", NODE_ENV: "test" };
+  const run = spawnSync(process.execPath, ["--disable-warning=ExperimentalWarning", "src/index.js"], {
+    cwd: fileURLToPath(new URL("..", import.meta.url)), env, encoding: "utf8", timeout: 10_000,
+  });
+  assert.notEqual(run.status, 0);
+  assert.match(run.stderr, /No se pudo arrancar la tienda: Configuración insegura/);
 });
