@@ -169,3 +169,16 @@ test("scene instances are destroyed on navigation and recommendation tabs work w
   const counts = await page.evaluate(() => window.__sceneCounts);
   expect(counts.mounted).toBe(counts.destroyed);
 });
+test("page colour and active link follow the coffee on screen, not the home mood", async ({ page }) => {
+  await page.goto("/");
+  const stripe = page.locator("header > div[aria-hidden]").first();
+  const nav = page.getByRole("navigation", { name: "Principal" });
+  await page.goto("/cafes/el-elegante");
+  await expect(stripe).toHaveCSS("background-color", "rgb(129, 22, 75)");
+  await expect(nav.getByRole("button", { name: "Cafés" })).toHaveAttribute("aria-current", "page");
+  await expect(nav.getByRole("button", { name: "El recorrido" })).not.toHaveAttribute("aria-current", "page");
+  await page.goto("/cafes/nutria");
+  await expect(stripe).toHaveCSS("background-color", "rgb(78, 113, 240)");
+  await page.goto("/cafes");
+  await expect(stripe).toHaveCSS("background-color", "rgb(98, 69, 50)");
+});

@@ -37,6 +37,19 @@ import {
   validSelection,
   screenOn,
 } from "./state.js";
+// Same coffee-to-colour pairs as the canvas header; no coffee means the house café de origen.
+const BRAND_LINE = {
+  regional: [C.cafe, C.crema],
+  lavado: [C.azul, "#000"],
+  natural: [C.moriche, C.crema],
+  honey: [C.naranja, "#000"],
+  platea: [C.cereza, C.crema],
+};
+function brandFor(coffee) {
+  const [strong, on] = BRAND_LINE[coffee?.key] ?? BRAND_LINE.regional;
+  const bag = coffee?.bag ?? C.crema;
+  return { strong, on, light: bag === C.crema ? C.luz : bag, band: bag };
+}
 export const CATALOG_ERROR =
   "No pudimos consultar la disponibilidad. Intenta de nuevo en un momento.";
 const CATALOG_REFRESH_MS = 60000;
@@ -697,11 +710,22 @@ export class Store extends CanvasLogic {
     this.liveCards(v);
     this.liveMood(v);
     this.liveCart(v);
+    // The canvas colours every page with the home mood's coffee; use the coffee on screen instead.
+    const pageCoffee = ["producto", "recorrido"].includes(s.screen) ? BY[s.product] : null;
+    if (s.screen !== "home") v.brand = brandFor(pageCoffee);
+    const navScreens = { Cafés: ["catalogo", "producto"], "El recorrido": ["recorrido"] };
     v.nav = v.nav
       .filter((n) => n.label !== "Suscripción" || FEATURES.subscriptions)
-      .map((n) =>
-        n.label === "El recorrido" ? { ...n, go: () => this.go("recorrido") } : n,
-      );
+      .map((n) => {
+        const current = navScreens[n.label]?.includes(s.screen) ? "page" : undefined;
+        return {
+          ...n,
+          ...(n.label === "El recorrido" && { go: () => this.go("recorrido") }),
+          current,
+          bg: current ? v.brand.light : "transparent",
+          weight: current ? "700" : "500",
+        };
+      });
     if (!FEATURES.subscriptions)
       for (const name of ["subThis", "goSub", "addSub"]) this.hideAction(v, name);
     if (s.feeling) {
