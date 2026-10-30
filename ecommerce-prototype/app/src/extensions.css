@@ -690,3 +690,17 @@ body:has(.store-toast) .whatsapp-float {
     }
   }
 }
+
+/* Footer contact line, in place of the canvas placeholder; same size and ink as the line it replaces. */
+.footer-contact {
+  margin: 0;
+  font-size: 14px;
+  line-height: 20px;
+  color: var(--ink);
+}
+.footer-contact a {
+  white-space: nowrap;
+  color: inherit;
+  font-weight: 600;
+  text-underline-offset: 3px;
+}

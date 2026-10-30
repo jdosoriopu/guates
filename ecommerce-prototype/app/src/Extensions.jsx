@@ -14,6 +14,7 @@ import {
   liveFor,
   plainCategories,
   plainCategory,
+  whatsappNumber,
   whatsappUrl,
 } from "./live/catalog.js";
 import { WhatsApp, WhatsAppFloat, Instagram, INSTAGRAM_URL } from "./live/WhatsApp.jsx";
@@ -885,6 +886,8 @@ function Account({ controller }) {
   );
 }
 const PENDING = "Texto por confirmar con Guates.";
+// 573114478632 -> 311 447 8632; other countries keep their digits.
+const localPhone = (n) => (/^57\d{10}$/.test(n) ? n.slice(2).replace(/(\d{3})(\d{3})(\d{4})/, "$1 $2 $3") : "+" + n);
 const info = {
   nosotros: {
     title: "Sobre Guates",
@@ -957,6 +960,23 @@ export function Extension({ controller, values, placement, item }) {
   if (placement === "catalog-end") return <PlainCards controller={controller} />;
   if (placement === "card")
     return item?.variantId ? <CardGrind controller={controller} card={item} /> : null;
+  if (placement === "footer-contact")
+    return (
+      <p className="footer-contact">
+        Instagram{" "}
+        <a href={INSTAGRAM_URL} target="_blank" rel="noopener noreferrer">
+          @guates.coffeeroasters
+        </a>
+        {whatsappUrl() && (
+          <>
+            {" · WhatsApp "}
+            <a href={whatsappUrl()} target="_blank" rel="noopener noreferrer">
+              {localPhone(whatsappNumber())}
+            </a>
+          </>
+        )}
+      </p>
+    );
   if (placement === "footer")
     return (
       <nav className="extension-footer" aria-label="Información">
