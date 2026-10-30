@@ -419,3 +419,21 @@ header nav button[aria-current="page"][style*="background: transparent"]:not(:fo
   outline: 2px solid var(--cafe-de-origen);
   outline-offset: -2px;
 }
+/* Shop cards: wider columns so "Ver su recorrido" and "Agregar" share one row. */
+section:has([aria-label="Ordenar"]) > div:has(> article) {
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 300px), 1fr)) !important;
+}
+article div:has(> .g-btn + .g-btn) {
+  flex-wrap: nowrap !important;
+}
+article div:has(> .g-btn + .g-btn) > .g-btn {
+  flex: 1 1 auto;
+  padding-inline: 16px;
+  white-space: nowrap;
+}
+@media (max-width: 360px) {
+  article div:has(> .g-btn + .g-btn) > .g-btn {
+    padding-inline: 10px;
+    font-size: 15px;
+  }
+}
