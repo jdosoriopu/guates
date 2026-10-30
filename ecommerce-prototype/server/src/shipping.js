@@ -27,8 +27,9 @@ export function freeShippingFrom(db) {
 
 export function shippingFor({ subtotal, destinoDane, pesoG }, { db }) {
   const threshold = freeShippingFrom(db);
-  const missingForFree = Math.max(0, threshold - subtotal);
   const { price, covered } = cotizarEnvio({ destinoDane, pesoG }, { db });
-  const free = covered && subtotal >= threshold;
+  // A $0 rate makes a destination free at any amount, so it never asks for more.
+  const free = covered && (price === 0 || subtotal >= threshold);
+  const missingForFree = free ? 0 : Math.max(0, threshold - subtotal);
   return { price: free ? 0 : price, free, covered, missingForFree };
 }

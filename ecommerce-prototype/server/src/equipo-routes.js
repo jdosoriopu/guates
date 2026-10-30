@@ -6,6 +6,7 @@ import { CatalogUnavailable } from "./catalog.js";
 const CONTENT_KEYS = ["chiguiro", "nutria", "colibri", "perezoso", "el_elegante"];
 const MAX_RATES = 2000;
 const isPosInt = (n) => Number.isInteger(n) && n > 0;
+const isNonNegInt = (n) => Number.isInteger(n) && n >= 0;
 
 class Invalid extends Error {}
 
@@ -17,7 +18,8 @@ function parseSettings(body) {
   const clean = rates.map((r) => {
     const dane = r?.dane;
     if (dane !== "default" && !placeByCode(dane)) throw new Invalid("Hay una tarifa con un municipio que no existe.");
-    if (!isPosInt(r.maxG) || !isPosInt(r.price)) throw new Invalid("El peso y el precio de cada tarifa deben ser enteros mayores a cero.");
+    if (!isPosInt(r.maxG)) throw new Invalid("El peso de cada tarifa debe ser un entero mayor a cero.");
+    if (!isNonNegInt(r.price)) throw new Invalid("El precio de cada tarifa debe ser un entero desde 0 (0 es envío gratis).");
     if (typeof r.covered !== "boolean" || typeof r.confirmed !== "boolean") throw new Invalid("Cada tarifa necesita cubierta y confirmada.");
     const key = `${dane}|${r.maxG}`;
     if (seen.has(key)) throw new Invalid("Hay dos tarifas con el mismo municipio y peso.");

@@ -76,6 +76,14 @@ test("places include Bogotá with 8-digit code", async () => {
   assert.ok(res.json().length > 1000);
 });
 
+test("a $0 rate ships free at any amount and never asks for more", () => {
+  const { db } = makeDeps();
+  addRate(db, "50606000", 1000, 0);
+  addRate(db, "50606000", 3000, 0);
+  assert.deepEqual(shippingFor({ subtotal: 30000, destinoDane: "50606000", pesoG: 450 }, { db }), { price: 0, free: true, covered: true, missingForFree: 0 });
+  assert.deepEqual(shippingFor({ subtotal: 30000, destinoDane: "50606000", pesoG: 5000 }, { db }), { price: 0, free: true, covered: true, missingForFree: 0 });
+});
+
 test("free shipping never masks an uncovered destination", () => {
   const { db } = makeDeps();
   addRate(db, "27001000", 1000, 0, 0);

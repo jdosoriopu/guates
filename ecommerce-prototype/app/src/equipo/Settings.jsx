@@ -75,7 +75,8 @@ function RateRow({ rate, places, canRemove, onChange, onRemove }) {
         </div>
         <div className="eq-field">
           <label htmlFor={`${base}-precio`}>Precio</label>
-          <input id={`${base}-precio`} type="number" inputMode="numeric" min="1" step="1" value={rate.price} onChange={(e) => set({ price: e.target.value })} />
+          <input id={`${base}-precio`} type="number" inputMode="numeric" min="0" step="1" aria-describedby={`${base}-precio-nota`} value={rate.price} onChange={(e) => set({ price: e.target.value })} />
+          <small id={`${base}-precio-nota`} className="eq-hint">0 = envío gratis a este destino</small>
         </div>
       </div>
       <div className="eq-rate-foot">

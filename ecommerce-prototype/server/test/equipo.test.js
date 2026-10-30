@@ -289,9 +289,14 @@ test("settings round trip and validation", async () => {
   assert.equal(await bad({ freeShippingFrom: 1000, rates: [{ dane: "00000000", maxG: 1000, price: 9, covered: true, confirmed: true }, next.rates[0]] }), 422);
   assert.equal(await bad({ freeShippingFrom: 1000, rates: [{ ...next.rates[0], maxG: 0 }] }), 422);
   assert.equal(await bad({ freeShippingFrom: 1000, rates: [{ ...next.rates[0], price: 1.5 }] }), 422);
+  assert.equal(await bad({ freeShippingFrom: 1000, rates: [{ ...next.rates[0], price: -1 }] }), 422);
   assert.equal(await bad({ freeShippingFrom: -1, rates: next.rates }), 422);
   assert.equal(await bad({ freeShippingFrom: 1000, rates: [next.rates[0], next.rates[0]] }), 422);
   assert.equal((await s.api("GET", "/settings")).json().rates.length, 3);
+
+  const free = { ...next, rates: [...next.rates, { dane: "50606000", maxG: 1000, price: 0, covered: true, confirmed: true }] };
+  assert.equal((await s.api("PUT", "/settings", free)).statusCode, 200);
+  assert.equal((await s.api("GET", "/settings")).json().rates.find((r) => r.dane === "50606000").price, 0);
 });
 
 test("alias PUT changes catalog content", async () => {
