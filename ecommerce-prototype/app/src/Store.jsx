@@ -628,14 +628,16 @@ export class Store extends CanvasLogic {
         ...card,
         process: toProcess(x),
         weight: [variantLabel(x.name), weightText(x.weightG)].filter(Boolean).join(" · "),
-        quickAria: `Agregar ${card.name} · ${x.name} en grano al carrito`,
+        quickAria: `Agregar ${card.name} · ${x.name}: elige la molienda`,
         price: x.available <= 0 ? "Agotado" : money(x.price),
         livePrice: x.price,
         open: () => this.open(p.key, false, x.id),
         quick:
           x.available <= 0
             ? this.disabled(() => {})
-            : this.buy(() => this.addVariant(p.key, x.id, "grano", 1)),
+            : this.buy(() =>
+                this.setState({ grindFor: { key: p.key, variantId: x.id, name: card.name, variant: variantLabel(x.name) } }),
+              ),
       }));
     });
     if (s.sort === "precio")

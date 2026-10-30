@@ -263,6 +263,54 @@ function CatalogCompare({ controller }) {
     </>
   );
 }
+// The grind is always the customer's choice: Agregar on a shop card asks for it before adding.
+function GrindSheet({ controller }) {
+  const pick = controller.state.grindFor;
+  const first = React.useRef(null);
+  const close = () => controller.setState({ grindFor: null });
+  // Leaving the shop drops a half-made choice instead of reopening it on return.
+  React.useEffect(() => close, []);
+  React.useEffect(() => {
+    if (!pick) return;
+    const opener = document.activeElement;
+    first.current?.focus();
+    const onKey = (e) => e.key === "Escape" && close();
+    document.addEventListener("keydown", onKey);
+    return () => {
+      document.removeEventListener("keydown", onKey);
+      if (opener?.isConnected) opener.focus();
+    };
+  }, [pick?.variantId]);
+  if (!pick) return null;
+  return (
+    <div className="grind-sheet-backdrop" onClick={(e) => e.target === e.currentTarget && close()}>
+      <div className="grind-sheet" role="dialog" aria-modal="true" aria-labelledby="grind-sheet-title">
+        <p id="grind-sheet-title" className="grind-sheet-title">
+          ¿Cómo lo muelo? <span>{pick.name} · {pick.variant}</span>
+        </p>
+        <div className="grind-sheet-options">
+          {GRINDS.map((g, i) => (
+            <button
+              key={g.key}
+              type="button"
+              ref={i === 0 ? first : undefined}
+              onClick={() => {
+                close();
+                controller.addVariant(pick.key, pick.variantId, g.key, 1);
+              }}
+            >
+              <strong>{g.label}</strong>
+              <small>{g.hint}</small>
+            </button>
+          ))}
+        </div>
+        <button type="button" className="catalog-clear grind-sheet-cancel" onClick={close}>
+          Cancelar
+        </button>
+      </div>
+    </div>
+  );
+}
 function PlainCards({ controller }) {
   const s = controller.state;
   const list =
@@ -884,7 +932,13 @@ export function Extension({ controller, values, placement }) {
     ) : null;
   if (placement === "filters") return <CatalogTools controller={controller} />;
   if (placement === "filters-after") return <CatalogCompare controller={controller} />;
-  if (placement === "catalog-end") return <PlainCards controller={controller} />;
+  if (placement === "catalog-end")
+    return (
+      <>
+        <PlainCards controller={controller} />
+        <GrindSheet controller={controller} />
+      </>
+    );
   if (placement === "footer")
     return (
       <nav className="extension-footer" aria-label="Información">

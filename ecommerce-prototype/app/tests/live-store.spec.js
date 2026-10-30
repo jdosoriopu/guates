@@ -19,6 +19,15 @@ test("catalog shows one card per variant Pulso has on sale", async ({ page }) =>
   await expect(feria).toContainText("$65.000");
   await expect(honey).toContainText("$52.500");
   await honey.getByRole("button", { name: /Agregar El Elegante · Geisha Honey/ }).click();
+  const sheet = page.getByRole("dialog", { name: /¿Cómo lo muelo\? El Elegante · Geisha Honey/ });
+  await expect(page.getByRole("button", { name: "Carrito, 0 bolsas" })).toBeVisible();
+  await sheet.getByRole("button", { name: /Media/ }).click();
+  await expect(sheet).toHaveCount(0);
+  await expect(page.getByRole("button", { name: "Carrito, 1 bolsa" })).toBeVisible();
+  await expect(page.getByRole("status").filter({ hasText: "Geisha Honey, media va en tu carrito" })).toBeVisible();
+  await honey.getByRole("button", { name: /Agregar El Elegante · Geisha Honey/ }).click();
+  await page.keyboard.press("Escape");
+  await expect(sheet).toHaveCount(0);
   await expect(page.getByRole("button", { name: "Carrito, 1 bolsa" })).toBeVisible();
   await feria.getByRole("button", { name: "Ver su recorrido" }).click();
   await expect(
