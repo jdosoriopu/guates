@@ -46,7 +46,7 @@ No secrets recorded here.
 | ventas.tiendaequestria.com | 200 |
 | api.tiendaequestria.com | 000 (in a certificate but no nginx site; unchanged) |
 
-### Proposed server changes, in order (nothing applied yet)
+### Server changes, in order (applied 2026-10-29)
 
 1. Port `8710` (free). Node: use `/usr/bin/node` (24.11.1 satisfies `>=22.13`), no install, so the unit uses `/usr/bin/node`.
 2. `useradd --system --create-home --home-dir /srv/guates --shell /usr/sbin/nologin guates`; create `/srv/guates/store/{releases,shared/backups}`.
@@ -62,3 +62,15 @@ No secrets recorded here.
 - nginx reload affects every site if the config is invalid; `nginx -t` first, and the backup tarball allows an immediate revert.
 - The shared system Node is only used, never replaced.
 - Pre-existing failures (ventas/clientes.ruta65cafe.co 500, api.tiendaequestria.com no site) are not caused by this work.
+
+## Applied on 2026-10-29
+
+- 1 GB swap file `/swapfile` (in `/etc/fstab`, backup `/root/fstab.bak-2026-10-29`), `vm.swappiness=10` in `/etc/sysctl.d/99-guates-swap.conf`. Remove: `swapoff /swapfile`, drop the fstab line, delete both files.
+- User `guates` (system, nologin, home `/srv/guates`), `/srv/guates/store/{releases,shared/backups}`.
+- `shared/store.env` in Pre-launch mode (sandbox Wompi keys, `PULSO_MODE=stub-orders`, `INDEXING=off`, `ORDER_PREFIX=TEST`), mode 600.
+- Unit `guates-store` installed and enabled; first release `20261029205449` healthy (about 38 MB).
+- nginx: backup `/root/nginx-backup-2026-10-29.tgz` and `/root/guatescoffeeroasters.co.bak-2026-10-29`; only the guates file changed. Every other site matched the baseline table after the reload.
+- Cron for `guates`: `15 3 * * * /srv/guates/store/shared/backup.sh` (first backup ran by hand).
+- Pending: `set-owner` (the owner types the password).
+
+Revert nginx: `cp /root/guatescoffeeroasters.co.bak-2026-10-29 /etc/nginx/sites-available/guatescoffeeroasters.co && nginx -t && systemctl reload nginx`.
