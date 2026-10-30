@@ -638,9 +638,17 @@ article:has(.card-grind) {
   color: var(--crema-de-papel);
   font: 600 15px/1 var(--font-sans);
   text-decoration: none;
-  transition: transform 0.2s ease, opacity 0.2s ease, visibility 0.2s;
+  transition: transform 0.2s ease, opacity 0.2s ease, visibility 0.2s, background-color 0.2s ease, color 0.2s ease;
 }
+.whatsapp-float:link,
+.whatsapp-float:visited {
+  color: var(--crema-de-papel);
+}
+/* Hover inverts to crema with verde ink, an approved pair; the border keeps its edge. */
 .whatsapp-float:hover {
+  border-color: var(--verde-moriche);
+  background: var(--crema-de-papel);
+  color: var(--verde-moriche);
   transform: translateY(-2px);
 }
 body:has(.purchase-dock) .whatsapp-float {
