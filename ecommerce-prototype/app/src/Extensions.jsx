@@ -263,50 +263,55 @@ function CatalogCompare({ controller }) {
     </>
   );
 }
-// The grind is always the customer's choice: Agregar on a shop card asks for it before adding.
-function GrindSheet({ controller }) {
-  const pick = controller.state.grindFor;
+// The grind is always the customer's choice: Agregar on a shop card slides this picker up inside the card.
+function CardGrind({ controller, card }) {
   const first = React.useRef(null);
+  const panel = React.useRef(null);
+  const open = controller.state.grindFor === card.variantId;
   const close = () => controller.setState({ grindFor: null });
-  // Leaving the shop drops a half-made choice instead of reopening it on return.
-  React.useEffect(() => close, []);
   React.useEffect(() => {
-    if (!pick) return;
-    const opener = document.activeElement;
+    if (!open) return;
     first.current?.focus();
-    const onKey = (e) => e.key === "Escape" && close();
-    document.addEventListener("keydown", onKey);
+    const opener = panel.current?.closest("article")?.querySelector("button[aria-expanded]");
     return () => {
-      document.removeEventListener("keydown", onKey);
-      if (opener?.isConnected) opener.focus();
+      if (opener?.isConnected && panel.current?.contains(document.activeElement) !== false) opener.focus();
     };
-  }, [pick?.variantId]);
-  if (!pick) return null;
+  }, [open]);
+  if (!open) return null;
   return (
-    <div className="grind-sheet-backdrop" onClick={(e) => e.target === e.currentTarget && close()}>
-      <div className="grind-sheet" role="dialog" aria-modal="true" aria-labelledby="grind-sheet-title">
-        <p id="grind-sheet-title" className="grind-sheet-title">
-          ¿Cómo lo muelo? <span>{pick.name} · {pick.variant}</span>
-        </p>
-        <div className="grind-sheet-options">
-          {GRINDS.map((g, i) => (
-            <button
-              key={g.key}
-              type="button"
-              ref={i === 0 ? first : undefined}
-              onClick={() => {
-                close();
-                controller.addVariant(pick.key, pick.variantId, g.key, 1);
-              }}
-            >
-              <strong>{g.label}</strong>
-              <small>{g.hint}</small>
-            </button>
-          ))}
-        </div>
-        <button type="button" className="catalog-clear grind-sheet-cancel" onClick={close}>
-          Cancelar
+    <div
+      ref={panel}
+      className="card-grind"
+      role="group"
+      aria-label={`Molienda para ${card.name} · ${card.variantName}`}
+      onKeyDown={(e) => e.key === "Escape" && close()}
+    >
+      <div className="card-grind-head">
+        <span>
+          Elige la molienda
+          <small>
+            {card.variantName} · {card.price}
+          </small>
+        </span>
+        <button type="button" className="card-grind-close" aria-label="Cerrar sin agregar" onClick={close}>
+          ×
         </button>
+      </div>
+      <div className="card-grind-options">
+        {GRINDS.map((g, i) => (
+          <button
+            key={g.key}
+            type="button"
+            ref={i === 0 ? first : undefined}
+            onClick={() => {
+              close();
+              controller.addVariant(card.key, card.variantId, g.key, 1);
+            }}
+          >
+            <strong>{g.label}</strong>
+            <small>{g.hint}</small>
+          </button>
+        ))}
       </div>
     </div>
   );
@@ -921,7 +926,7 @@ const info = {
     pending: true,
   },
 };
-export function Extension({ controller, values, placement }) {
+export function Extension({ controller, values, placement, item }) {
   const s = controller.state;
   // The canvas Carrito button already opens the bag; only accounts add a header link.
   if (placement === "header")
@@ -932,13 +937,9 @@ export function Extension({ controller, values, placement }) {
     ) : null;
   if (placement === "filters") return <CatalogTools controller={controller} />;
   if (placement === "filters-after") return <CatalogCompare controller={controller} />;
-  if (placement === "catalog-end")
-    return (
-      <>
-        <PlainCards controller={controller} />
-        <GrindSheet controller={controller} />
-      </>
-    );
+  if (placement === "catalog-end") return <PlainCards controller={controller} />;
+  if (placement === "card")
+    return item?.variantId ? <CardGrind controller={controller} card={item} /> : null;
   if (placement === "footer")
     return (
       <nav className="extension-footer" aria-label="Información">

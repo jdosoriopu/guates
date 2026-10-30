@@ -462,6 +462,8 @@ export class Store extends CanvasLogic {
     this.toast(this.state.toast, 3000);
   };
   adaptProps(tag, props) {
+    const card = this._cardByQuick?.get(props["on-click"] ?? props.onClick);
+    if (card) props = { ...props, "aria-expanded": this.state.grindFor === card.variantId };
     if (tag === "div" && props.role === "status" && props.style?.position === "sticky")
       return {
         ...props,
@@ -629,6 +631,9 @@ export class Store extends CanvasLogic {
         process: toProcess(x),
         weight: [variantLabel(x.name), weightText(x.weightG)].filter(Boolean).join(" · "),
         quickAria: `Agregar ${card.name} · ${x.name}: elige la molienda`,
+        key: p.key,
+        variantId: x.id,
+        variantName: variantLabel(x.name),
         price: x.available <= 0 ? "Agotado" : money(x.price),
         livePrice: x.price,
         open: () => this.open(p.key, false, x.id),
@@ -636,7 +641,7 @@ export class Store extends CanvasLogic {
           x.available <= 0
             ? this.disabled(() => {})
             : this.buy(() =>
-                this.setState({ grindFor: { key: p.key, variantId: x.id, name: card.name, variant: variantLabel(x.name) } }),
+                this.setState({ grindFor: this.state.grindFor === x.id ? null : x.id }),
               ),
       }));
     });
@@ -644,6 +649,7 @@ export class Store extends CanvasLogic {
       v.cards.sort((a, b) => (a.livePrice ?? Infinity) - (b.livePrice ?? Infinity));
     v.cardsEmpty = !v.cards.length;
     v.cardsCount = countText(v.cards.length);
+    this._cardByQuick = new Map(v.cards.filter((c) => c.variantId).map((c) => [c.quick, c]));
   }
   liveMood(v) {
     const s = this.state,
