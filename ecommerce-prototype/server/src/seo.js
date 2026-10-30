@@ -93,11 +93,15 @@ export function llmsTxt(catalog, content, baseUrl, freeShippingFrom = DEFAULT_FR
 }
 
 const pageShell = (h1, body) => `<main class="ssr"><h1>${esc(h1)}</h1>${body}</main>`;
-// Crawlers read the server HTML; people see the store once React mounts. The plain version only shows
-// if the app has not replaced it within 4 s, or when JavaScript is off.
+// Crawlers read the server HTML; people see a short loading line until React mounts. The plain version
+// only shows if the app has not replaced it within 10 s, or when JavaScript is off.
 const SSR_STYLE =
-  "<style>.ssr{opacity:0;animation:ssr-show 0s 4s forwards}@keyframes ssr-show{to{opacity:1}}</style>" +
-  "<noscript><style>.ssr{opacity:1;animation:none}</style></noscript>";
+  "<style>html{background:#f6f3ed}" +
+  ".ssr{opacity:0;animation:ssr-show 0s 10s forwards}" +
+  "#root:has(>.ssr)::before{content:'Preparando el recorrido de tu taza…';display:block;padding:40vh 16px 0;text-align:center;" +
+  "font:500 16px/1.4 system-ui,sans-serif;color:#624532;animation:ssr-hide 0s 10s forwards}" +
+  "@keyframes ssr-show{to{opacity:1}}@keyframes ssr-hide{to{opacity:0;padding:0;height:0}}</style>" +
+  "<noscript><style>.ssr{opacity:1;animation:none}#root:has(>.ssr)::before{content:none}</style></noscript>";
 const para = (t) => `<p>${esc(t)}</p>`;
 
 function staticPages(settings) {
