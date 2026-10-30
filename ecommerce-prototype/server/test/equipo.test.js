@@ -127,6 +127,17 @@ test("order list hides unpaid by default, pins attention first, newest first", a
   const only = (await s.api("GET", "/orders?status=pendiente_pago")).json();
   assert.deepEqual(only.map((o) => o.no), [unpaid]);
   assert.equal((await s.api("GET", "/orders?status=nope")).statusCode, 422);
+
+  const failed = await s.newOrder({ pay: false });
+  await s.orders.applyPayment({ reference: failed, transactionId: "tx-f", status: "DECLINED", amountInCents: 1 });
+  const unsettled = (await s.api("GET", "/orders?status=pendiente_pago,pago_fallido")).json();
+  assert.deepEqual(unsettled.map((o) => [o.no, o.status]), [[failed, "pago_fallido"], [unpaid, "pendiente_pago"]]);
+  assert.equal((await s.api("GET", "/orders?status=pago_fallido,nope")).statusCode, 422);
+});
+
+test("the dashboard learns the store mode", async () => {
+  const s = await setup();
+  assert.deepEqual((await s.api("GET", "/mode")).json(), { mode: "prueba", mixed: false, orderPrefix: "WEB" });
 });
 
 test("order detail carries the full record", async () => {

@@ -42,7 +42,18 @@ export function verifyEvent(body, eventsSecret, headerChecksum) {
 
 const FINAL = ["APPROVED", "DECLINED", "VOIDED", "ERROR"];
 
-export function createWompi({ config, fetch: fetchImpl = globalThis.fetch }) {
+const LOG_EVERY_MS = 10 * 60_000;
+
+export function createWompi({ config, fetch: fetchImpl = globalThis.fetch, logger = console, now = Date.now }) {
+  // A wrong private key would silently disable every lookup, so failures reach the log, at most once per kind every 10 min.
+  const lastLogged = new Map();
+  function warn(kind, message) {
+    const t = now();
+    if (t - (lastLogged.get(kind) ?? -Infinity) < LOG_EVERY_MS) return;
+    lastLogged.set(kind, t);
+    logger.error?.(message);
+  }
+
   return {
     // Returns null when lookups are disabled or Wompi is unreachable; callers treat that as "no news".
     async findByReference(reference) {
@@ -52,14 +63,18 @@ export function createWompi({ config, fetch: fetchImpl = globalThis.fetch }) {
           headers: { Authorization: `Bearer ${config.wompi.privateKey}`, Accept: "application/json" },
           signal: AbortSignal.timeout(8000),
         });
-        if (!res.ok) return null;
+        if (!res.ok) {
+          warn(`status-${res.status}`, `Wompi lookup answered ${res.status}${res.status === 401 ? " (revisa WOMPI_PRIVATE_KEY)" : ""}`);
+          return null;
+        }
         const list = ((await res.json())?.data ?? []).filter((t) => t?.reference === reference);
         if (!list.length) return null;
         // An approved attempt wins over earlier declines; otherwise the latest attempt decides.
         const byDate = [...list].sort((x, y) => String(y.created_at ?? "").localeCompare(String(x.created_at ?? "")));
         const pick = byDate.find((t) => t.status === "APPROVED") ?? byDate.find((t) => FINAL.includes(t.status)) ?? byDate[0];
         return { id: pick.id, status: pick.status, amountInCents: pick.amount_in_cents, reference: pick.reference };
-      } catch {
+      } catch (err) {
+        warn("network", `Wompi lookup failed: ${err?.message ?? err}`);
         return null;
       }
     },

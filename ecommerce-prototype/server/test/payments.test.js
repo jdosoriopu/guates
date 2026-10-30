@@ -287,3 +287,72 @@ test("GET /api/orders/:no awaits the settled view", async () => {
   assert.equal(res.statusCode, 200);
   assert.equal(res.json().status, "pendiente_pago");
 });
+
+test("a declined attempt followed by an approved one found by reconcile ends paid, registered and notified once", async () => {
+  const t = await setupLookup();
+  await t.orders.applyPayment({ reference: t.no, transactionId: "tx-1", status: "DECLINED", amountInCents: t.row().total * 100 });
+  assert.equal(t.row().status, "pago_fallido");
+  t.clock.advance(3 * 60_000);
+  assert.equal(await t.orders.reconcile(), 1);
+  assert.equal(t.row().status, "pagado");
+  assert.equal(t.row().wompi_tx, "tx-9");
+  // The late webhook and a second reconcile change nothing.
+  await t.orders.applyPayment({ reference: t.no, transactionId: "tx-9", status: "APPROVED", amountInCents: t.row().total * 100 });
+  assert.equal(await t.orders.reconcile(), 0);
+  assert.equal(t.calls.register.length, 1);
+  assert.deepEqual(t.calls.notify, ["paid"]);
+});
+
+test("reconcile does not count a failed order whose lookup is still declined", async () => {
+  const t = await setupLookup();
+  await t.orders.applyPayment({ reference: t.no, transactionId: "tx-1", status: "DECLINED", amountInCents: t.row().total * 100 });
+  t.holder.txs = [{ ...t.holder.txs[0], status: "DECLINED" }];
+  t.clock.advance(3 * 60_000);
+  assert.equal(await t.orders.reconcile(), 0);
+  assert.equal(t.row().status, "pago_fallido");
+  assert.deepEqual(t.calls.notify, []);
+});
+
+test("publicView re-checks a failed order with Wompi, at most once every 15 s", async () => {
+  const t = await setupLookup();
+  const approved = t.holder.txs;
+  t.holder.txs = [{ ...approved[0], id: "tx-1", status: "DECLINED" }];
+  await t.orders.applyPayment({ reference: t.no, transactionId: "tx-1", status: "DECLINED", amountInCents: t.row().total * 100 });
+  t.clock.advance(11_000);
+  assert.equal((await t.orders.publicView(t.no, t.token)).status, "pago_fallido"); // checked, still declined
+  t.holder.txs = approved;
+  t.clock.advance(14_000);
+  assert.equal((await t.orders.publicView(t.no, t.token)).status, "pago_fallido"); // throttled
+  t.clock.advance(1_000);
+  assert.equal((await t.orders.publicView(t.no, t.token)).status, "pagado");
+  assert.equal(t.calls.register.length, 1);
+  assert.deepEqual(t.calls.notify, ["paid"]);
+});
+
+test("Wompi lookup failures are logged, at most once per kind every 10 min", async () => {
+  const on = makeDeps({ config: { wompi: { lookup: true } } });
+  const logged = [];
+  let t = 0;
+  const wompi = createWompi({
+    config: on.config, now: () => t, logger: { error: (m) => logged.push(m) },
+    fetch: async () => ({ ok: false, status: 401, json: async () => ({}) }),
+  });
+  assert.equal(await wompi.findByReference("WEB-1"), null);
+  assert.equal(await wompi.findByReference("WEB-2"), null);
+  assert.deepEqual(logged, ["Wompi lookup answered 401 (revisa WOMPI_PRIVATE_KEY)"]);
+  t += 10 * 60_000;
+  await wompi.findByReference("WEB-3");
+  assert.equal(logged.length, 2);
+});
+
+test("reconcile logs an order that throws and keeps going", async () => {
+  const t = await setupLookup();
+  const logged = [];
+  const orders = createOrders({
+    db: t.db, catalog: t.catalog, pulso: {}, config: t.config, now: t.clock.now, logger: { error: (m) => logged.push(m) },
+    wompi: { findByReference: async () => { throw new Error("boom"); } },
+  });
+  t.clock.advance(3 * 60_000);
+  assert.equal(await orders.reconcile(), 0);
+  assert.deepEqual(logged, [`reconcile ${t.no} failed: boom`]);
+});

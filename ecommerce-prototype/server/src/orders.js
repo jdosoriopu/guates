@@ -84,11 +84,13 @@ const ATTENTION = {
 const AMOUNT_MISMATCH = "El monto pagado no coincide";
 const FINAL_STATUSES = ["APPROVED", "DECLINED", "VOIDED", "ERROR"];
 const SETTLE_AFTER_MS = 10_000;
+const RECHECK_FAILED_MS = 15_000;
+const UNSETTLED = ["pendiente_pago", "pago_fallido"];
 const RECONCILE_MIN_AGE_MS = 2 * 60_000;
 const RECONCILE_MAX_AGE_MS = 48 * 3600_000;
 const defaultSleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
-export function createOrders({ db, catalog, pulso, wompi, notify, config, now = Date.now, sleep = defaultSleep }) {
+export function createOrders({ db, catalog, pulso, wompi, notify, config, now = Date.now, sleep = defaultSleep, logger = console }) {
   const iso = () => new Date(now()).toISOString();
 
   // Increments and reads inside the caller's transaction so numbers never repeat.
@@ -234,35 +236,56 @@ export function createOrders({ db, catalog, pulso, wompi, notify, config, now = 
     });
   }
 
+  // Returns true when the lookup moved the order. A decline can be followed by an approval on the same
+  // reference, so pago_fallido orders are checked too and an approval goes through applyPayment like a webhook.
   async function settleFromWompi(no) {
     const tx = await wompi?.findByReference(no);
     if (!tx || !FINAL_STATUSES.includes(tx.status)) return false;
-    await applyPayment({ reference: no, transactionId: tx.id, status: tx.status, amountInCents: tx.amountInCents });
-    return true;
+    const before = getOrder(no)?.status;
+    const after = await applyPayment({ reference: no, transactionId: tx.id, status: tx.status, amountInCents: tx.amountInCents });
+    return Boolean(after) && after.status !== before;
   }
 
   async function reconcile() {
     const t = now();
     const from = new Date(t - RECONCILE_MAX_AGE_MS).toISOString();
     const to = new Date(t - RECONCILE_MIN_AGE_MS).toISOString();
-    const pending = db.prepare("SELECT no FROM orders WHERE status = 'pendiente_pago' AND created_at >= ? AND created_at <= ?").all(from, to);
+    const pending = db
+      .prepare("SELECT no FROM orders WHERE status IN ('pendiente_pago', 'pago_fallido') AND created_at >= ? AND created_at <= ?")
+      .all(from, to);
     let settled = 0;
     for (const { no } of pending) {
       try {
         if (await settleFromWompi(no)) settled++;
-      } catch {}
+      } catch (err) {
+        logger.error?.(`reconcile ${no} failed: ${err?.message ?? err}`);
+      }
     }
     return settled;
+  }
+
+  // Pending orders are looked up on every poll; failed ones at most once per RECHECK_FAILED_MS each.
+  const lastFailedCheck = new Map();
+  function dueForCheck(o) {
+    if (o.status !== "pago_fallido") return true;
+    const t = now();
+    const last = lastFailedCheck.get(o.no);
+    if (last !== undefined && t - last < RECHECK_FAILED_MS) return false;
+    lastFailedCheck.set(o.no, t);
+    if (lastFailedCheck.size > 1000) lastFailedCheck.delete(lastFailedCheck.keys().next().value);
+    return true;
   }
 
   async function publicView(no, token) {
     if (typeof no !== "string" || typeof token !== "string") return null;
     let o = db.prepare("SELECT * FROM orders WHERE no = ? AND token = ?").get(no, token);
     if (!o) return null;
-    if (o.status === "pendiente_pago" && now() - Date.parse(o.created_at) > SETTLE_AFTER_MS) {
+    if (UNSETTLED.includes(o.status) && now() - Date.parse(o.created_at) > SETTLE_AFTER_MS && dueForCheck(o)) {
       try {
         await settleFromWompi(no);
-      } catch {}
+      } catch (err) {
+        logger.error?.(`order view lookup ${no} failed: ${err?.message ?? err}`);
+      }
       o = getOrder(no);
     }
     const items = db
@@ -276,9 +299,11 @@ export function createOrders({ db, catalog, pulso, wompi, notify, config, now = 
 
   const LIST_STATUSES = ["pendiente_pago", "pagado", "pago_fallido", "requiere_atencion", "despachado", "entregado", "anulado"];
 
+  // `status` is one status or a comma-separated list; without it, unpaid orders stay out of the list.
   function list(status) {
-    if (status !== undefined && !LIST_STATUSES.includes(status)) throw new OrderError("invalid", "Estado desconocido.");
-    const where = status ? "o.status = ?" : "o.status NOT IN ('pendiente_pago', 'pago_fallido')";
+    const statuses = status === undefined ? [] : String(status).split(",");
+    if (status !== undefined && !statuses.every((x) => LIST_STATUSES.includes(x))) throw new OrderError("invalid", "Estado desconocido.");
+    const where = statuses.length ? `o.status IN (${statuses.map(() => "?").join(", ")})` : "o.status NOT IN ('pendiente_pago', 'pago_fallido')";
     return db
       .prepare(
         `SELECT o.no, o.created_at AS created, o.status, o.customer_name AS name, o.municipio, o.total, o.attention_reason,
@@ -286,7 +311,7 @@ export function createOrders({ db, catalog, pulso, wompi, notify, config, now = 
          FROM orders o WHERE ${where}
          ORDER BY (o.status = 'requiere_atencion') DESC, o.created_at DESC, o.no DESC`,
       )
-      .all(...(status ? [status] : []))
+      .all(...statuses)
       .map((r) => ({ ...r }));
   }
 

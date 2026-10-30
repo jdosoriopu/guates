@@ -64,3 +64,20 @@ test("push channel is a no-op without VAPID keys", async () => {
   const ch = pushChannel({ db, vapid: { publicKey: "", privateKey: "", subject: "" }, webpush: {} });
   await ch.send({ type: "paid", order: order() });
 });
+
+test("push failures other than 404/410 reach the log and keep the subscription", async () => {
+  const { db } = makeDeps();
+  db.prepare("INSERT INTO push_subscriptions (endpoint, p256dh, auth, created_at) VALUES ('https://fcm.example/abc', 'k', 'a', 'now')").run();
+  const logged = [];
+  const webpush = {
+    setVapidDetails() {},
+    sendNotification: async () => {
+      throw Object.assign(new Error("Forbidden"), { statusCode: 403 });
+    },
+  };
+  const ch = pushChannel({ db, vapid: { publicKey: "p", privateKey: "q", subject: "mailto:a@b.co" }, webpush, logger: { error: (m) => logged.push(m) } });
+  await ch.send({ type: "paid", order: order() });
+  assert.equal(logged.length, 1);
+  assert.match(logged[0], /push to fcm\.example failed: 403 Forbidden/);
+  assert.equal(db.prepare("SELECT COUNT(*) AS n FROM push_subscriptions").get().n, 1);
+});

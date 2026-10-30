@@ -30,7 +30,15 @@ export function createNotifier({ channels, logger = console }) {
   };
 }
 
-export function pushChannel({ db, vapid, webpush }) {
+const hostOf = (endpoint) => {
+  try {
+    return new URL(endpoint).host;
+  } catch {
+    return "?";
+  }
+};
+
+export function pushChannel({ db, vapid, webpush, logger = console }) {
   const enabled = Boolean(vapid?.publicKey && vapid?.privateKey);
   if (enabled) webpush.setVapidDetails(vapid.subject, vapid.publicKey, vapid.privateKey);
 
@@ -51,6 +59,9 @@ export function pushChannel({ db, vapid, webpush }) {
           } catch (err) {
             if (err?.statusCode === 404 || err?.statusCode === 410) {
               db.prepare("DELETE FROM push_subscriptions WHERE endpoint = ?").run(s.endpoint);
+            } else {
+              // Push is the owner's only alert: a VAPID or permission failure must be visible.
+              logger.error?.(`push to ${hostOf(s.endpoint)} failed: ${err?.statusCode ?? ""} ${err?.message ?? err}`.trim());
             }
           }
         }),

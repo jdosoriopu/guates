@@ -69,6 +69,8 @@ export async function equipoRoutes(app) {
       return reply.code(204).send();
     });
 
+    guarded.get("/mode", async () => ({ mode: config.mode, mixed: config.mixedMode, orderPrefix: config.orderPrefix }));
+
     guarded.get("/orders", async (req) => orders.list(req.query?.status));
     guarded.get("/orders/:no", async (req, reply) => orders.detail(req.params.no) ?? reply.code(404).send({ error: "No encontramos ese pedido." }));
     guarded.post("/orders/:no/despachar", async (req) => orders.despachar(req.params.no, req.body?.tracking));
