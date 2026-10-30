@@ -3,10 +3,13 @@ import { GRINDS, money } from "../../generated/logic.js";
 import { ALL_PRODUCTS } from "./catalog.js";
 import { getOrder } from "./api.js";
 import { placeName } from "./Checkout.jsx";
+import { WhatsApp } from "./WhatsApp.jsx";
 import "./live.css";
 
 const POLL_MS = 3000;
 const POLL_FOR_MS = 2 * 60 * 1000;
+// Wompi can approve a retry after reporting a decline, so a failure is only final after this long.
+export const FAILED_GRACE_MS = 45 * 1000;
 const PAID = ["pagado", "despachado", "entregado"];
 const G = window.Guates;
 
@@ -14,8 +17,13 @@ const STATUS_COPY = {
   pendiente_pago: "Tu pago está en proceso. Apenas Wompi lo confirme, preparamos tu café.",
   pago_fallido: "El pago no se completó. Tu bolsa sigue aquí para intentarlo de nuevo.",
   requiere_atencion: "Recibimos tu pago. Estamos revisando la disponibilidad y te escribimos por WhatsApp.",
-  anulado: "Este pedido fue anulado. Si tienes dudas, escríbenos por WhatsApp.",
+  anulado: (
+    <>
+      Este pedido fue anulado. Si tienes dudas, escríbenos por <WhatsApp />.
+    </>
+  ),
 };
+const CHECKING_FAILED = "Estamos confirmando tu pago con Wompi. Esto puede tardar unos segundos.";
 
 const grindLabel = (key) => GRINDS.find((g) => g.key === key)?.label ?? key;
 
@@ -55,6 +63,7 @@ export function Confirmation({ controller }) {
   const ref = controller.state.orderRef;
   const [order, setOrder] = useState(null);
   const [error, setError] = useState("");
+  const [failedFinal, setFailedFinal] = useState(false);
 
   // Polls while the payment is pending; the webhook moves the order on the server.
   useEffect(() => {
@@ -62,12 +71,22 @@ export function Confirmation({ controller }) {
     let live = true,
       timer;
     const started = Date.now();
+    let failedSince = null;
     const tick = async () => {
       try {
         const next = await getOrder(ref.no, ref.token);
         if (!live) return;
         setOrder(next);
         setError("");
+        if (next.status === "pago_fallido") {
+          failedSince ??= Date.now();
+          if (Date.now() - failedSince >= FAILED_GRACE_MS) {
+            setFailedFinal(true);
+            return;
+          }
+          timer = setTimeout(tick, POLL_MS);
+          return;
+        }
         if (next.status !== "pendiente_pago") return;
       } catch (err) {
         if (!live) return;
@@ -77,7 +96,7 @@ export function Confirmation({ controller }) {
         }
         setError(err.message);
       }
-      if (Date.now() - started < POLL_FOR_MS) timer = setTimeout(tick, POLL_MS);
+      if (failedSince !== null || Date.now() - started < POLL_FOR_MS) timer = setTimeout(tick, POLL_MS);
     };
     tick();
     return () => {
@@ -119,9 +138,9 @@ export function Confirmation({ controller }) {
         <div className="extension-intro">
           <h1>Pedido {order.no}</h1>
           <p className="live-status" role="status">
-            {STATUS_COPY[status] ?? STATUS_COPY.pendiente_pago}
+            {status === "pago_fallido" && !failedFinal ? CHECKING_FAILED : (STATUS_COPY[status] ?? STATUS_COPY.pendiente_pago)}
           </p>
-          {status === "pago_fallido" && (
+          {status === "pago_fallido" && failedFinal && (
             <button type="button" className="extension-button" onClick={() => controller.navigate("/checkout")}>
               Intentar de nuevo
             </button>

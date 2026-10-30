@@ -3,6 +3,7 @@ import { BY, GRINDS, money } from "../../generated/logic.js";
 import { variantById } from "./catalog.js";
 import { ApiError, createOrder, fetchPlaces, quoteShipping } from "./api.js";
 import { readAttribution } from "./attribution.js";
+import { WhatsApp } from "./WhatsApp.jsx";
 import "./live.css";
 
 export const LAST_ORDER_KEY = "guates.lastOrder.v1";
@@ -72,6 +73,7 @@ export function Checkout({ controller }) {
   const [tried, setTried] = useState(false);
   const [busy, setBusy] = useState(false);
   const [failure, setFailure] = useState(null);
+  const [quoteTry, setQuoteTry] = useState(0);
   const paying = useRef(false);
   const formRef = useRef(null);
   const sentDraft = useRef(null);
@@ -114,7 +116,7 @@ export function Checkout({ controller }) {
     return () => {
       live = false;
     };
-  }, [quoteKey]);
+  }, [quoteKey, quoteTry]);
 
   const set = (key, value) =>
     controller.setState((st) => ({ form: { ...EMPTY_FORM, ...st.form, [key]: value } }));
@@ -157,6 +159,8 @@ export function Checkout({ controller }) {
             ? "Gratis"
             : money(ship.price);
 
+  // Paying needs the total the server will charge, so Pagar waits for a covered quote once a municipality is chosen.
+  const waitingQuote = !!form.dane && total === null;
   const errors = tried ? problems(form, accepted) : {};
   const shown = failure?.fields && !Object.keys(errors).length ? null : failure;
 
@@ -171,6 +175,7 @@ export function Checkout({ controller }) {
       formRef.current?.querySelector(`[data-field="${first}"]`)?.focus();
       return;
     }
+    if (total === null) return;
     paying.current = true;
     setBusy(true);
     setFailure(null);
@@ -303,8 +308,23 @@ export function Checkout({ controller }) {
           )}
           {uncovered && (
             <p className="live-callout live-callout-warn" role="alert">
-              Todavía no llegamos a {placeName(place?.municipio ?? "ese municipio")}. Escríbenos por WhatsApp y lo resolvemos.
+              Todavía no llegamos a {placeName(place?.municipio ?? "ese municipio")}. Escríbenos por <WhatsApp /> y lo resolvemos.
             </p>
+          )}
+          {current?.error && (
+            <div className="live-callout live-callout-warn" role="alert">
+              <p>{current.error}</p>
+              <button
+                type="button"
+                className="extension-button"
+                onClick={() => {
+                  setQuote(null);
+                  setQuoteTry((n) => n + 1);
+                }}
+              >
+                Calcular de nuevo
+              </button>
+            </div>
           )}
           <div className="live-field">
             <label className="extension-check live-privacy">
@@ -349,7 +369,7 @@ export function Checkout({ controller }) {
               )}
             </div>
           )}
-          <button type="submit" className="extension-button live-pay" disabled={busy || !!uncovered} aria-busy={busy || undefined}>
+          <button type="submit" className="extension-button live-pay" disabled={busy || waitingQuote} aria-busy={busy || undefined}>
             {busy ? "Preparando tu pago…" : total === null ? "Pagar con Wompi" : `Pagar ${money(total)} con Wompi`}
           </button>
         </section>

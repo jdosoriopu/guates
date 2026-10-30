@@ -120,3 +120,14 @@ test("only a plain category on sale still lists products and sells the plain one
   assert.equal(variantById("var-plain").variant.available, 5);
   applyCatalog(fixture);
 });
+
+test("the WhatsApp link comes from the catalog response and is absent without a number", async () => {
+  const { whatsappNumber, whatsappUrl } = await import("../src/live/catalog.js");
+  applyCatalog({ ...fixture, contact: { whatsapp: null } });
+  assert.equal(whatsappNumber(), null);
+  assert.equal(whatsappUrl(), null);
+  applyCatalog({ ...fixture, contact: { whatsapp: "573001234567" } });
+  assert.equal(whatsappUrl(), "https://wa.me/573001234567");
+  applyCatalog({ ...fixture, contact: { whatsapp: "javascript:alert(1)" } });
+  assert.equal(whatsappUrl(), null);
+});

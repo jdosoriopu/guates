@@ -1,8 +1,8 @@
 import React, { useEffect, useRef, useState } from "react";
 import { api } from "./api.js";
 import { Link } from "./App.jsx";
-import { StatusChip } from "./Orders.jsx";
-import { GRIND, addressText, dateTime, mapsLink, money, waLink } from "./format.js";
+import { StatusChip, TestChip } from "./Orders.jsx";
+import { GRIND, addressText, dateTime, isTestOrder, mapsLink, money, waLink } from "./format.js";
 
 const REFUND = "Recuerda devolver el dinero desde el panel de Wompi.";
 
@@ -95,7 +95,9 @@ export function OrderDetail({ no }) {
       </p>
       <div className="eq-title-row">
         <h1 className="eq-h1">Pedido {order.no}</h1>
-        <StatusChip status={s} data-testid="estado" />
+        <span className="eq-chips">
+          {isTestOrder(order.no) && <TestChip />} <StatusChip status={s} data-testid="estado" />
+        </span>
       </div>
       <p className="body-sm eq-muted">{dateTime(order.created)}</p>
 

@@ -1,5 +1,5 @@
 import { test, expect } from "@playwright/test";
-import { addFeria, fillCheckout, paidOrder } from "./helpers.js";
+import { addFeria, fillCheckout, paidOrder, signedEvent, FERIA_ID, BOGOTA } from "./helpers.js";
 
 // Test-only owner, created through the server's NODE_ENV=test endpoint.
 const OWNER = { email: "duena@guates.test", password: "clave-de-prueba-larga" };
@@ -72,6 +72,26 @@ test("a paid order is dispatched and the customer gets a WhatsApp link", async (
   await expect(card(page, no)).toHaveCount(0);
   await page.getByRole("button", { name: "Despachados" }).click();
   await expect(card(page, no)).toContainText("Despachado");
+});
+
+test("unpaid and declined orders wait under Sin pagar, and the header shows the test mode", async ({ page }) => {
+  const created = await page.request.post("/api/orders", {
+    data: {
+      lines: [{ variantId: FERIA_ID, grind: "grano", qty: 1 }],
+      customer: { name: "Pedro Sinpago", phone: "3201234567", email: "pedro@correo.com" },
+      destination: { dane: BOGOTA, address: "Calle 9 # 9-9" },
+      privacyAccepted: true,
+    },
+  });
+  expect(created.status()).toBe(201);
+  const { no } = await created.json();
+  await page.request.post("/api/webhook/payments", { data: signedEvent({ reference: no, status: "DECLINED", amountInCents: 8000000 }) });
+  await login(page);
+  await expect(page.getByRole("note").filter({ hasText: "Modo prueba" })).toBeVisible();
+  await expect(card(page, no)).toHaveCount(0);
+  await page.getByRole("button", { name: /Sin pagar/ }).click();
+  await expect(card(page, no)).toContainText("Pago fallido");
+  await expect(card(page, no)).toContainText("Pedro Sinpago");
 });
 
 test("a push link opens the order directly and annulling reminds the refund", async ({ page }) => {

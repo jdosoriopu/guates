@@ -352,12 +352,65 @@ test("a declined payment keeps the bag for another try", async ({ page }) => {
   const res = await page.request.post("/api/webhook/payments", { data: signedEvent({ reference: no, status: "DECLINED", amountInCents: 8000000 }) });
   expect(res.status()).toBe(200);
   const back = new URL(wompi.searchParams.get("redirect-url"));
+  await page.clock.install();
   await page.goto(back.pathname + back.search);
+  // Wompi may still approve a retry, so the page keeps checking before it calls the payment failed.
+  await expect(page.getByText("Estamos confirmando tu pago con Wompi. Esto puede tardar unos segundos.")).toBeVisible();
+  await expect(page.getByRole("button", { name: "Intentar de nuevo" })).toHaveCount(0);
+  await page.clock.fastForward(46_000);
   await expect(page.getByText("El pago no se completó. Tu bolsa sigue aquí para intentarlo de nuevo.")).toBeVisible();
   const cart = await page.evaluate(() => JSON.parse(localStorage.getItem("guates.canvas-store.v1")).cart);
   expect(cart).toHaveLength(1);
   await page.getByRole("button", { name: "Intentar de nuevo" }).click();
   await expect(page).toHaveURL(/\/checkout$/);
+});
+
+test("an approval after a decline turns the confirmation into paid", async ({ page }) => {
+  const seen = await watch(page);
+  await addFeria(page, 1);
+  await page.goto("/checkout");
+  await fillCheckout(page);
+  const wompi = await payAndRedirect(page, seen, "Pagar $80.000 con Wompi");
+  const no = wompi.searchParams.get("reference");
+  await page.request.post("/api/webhook/payments", { data: signedEvent({ reference: no, id: "tx-a", status: "DECLINED", amountInCents: 8000000 }) });
+  const back = new URL(wompi.searchParams.get("redirect-url"));
+  await page.goto(back.pathname + back.search);
+  await expect(page.getByText("Estamos confirmando tu pago con Wompi. Esto puede tardar unos segundos.")).toBeVisible();
+  await page.request.post("/api/webhook/payments", { data: signedEvent({ reference: no, id: "tx-b", status: "APPROVED", amountInCents: 8000000 }) });
+  await expect(page.getByRole("heading", { name: "¡Listo, Ana! Recibimos tu pago." })).toBeVisible({ timeout: 15000 });
+});
+
+test("Pagar waits for the shipping quote and offers to recalculate when it fails", async ({ page }) => {
+  let fail = true;
+  await page.route("**/api/shipping/quote", (route) =>
+    fail
+      ? route.fulfill({ status: 503, json: { error: "No pudimos consultar los precios. Intenta de nuevo en un momento." } })
+      : route.continue(),
+  );
+  await addFeria(page, 1);
+  await page.goto("/checkout");
+  await fillCheckout(page);
+  await expect(page.getByRole("alert").filter({ hasText: "No pudimos consultar los precios" })).toBeVisible();
+  await expect(page.getByRole("button", { name: /Pagar/ })).toBeDisabled();
+  fail = false;
+  await page.getByRole("button", { name: "Calcular de nuevo" }).click();
+  await expect(page.getByRole("button", { name: "Pagar $80.000 con Wompi" })).toBeEnabled();
+});
+
+test("with a WhatsApp number the contact copy links to wa.me; without one it stays plain", async ({ page }) => {
+  await page.goto("/ayuda");
+  await expect(page.locator("main")).toContainText("Instagram, WhatsApp, correo y horarios: por confirmar.");
+  await expect(page.locator('a[href^="https://wa.me/"]')).toHaveCount(0);
+
+  await page.route("**/api/catalog", async (route) => {
+    const res = await route.fetch();
+    route.fulfill({ response: res, json: { ...(await res.json()), contact: { whatsapp: "573001234567" } } });
+  });
+  await page.goto("/ayuda");
+  const link = page.locator("main").getByRole("link", { name: "WhatsApp" });
+  await expect(link).toHaveAttribute("href", "https://wa.me/573001234567");
+  await expect(page.locator("main")).toContainText("¿Dudas con tu pedido? Escríbenos por WhatsApp.");
+  await expect(page.getByRole("navigation", { name: "Información" }).getByRole("link", { name: "WhatsApp" })).toHaveAttribute("href", "https://wa.me/573001234567");
 });
 
 test("an unknown order or token shows the not-found page", async ({ page }) => {

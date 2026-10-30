@@ -14,16 +14,22 @@ export const STATUS = {
   anulado: "Anulado",
 };
 
+// Orders that never got a confirmed payment. The server leaves them out of the default list.
+export const UNPAID = ["pendiente_pago", "pago_fallido"];
+
 export const FILTERS = [
   { key: "pendientes", label: "Por despachar", statuses: ["pagado", "requiere_atencion"] },
   { key: "despachados", label: "Despachados", statuses: ["despachado"] },
-  { key: "todos", label: "Todos", statuses: null },
+  { key: "todos", label: "Todos", statuses: ["pagado", "requiere_atencion", "despachado", "entregado", "anulado"] },
+  { key: "sin_pagar", label: "Sin pagar", statuses: UNPAID },
 ];
 
 export function filterOrders(list, key) {
   const f = FILTERS.find((x) => x.key === key) ?? FILTERS[0];
-  return f.statuses ? list.filter((o) => f.statuses.includes(o.status)) : list;
+  return list.filter((o) => f.statuses.includes(o.status));
 }
+
+export const isTestOrder = (no) => String(no).startsWith("TEST-");
 
 const MONTHS = ["ene", "feb", "mar", "abr", "may", "jun", "jul", "ago", "sep", "oct", "nov", "dic"];
 

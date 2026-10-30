@@ -35,7 +35,8 @@ const order = (no) => `/orders/${encodeURIComponent(no)}`;
 export const api = {
   login: (email, password) => post("/login", { email, password }),
   logout: () => post("/logout"),
-  orders: () => request("/orders"),
+  orders: (status) => request(status ? `/orders?status=${encodeURIComponent(status)}` : "/orders"),
+  mode: () => request("/mode"),
   order: (no) => request(order(no)),
   despachar: (no, tracking) => post(`${order(no)}/despachar`, { tracking }),
   entregar: (no) => post(`${order(no)}/entregar`),

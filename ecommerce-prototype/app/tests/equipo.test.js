@@ -1,7 +1,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
-import { money, relativeTime, waLink, mapsLink, addressText, bagsLabel, filterOrders } from "../src/equipo/format.js";
+import { money, relativeTime, waLink, mapsLink, addressText, bagsLabel, filterOrders, isTestOrder } from "../src/equipo/format.js";
 import { pushSupport, keyBytes } from "../src/equipo/push.js";
 
 const order = {
@@ -43,10 +43,13 @@ test("maps link and copied address", () => {
 test("bags and filters", () => {
   assert.equal(bagsLabel(1), "1 bolsa");
   assert.equal(bagsLabel(3), "3 bolsas");
-  const list = ["pagado", "requiere_atencion", "despachado", "entregado", "anulado"].map((status, i) => ({ no: `WEB-${i}`, status }));
+  const list = ["pagado", "requiere_atencion", "despachado", "entregado", "anulado", "pendiente_pago", "pago_fallido"].map((status, i) => ({ no: `WEB-${i}`, status }));
   assert.deepEqual(filterOrders(list, "pendientes").map((o) => o.status), ["pagado", "requiere_atencion"]);
   assert.deepEqual(filterOrders(list, "despachados").map((o) => o.status), ["despachado"]);
   assert.equal(filterOrders(list, "todos").length, 5);
+  assert.deepEqual(filterOrders(list, "sin_pagar").map((o) => o.status), ["pendiente_pago", "pago_fallido"]);
+  assert.equal(isTestOrder("TEST-1001"), true);
+  assert.equal(isTestOrder("WEB-1001"), false);
 });
 
 test("push support tells iPhone outside the home screen apart", () => {

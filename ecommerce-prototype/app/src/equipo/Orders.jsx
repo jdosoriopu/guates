@@ -1,7 +1,7 @@
 import React, { useCallback, useEffect, useState } from "react";
 import { api } from "./api.js";
 import { Link } from "./App.jsx";
-import { FILTERS, STATUS, bagsLabel, filterOrders, money, relativeTime } from "./format.js";
+import { FILTERS, STATUS, UNPAID, bagsLabel, filterOrders, isTestOrder, money, relativeTime } from "./format.js";
 
 const REFRESH_MS = 30000;
 const FILTER_KEY = "guates.equipo.filtro";
@@ -13,6 +13,16 @@ const CHIP_BG = {
   despachado: "verde-moriche",
   entregado: "cafe-de-origen",
 };
+
+// Sandbox orders look like real ones, so they carry this chip and must never be shipped.
+export function TestChip() {
+  const ink = window.Guates.inkFor("sol-de-sabana");
+  return (
+    <span className="eq-chip" style={{ background: "var(--sol-de-sabana)", color: `var(--${ink})` }}>
+      Prueba
+    </span>
+  );
+}
 
 export function StatusChip({ status, ...rest }) {
   const bg = CHIP_BG[status];
@@ -28,6 +38,7 @@ const EMPTY = {
   pendientes: "No hay pedidos por despachar. Cuando entre un pago, aparece aquí.",
   despachados: "No hay pedidos en camino.",
   todos: "Todavía no hay pedidos pagados.",
+  sin_pagar: "No hay pedidos sin pagar.",
 };
 
 function savedFilter() {
@@ -47,7 +58,8 @@ export function Orders() {
 
   const load = useCallback(async () => {
     try {
-      setOrders(await api.orders());
+      const [main, unpaid] = await Promise.all([api.orders(), api.orders(UNPAID.join(","))]);
+      setOrders([...main, ...unpaid]);
       setError("");
     } catch (err) {
       if (err.status !== 401) setError(err.message);
@@ -94,6 +106,12 @@ export function Orders() {
         </p>
       )}
       {!orders && !error && <p role="status">Cargando pedidos…</p>}
+      {filter === "sin_pagar" && (
+        <p className="body-sm eq-muted">
+          Pedidos que no terminaron el pago o que Wompi rechazó. No los despaches: si Wompi aprueba el pago, pasan solos a Por
+          despachar y te llega el aviso.
+        </p>
+      )}
       {orders && shown.length === 0 && <p className="body eq-muted">{EMPTY[filter]}</p>}
       <ul className="eq-list">
         {shown.map((o) => (
@@ -109,7 +127,9 @@ export function Orders() {
                 <span className="data">
                   {money(o.total)} · {bagsLabel(o.bags)}
                 </span>{" "}
-                <StatusChip status={o.status} />
+                <span className="eq-chips">
+                  {isTestOrder(o.no) && <TestChip />} <StatusChip status={o.status} />
+                </span>
               </span>
               {o.status === "requiere_atencion" && o.attention_reason && <span className="body-sm eq-attention"> {o.attention_reason}</span>}
             </Link>

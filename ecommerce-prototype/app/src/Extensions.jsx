@@ -14,7 +14,9 @@ import {
   liveFor,
   plainCategories,
   plainCategory,
+  whatsappUrl,
 } from "./live/catalog.js";
+import { WhatsApp } from "./live/WhatsApp.jsx";
 import { FEATURES } from "./live/features.js";
 import { Checkout } from "./live/Checkout.jsx";
 import { Confirmation } from "./live/Confirmation.jsx";
@@ -820,20 +822,37 @@ const info = {
       "Guates nace en los Llanos y mira otros orígenes con curiosidad. Donde empieza otro mapa del café.",
     ],
   },
+  // Contact copy is read at render time: the WhatsApp number arrives with the catalog.
   ayuda: {
     title: "Ayuda y contacto",
-    body: [
-      "Pagas en línea con Wompi y recibes la confirmación de tu pedido apenas se aprueba el pago.",
-      "Instagram, WhatsApp, correo y horarios: por confirmar.",
-    ],
+    get body() {
+      const paid = "Pagas en línea con Wompi y recibes la confirmación de tu pedido apenas se aprueba el pago.";
+      if (!whatsappUrl()) return [paid, "Instagram, WhatsApp, correo y horarios: por confirmar."];
+      return [
+        paid,
+        <p key="whatsapp">
+          ¿Dudas con tu pedido? Escríbenos por <WhatsApp />.
+        </p>,
+        "Instagram, correo y horarios: por confirmar.",
+      ];
+    },
   },
   envios: {
     title: "Envíos y devoluciones",
-    body: [
-      "Enviamos con Interrapidísimo. El costo del envío lo calculamos según tu municipio al finalizar tu compra, antes de que pagues, y es gratis desde $90.000.",
-      "Tiempos de entrega: por confirmar.",
-      "Si tu café llega con algún problema, escríbenos y lo resolvemos. Las condiciones de devolución están por confirmar.",
-    ],
+    get body() {
+      return [
+        "Enviamos con Interrapidísimo. El costo del envío lo calculamos según tu municipio al finalizar tu compra, antes de que pagues, y es gratis desde $90.000.",
+        "Tiempos de entrega: por confirmar.",
+        whatsappUrl() ? (
+          <p key="problema">
+            Si tu café llega con algún problema, escríbenos por <WhatsApp /> y lo resolvemos. Las condiciones de
+            devolución están por confirmar.
+          </p>
+        ) : (
+          "Si tu café llega con algún problema, escríbenos y lo resolvemos. Las condiciones de devolución están por confirmar."
+        ),
+      ];
+    },
   },
   privacidad: {
     title: "Privacidad",
@@ -867,6 +886,11 @@ export function Extension({ controller, values, placement }) {
             {info[k].title}
           </Link>
         ))}
+        {whatsappUrl() && (
+          <a href={whatsappUrl()} target="_blank" rel="noopener noreferrer">
+            WhatsApp
+          </a>
+        )}
       </nav>
     );
   return (
@@ -918,9 +942,9 @@ export function Extension({ controller, values, placement }) {
           <>
             <Intro title={info[s.screen].title} />
             <Panel>
-              {info[s.screen].body.map((text) => (
-                <p key={text}>{text}</p>
-              ))}
+              {info[s.screen].body.map((text) =>
+                typeof text === "string" ? <p key={text}>{text}</p> : text,
+              )}
               {info[s.screen].pending && (
                 <p className="extension-pending" role="note">
                   {PENDING}

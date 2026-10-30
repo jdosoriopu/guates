@@ -27,6 +27,14 @@ export function applyCatalog(catalog) {
 
 export const catalogApplied = () => current !== null;
 
+// Digits with the country code, set on the server as CONTACT_WHATSAPP; null until the owner gives a number.
+export function whatsappNumber() {
+  const n = current?.contact?.whatsapp;
+  return typeof n === "string" && /^\d{8,15}$/.test(n) ? n : null;
+}
+
+export const whatsappUrl = () => (whatsappNumber() ? `https://wa.me/${whatsappNumber()}` : null);
+
 // Before any catalog arrives every known product is assumed on sale, so content still renders.
 export function isOnSale(key) {
   if (!BY[key]) return false;

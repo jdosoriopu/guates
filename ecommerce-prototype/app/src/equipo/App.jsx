@@ -46,6 +46,7 @@ function toLogin() {
 
 export function App() {
   const [path, setPath] = useState(here);
+  const [mode, setMode] = useState(null);
   const mainRef = useRef(null);
   const first = useRef(true);
 
@@ -57,6 +58,12 @@ export function App() {
   }, []);
 
   const route = routeFor(location.pathname);
+  const signedIn = route.name !== "login";
+
+  useEffect(() => {
+    if (!signedIn || mode) return;
+    api.mode().then(setMode, () => {});
+  }, [signedIn]);
 
   useEffect(() => {
     document.title = `${route.title} · Guates`;
@@ -81,13 +88,23 @@ export function App() {
     );
   }
 
-  const { Logo } = window.Guates;
+  const Guates = window.Guates;
+  const { Logo } = Guates;
   return (
     <>
       <header className="eq-header">
         <Link href="/equipo" className="eq-brand" aria-label="Guates · Pedidos">
           <Logo version="alternativo" on="crema-de-papel" height={48} title="Guates" />
         </Link>
+        {mode && (mode.mode === "prueba" || mode.mixed) && (
+          <span
+            className="eq-chip eq-mode"
+            role="note"
+            style={{ background: "var(--sol-de-sabana)", color: `var(--${Guates.inkFor("sol-de-sabana")})` }}
+          >
+            {mode.mixed ? "Configuración mixta" : "Modo prueba"}
+          </span>
+        )}
         <nav aria-label="Tablero" className="eq-nav">
           <Link href="/equipo" aria-current={route.name === "orders" || route.name === "order" ? "page" : undefined}>
             Pedidos
