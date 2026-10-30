@@ -626,10 +626,13 @@ export class Store extends CanvasLogic {
         return catalogApplied()
           ? [{ ...card, price: "Agotado", weight: "", quick: this.disabled(() => {}) }]
           : [{ ...card, price: NO_PRICE, weight: "", quick: this.buy(card.quick) }];
+      // The variant is the title (one coffee can have several cards); the coffee's name moves next to the price.
       return variants.map((x) => ({
         ...card,
+        name: variantLabel(x.name),
+        coffee: card.name,
         process: toProcess(x),
-        weight: [variantLabel(x.name), weightText(x.weightG)].filter(Boolean).join(" · "),
+        weight: [card.name, weightText(x.weightG)].filter(Boolean).join(" · "),
         quickAria: `Agregar ${card.name} · ${x.name}: elige la molienda`,
         key: p.key,
         variantId: x.id,
@@ -780,7 +783,7 @@ export class Store extends CanvasLogic {
       for (const name of ["subThis", "goSub", "addSub"]) this.hideAction(v, name);
     if (s.feeling) {
       v.cards = v.cards.filter((card) => {
-        const p = PRODUCTS.find((x) => x.name === card.name);
+        const p = PRODUCTS.find((x) => x.name === (card.coffee ?? card.name));
         return p?.traits.includes(s.feeling);
       });
       v.cardsEmpty = !v.cards.length;

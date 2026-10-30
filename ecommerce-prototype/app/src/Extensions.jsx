@@ -296,7 +296,7 @@ function CardGrind({ controller, card }) {
       ref={panel}
       className={"card-grind" + (leaving ? " is-leaving" : "")}
       role="group"
-      aria-label={`Molienda para ${card.name} · ${card.variantName}`}
+      aria-label={`Molienda para ${card.coffee} · ${card.variantName}`}
       onKeyDown={(e) => e.key === "Escape" && close()}
       inert={leaving || undefined}
     >

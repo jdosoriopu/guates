@@ -10,12 +10,13 @@ test.beforeEach(async ({ page }) => {
 test("catalog shows one card per variant Pulso has on sale", async ({ page }) => {
   await page.goto("/cafes");
   const cards = page.locator("main article h2");
-  await expect(cards).toHaveText(["Colibrí", "El Elegante", "El Elegante", "Nutria"]);
+  await expect(cards).toHaveText(["Bourbon Rosado Natural", "Geisha Feria", "Geisha Honey", "Caturra Lavado"]);
   await expect(page.locator("main")).toContainText("4 cafés");
   await expect(cards.filter({ hasText: "Chigüiro" })).toHaveCount(0);
   await expect(cards.filter({ hasText: "Perezoso" })).toHaveCount(0);
-  const feria = page.locator("main article").filter({ hasText: "Geisha Feria · 250 g" });
-  const honey = page.locator("main article").filter({ hasText: "Geisha Honey · 250 g" });
+  const feria = page.locator("main article").filter({ has: page.getByRole("heading", { name: "Geisha Feria" }) });
+  const honey = page.locator("main article").filter({ has: page.getByRole("heading", { name: "Geisha Honey" }) });
+  await expect(feria).toContainText("El Elegante · 250 g");
   await expect(feria).toContainText("$65.000");
   await expect(honey).toContainText("$52.500");
   await honey.getByRole("button", { name: /Agregar El Elegante · Geisha Honey/ }).click();
@@ -260,7 +261,8 @@ test("prices sit next to the real bag weight, not a sample label", async ({ page
 test("the process filter matches any live variant's process", async ({ page }) => {
   await page.goto("/cafes?proceso=Honey");
   await expect(page.locator("main article")).toHaveCount(1);
-  await expect(page.locator("main article")).toContainText("Geisha Honey · 250 g");
+  await expect(page.locator("main article h2")).toHaveText("Geisha Honey");
+  await expect(page.locator("main article")).toContainText("El Elegante · 250 g");
   await expect(page.locator("main")).toContainText("1 café");
 });
 
