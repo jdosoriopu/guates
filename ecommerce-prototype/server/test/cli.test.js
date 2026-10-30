@@ -20,7 +20,7 @@ function seedDb(path) {
     `INSERT INTO order_items (order_no, variant_id, category_key, category_name, variant_name, grind, qty, unit_price)
      VALUES (?, 'v', 'c', 'Café', 'Var', 'media', 1, 1000)`,
   );
-  for (const no of ["TEST-1001", "WEB-1001"]) {
+  for (const no of ["TEST-1001", "WEB-1001", "test-1002"]) {
     insOrder.run(no);
     insItem.run(no);
   }
@@ -43,8 +43,9 @@ test("purge-orders --prefix TEST removes TEST orders and their items, keeps WEB"
     assert.equal(res.status, 0, res.stderr);
     assert.match(res.stdout, /1/);
     const db = openDb(dbPath);
-    assert.deepEqual(db.prepare("SELECT no FROM orders").all().map((r) => r.no), ["WEB-1001"]);
-    assert.deepEqual(db.prepare("SELECT order_no FROM order_items").all().map((r) => r.order_no), ["WEB-1001"]);
+    // Exact, case-sensitive: a lowercase test- order is not a TEST- order.
+    assert.deepEqual(db.prepare("SELECT no FROM orders ORDER BY no").all().map((r) => r.no), ["WEB-1001", "test-1002"]);
+    assert.deepEqual(db.prepare("SELECT order_no FROM order_items ORDER BY order_no").all().map((r) => r.order_no), ["WEB-1001", "test-1002"]);
     db.close();
   } finally {
     rmSync(dir, { recursive: true, force: true });
@@ -59,12 +60,12 @@ test("purge-orders with another prefix needs --force", () => {
     const refused = runCli(dbPath, "purge-orders", "--prefix", "WEB");
     assert.notEqual(refused.status, 0);
     let db = openDb(dbPath);
-    assert.equal(db.prepare("SELECT COUNT(*) AS n FROM orders").get().n, 2);
+    assert.equal(db.prepare("SELECT COUNT(*) AS n FROM orders").get().n, 3);
     db.close();
     const forced = runCli(dbPath, "purge-orders", "--prefix", "WEB", "--force");
     assert.equal(forced.status, 0, forced.stderr);
     db = openDb(dbPath);
-    assert.deepEqual(db.prepare("SELECT no FROM orders").all().map((r) => r.no), ["TEST-1001"]);
+    assert.deepEqual(db.prepare("SELECT no FROM orders ORDER BY no").all().map((r) => r.no), ["TEST-1001", "test-1002"]);
     db.close();
   } finally {
     rmSync(dir, { recursive: true, force: true });

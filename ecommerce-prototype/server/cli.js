@@ -75,11 +75,12 @@ if (command === "vapid-keys") {
   const { loadConfig } = await import("./src/config.js");
   const { openDb } = await import("./src/db.js");
   const db = openDb(loadConfig().dbPath);
-  // Escape LIKE wildcards so the prefix is matched literally.
-  const like = `${prefix}-`.replace(/[\\%_]/g, "\\$&") + "%";
+  // substr keeps the match exact and case-sensitive (LIKE would also match test-/Test- orders).
+  const head = `${prefix}-`;
+  const match = "substr(no, 1, ?) = ?";
   db.exec("BEGIN");
-  db.prepare("DELETE FROM order_items WHERE order_no IN (SELECT no FROM orders WHERE no LIKE ? ESCAPE '\\')").run(like);
-  const { changes } = db.prepare("DELETE FROM orders WHERE no LIKE ? ESCAPE '\\'").run(like);
+  db.prepare(`DELETE FROM order_items WHERE order_no IN (SELECT no FROM orders WHERE ${match})`).run(head.length, head);
+  const { changes } = db.prepare(`DELETE FROM orders WHERE ${match}`).run(head.length, head);
   db.exec("COMMIT");
   console.log(`Pedidos ${prefix}- borrados: ${changes}`);
 } else {

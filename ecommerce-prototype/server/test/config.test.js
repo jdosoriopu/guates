@@ -61,12 +61,21 @@ test("unsafe mixes of Wompi keys, PULSO_MODE and ORDER_PREFIX refuse to start", 
   for (const [env, message] of refused) assert.throws(() => loadConfig(env), message, JSON.stringify(env.PULSO_MODE));
 });
 
-test("ALLOW_MIXED_MODE=on lifts only the mode checks, never mismatched keys", () => {
+test("ALLOW_MIXED_MODE=on waives only sandbox keys with live Pulso, never real money", () => {
   const smoke = loadConfig({ ...sandbox, PULSO_MODE: "live", ORDER_PREFIX: "TEST", ALLOW_MIXED_MODE: "on" });
   assert.equal(smoke.mixedMode, true);
   assert.match(describeMode(smoke), /ALLOW_MIXED_MODE=on/);
   assert.throws(() => loadConfig({ ...sandbox, WOMPI_PRIVATE_KEY: "prv_prod_a", PULSO_MODE: "stub", ALLOW_MIXED_MODE: "on" }), /ambientes distintos/);
   assert.throws(() => loadConfig({ ...sandbox, PULSO_MODE: "live", ALLOW_MIXED_MODE: "yes" }), /Configuración insegura/);
+  for (const mode of ["stub", "stub-orders"])
+    assert.throws(() => loadConfig({ ...production, PULSO_MODE: mode, ALLOW_MIXED_MODE: "on" }), /Configuración insegura/);
+  assert.throws(() => loadConfig({ ...production, PULSO_MODE: "live", ORDER_PREFIX: "TEST", ALLOW_MIXED_MODE: "on" }), /Configuración insegura/);
+  assert.equal(loadConfig({ ...sandbox, PULSO_MODE: "stub-orders", ALLOW_MIXED_MODE: "on" }).mixedMode, false);
+});
+
+test("a test order prefix is refused with production keys in any letter case", () => {
+  for (const prefix of ["test", "Test"])
+    assert.throws(() => loadConfig({ ...production, PULSO_MODE: "live", ORDER_PREFIX: prefix }), /ORDER_PREFIX/);
 });
 
 test("describeMode names the effective mode", () => {

@@ -5,7 +5,7 @@ Target: DigitalOcean droplet `159.89.158.17`, domain `guatescoffeeroasters.co`. 
 - `deploy.sh`: tests, local build, rsync a release, `npm ci --omit=dev` on the server, swap `current`, restart, health check, rollback, keep 5 releases. Env: `DEPLOY_HOST` (default `159.89.158.17`), `DEPLOY_USER` (default `root`), `SKIP_TESTS=1`. The port is read from the server's `store.env`. The root `.env` is never copied.
 - `backup.sh`: daily snapshot of `store.db`, keeps 14 (uses `sqlite3` if present, otherwise Node's `node:sqlite` backup, because the server has no `sqlite3`). Cron for user `guates`: `15 3 * * * /srv/guates/store/shared/backup.sh`.
 - `store.env.example`: every variable with the Pre-launch values. Copy-ready: copy as-is to `store.env` and replace the `<placeholders>`. Comments sit on their own lines because systemd keeps inline text as part of a value.
-- `remote-activate.sh`: uploaded by `deploy.sh` to `shared/`; validates `store.env`/PORT/unit, swaps `current`, restarts, checks health and rolls back (or stops the service on a failed first deploy).
+- `remote-activate.sh`: streamed by `deploy.sh` over ssh (`bash -s`, never stored on the server, so root never runs a file the service user can change); validates `store.env`/PORT/unit, swaps `current`, restarts, checks health and rolls back (or stops the service on a failed first deploy).
 - `systemd/guates-store.service`: runs as `guates` with `NODE_ENV=production` (the `/api/test/*` routes return 404).
 - `nginx/guates-store.conf`: location block to paste into the existing `guatescoffeeroasters.co` server block.
 
@@ -15,7 +15,7 @@ Server variables added for this deploy: `ORDER_PREFIX` (default `WEB`) and `TRUS
 
 ## Mode safety and the go-live checklist
 
-The server refuses to start, with a Spanish message and exit code 1, when the settings mix environments: production Wompi keys (`pub_prod_`/`prv_prod_`) with `PULSO_MODE` other than `live` or with `ORDER_PREFIX=TEST`; sandbox keys with `PULSO_MODE=live`; or a public and private key from different environments. The effective mode is logged at startup (`journalctl -u guates-store | grep Modo`), and the dashboard shows a *Modo prueba* chip while Wompi is in the sandbox. `ALLOW_MIXED_MODE=on` lifts the mode check (never the key-pair check) for the one-off Pulso smoke test; remove it right after.
+The server refuses to start, with a Spanish message and exit code 1, when the settings mix environments: production Wompi keys (`pub_prod_`/`prv_prod_`) with `PULSO_MODE` other than `live` or with `ORDER_PREFIX=TEST` (any letter case); sandbox keys with `PULSO_MODE=live`; or a public and private key from different environments. The effective mode is logged at startup (`journalctl -u guates-store | grep Modo`), and the dashboard shows a *Modo prueba* chip while Wompi is in the sandbox. `ALLOW_MIXED_MODE=on` waives only sandbox keys with `PULSO_MODE=live`, for the one-off Pulso smoke test; it never allows production keys with a stubbed Pulso or a TEST prefix, nor mismatched key pairs. Remove it right after.
 
 Local `npm start` reads the root `.env`, which has sandbox keys and no `PULSO_MODE` (default `live`), so it is refused: run it with `PULSO_MODE=stub-orders` (or `stub`).
 

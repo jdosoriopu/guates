@@ -8,7 +8,7 @@ function keyEnv(value, prefix) {
 }
 
 // Refuses settings that would mix real money with stubbed Pulso or test order numbers, or sandbox payments with real Pulso sales.
-// ALLOW_MIXED_MODE=on only lifts the mode checks (for the one-off Pulso smoke test); mismatched key pairs are always refused.
+// ALLOW_MIXED_MODE=on only waives sandbox keys with PULSO_MODE=live (the one-off Pulso smoke test); nothing that touches real money.
 function checkMode({ env, pulsoMode, orderPrefix }) {
   const publicEnv = keyEnv(env.WOMPI_PUBLIC_KEY, "pub");
   const privateEnv = keyEnv(env.WOMPI_PRIVATE_KEY, "prv");
@@ -26,17 +26,17 @@ function checkMode({ env, pulsoMode, orderPrefix }) {
   if (publicEnv === "prod" && pulsoMode !== "live") {
     problems.push(`Con llaves de producción de Wompi, PULSO_MODE debe ser live (ahora es ${pulsoMode}): los pagos reales no quedarían registrados en Pulso.`);
   }
-  if (publicEnv === "prod" && orderPrefix === "TEST") {
+  if (publicEnv === "prod" && orderPrefix.toUpperCase() === "TEST") {
     problems.push("Con llaves de producción de Wompi, ORDER_PREFIX no puede ser TEST: los pedidos reales se borrarían con purge-orders.");
   }
-  if (publicEnv === "test" && pulsoMode === "live") {
+  const smokeTest = publicEnv === "test" && pulsoMode === "live";
+  if (smokeTest && env.ALLOW_MIXED_MODE !== "on") {
     problems.push("Con llaves de sandbox de Wompi, PULSO_MODE no puede ser live: los pagos de prueba registrarían ventas reales en Pulso.");
   }
-  const allowMixed = env.ALLOW_MIXED_MODE === "on";
-  if (problems.length && !allowMixed) {
+  if (problems.length) {
     throw new Error(`Configuración insegura, el servidor no arranca. ${problems.join(" ")} Revisa store.env (lista de salida en vivo en deploy/README.md).`);
   }
-  return { wompiEnv: publicEnv, mixed: problems.length > 0 };
+  return { wompiEnv: publicEnv, mixed: smokeTest };
 }
 
 const WHATSAPP = /^\d{8,15}$/;

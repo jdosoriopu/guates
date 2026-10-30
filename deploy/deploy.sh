@@ -30,11 +30,12 @@ rsync -az --delete -e ssh "$ROOT/ecommerce-prototype/app/dist/" "$SSH_TARGET:$RE
 
 # Production dependencies only, installed on the server as `guates` so files and cache belong to the service user.
 remote "chown -R guates:guates '$RELEASE' && cd '$RELEASE/server' && runuser -u guates -- env HOME=/srv/guates npm ci --omit=dev"
-rsync -az -e ssh "$ROOT/deploy/backup.sh" "$ROOT/deploy/remote-activate.sh" "$SSH_TARGET:$BASE/shared/"
-remote "chmod 755 '$BASE/shared/backup.sh' '$BASE/shared/remote-activate.sh' && chown guates:guates '$BASE/shared/backup.sh'"
+rsync -az -e ssh "$ROOT/deploy/backup.sh" "$SSH_TARGET:$BASE/shared/"
+remote "chmod 755 '$BASE/shared/backup.sh' && chown guates:guates '$BASE/shared/backup.sh' && rm -f '$BASE/shared/remote-activate.sh'"
 
-# Validation, swap, restart, health check and rollback all happen in one script on the server.
-remote "'$BASE/shared/remote-activate.sh' '$RELEASE'"
+# Validation, swap, restart, health check and rollback all happen in one script, streamed from this machine:
+# root never runs a file that the service user could have replaced.
+ssh "$SSH_TARGET" bash -s -- "'$RELEASE'" < "$ROOT/deploy/remote-activate.sh"
 
 remote "cd '$BASE/releases' && ls -1dt */ | tail -n +$((KEEP + 1)) | grep -v \"^\$(basename \$(readlink -f '$BASE/current'))/\$\" | xargs -r rm -rf"
 echo "Deployed $RELEASE"
