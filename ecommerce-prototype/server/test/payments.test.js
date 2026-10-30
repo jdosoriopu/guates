@@ -18,9 +18,16 @@ function eventFor({ reference, id = "tx-1", status = "APPROVED", amount, timesta
   return { event: "transaction.updated", data, environment: "test", signature: { properties, checksum }, timestamp, sent_at: "2026-10-29T10:00:00.000Z" };
 }
 
-async function setup({ pulsoResult, fetch } = {}) {
+async function setup({ pulsoResult, fetch, mailResult } = {}) {
   const deps = makeDeps({ fetch });
-  const calls = { register: [], notify: [], sleeps: [] };
+  const calls = { register: [], notify: [], sleeps: [], mail: [] };
+  const mailer = {
+    send: async (m) => {
+      calls.mail.push(m);
+      if (mailResult === "throw") throw new Error("mail down");
+      return mailResult ?? { ok: true };
+    },
+  };
   const pulso = {
     ...deps.pulso,
     registerOrder: async (args) => {
@@ -32,7 +39,7 @@ async function setup({ pulsoResult, fetch } = {}) {
   const notify = { notifyOwner: async (e) => void calls.notify.push({ type: e.type, no: e.order.no }) };
   const wompi = createWompi({ config: deps.config, fetch });
   const orders = createOrders({
-    db: deps.db, catalog: deps.catalog, pulso, wompi, notify, config: deps.config, now: deps.clock.now,
+    db: deps.db, catalog: deps.catalog, pulso, wompi, notify, mailer, config: deps.config, now: deps.clock.now,
     sleep: async (ms) => void calls.sleeps.push(ms),
   });
   const app = buildApp({ ...deps, pulso, orders, wompi });
@@ -355,4 +362,36 @@ test("reconcile logs an order that throws and keeps going", async () => {
   t.clock.advance(3 * 60_000);
   assert.equal(await orders.reconcile(), 0);
   assert.deepEqual(logged, [`reconcile ${t.no} failed: boom`]);
+});
+
+test("an approved payment emails the customer one receipt, even when applied three times", async () => {
+  const t = await setup();
+  const x = { reference: t.no, transactionId: "tx-1", status: "APPROVED", amountInCents: t.total * 100 };
+  await Promise.all([t.orders.applyPayment(x), t.orders.applyPayment(x), t.orders.applyPayment(x)]);
+  assert.equal(t.calls.mail.length, 1);
+  assert.equal(t.calls.mail[0].to, "ana@correo.com");
+  assert.equal(t.calls.mail[0].subject, `[Prueba] Recibimos tu pago · Pedido ${t.no}`);
+  assert.ok(t.row().receipt_sent_at);
+});
+
+test("a paid order Pulso refused still gets its receipt; a declined or mismatched one does not", async () => {
+  const refused = await setup({ pulsoResult: { ok: false, code: "stock" } });
+  await refused.orders.applyPayment({ reference: refused.no, transactionId: "tx-1", status: "APPROVED", amountInCents: refused.total * 100 });
+  assert.equal(refused.row().status, "requiere_atencion");
+  assert.equal(refused.calls.mail.length, 1);
+
+  const declined = await setup();
+  await declined.orders.applyPayment({ reference: declined.no, transactionId: "tx-1", status: "DECLINED", amountInCents: declined.total * 100 });
+  const mismatch = await setup();
+  await mismatch.orders.applyPayment({ reference: mismatch.no, transactionId: "tx-1", status: "APPROVED", amountInCents: 100 });
+  assert.equal(declined.calls.mail.length + mismatch.calls.mail.length, 0);
+});
+
+test("a failing or throwing mailer leaves the order paid and the receipt unmarked", async () => {
+  for (const mailResult of [{ ok: false, code: "rejected" }, "throw"]) {
+    const t = await setup({ mailResult });
+    const o = await t.orders.applyPayment({ reference: t.no, transactionId: "tx-1", status: "APPROVED", amountInCents: t.total * 100 });
+    assert.equal(o.status, "pagado");
+    assert.equal(t.row().receipt_sent_at, null);
+  }
 });

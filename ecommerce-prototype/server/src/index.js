@@ -9,6 +9,7 @@ import { createOrders } from "./orders.js";
 import webpush from "web-push";
 import { createNotifier, pushChannel } from "./notify.js";
 import { buildApp } from "./app.js";
+import { createMailer } from "./mail.js";
 
 let config;
 try {
@@ -24,7 +25,8 @@ const catalog = createCatalog({ pulso, db, ttlMs: config.catalogTtlMs });
 
 const wompi = createWompi({ config, fetch });
 const notify = createNotifier({ channels: [pushChannel({ db, vapid: config.vapid, webpush })] });
-const orders = createOrders({ db, catalog, pulso, wompi, notify, config });
+const mailer = createMailer({ config, fetch });
+const orders = createOrders({ db, catalog, pulso, wompi, notify, mailer, config });
 const app = buildApp({ config, db, pulso, catalog, orders, wompi, logger: true });
 app.log.info(describeMode(config));
 setInterval(() => orders.reconcile().catch((err) => app.log.error(err, "reconcile failed")), 5 * 60_000).unref();

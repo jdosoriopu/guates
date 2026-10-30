@@ -90,6 +90,11 @@ export function loadConfig(env = process.env) {
     dbPath: env.DB_PATH || "data/store.sqlite",
     distDir: env.DIST_DIR || "../app/dist",
     catalogTtlMs: 60000,
+    mail: {
+      brevoKey: env.BREVO_API_KEY || "",
+      from: env.MAIL_FROM || "pedidos@guatescoffeeroasters.co",
+      fromName: env.MAIL_FROM_NAME || "Guates Coffee Roasters",
+    },
     vapid: {
       publicKey: env.VAPID_PUBLIC_KEY || "",
       privateKey: env.VAPID_PRIVATE_KEY || "",

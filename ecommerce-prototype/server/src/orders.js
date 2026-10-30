@@ -3,6 +3,7 @@ import { CatalogUnavailable } from "./catalog.js";
 import { placeByCode } from "./places.js";
 import { shippingFor, PACKAGING_G } from "./shipping.js";
 import { checkoutUrl } from "./wompi.js";
+import { receiptEmail } from "./mail.js";
 
 const GRINDS = ["grano", "fina", "media", "gruesa"];
 const EMAIL = /^[^@\s]+@[^@\s]+\.[^@\s]+$/;
@@ -94,7 +95,7 @@ const RECONCILE_MIN_AGE_MS = 2 * 60_000;
 const RECONCILE_MAX_AGE_MS = 48 * 3600_000;
 const defaultSleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
-export function createOrders({ db, catalog, pulso, wompi, notify, config, now = Date.now, sleep = defaultSleep, logger = console }) {
+export function createOrders({ db, catalog, pulso, wompi, notify, mailer, config, now = Date.now, sleep = defaultSleep, logger = console }) {
   const iso = () => new Date(now()).toISOString();
 
   // Increments and reads inside the caller's transaction so numbers never repeat.
@@ -182,6 +183,19 @@ export function createOrders({ db, catalog, pulso, wompi, notify, config, now = 
     } catch {}
   }
 
+  // Tells the customer their payment arrived; a mail failure never touches the order.
+  async function sendReceipt(o) {
+    if (!mailer || o.receipt_sent_at) return;
+    try {
+      const items = db.prepare("SELECT category_name, variant_name, grind, qty, unit_price FROM order_items WHERE order_no = ? ORDER BY id").all(o.no);
+      const mail = receiptEmail({ order: o, items, config });
+      const res = await mailer.send({ to: o.customer_email, name: o.customer_name, ...mail });
+      if (res.ok) db.prepare("UPDATE orders SET receipt_sent_at = ? WHERE no = ?").run(iso(), o.no);
+    } catch (err) {
+      logger.error?.(`receipt ${o.no} failed: ${err?.message ?? err}`);
+    }
+  }
+
   function setStatus(no, status, extra = {}) {
     db.prepare("UPDATE orders SET status = ?, wompi_tx = COALESCE(?, wompi_tx), pulso_sale_id = COALESCE(?, pulso_sale_id), attention_reason = ?, updated_at = ? WHERE no = ?")
       .run(status, extra.tx ?? null, extra.saleId ?? null, extra.reason ?? null, iso(), no);
@@ -232,10 +246,13 @@ export function createOrders({ db, catalog, pulso, wompi, notify, config, now = 
       if (result.ok) {
         const updated = setStatus(o.no, "pagado", { tx, saleId: result.saleId });
         await tell({ type: "paid", order: updated });
+        await sendReceipt(updated);
         return updated;
       }
+      // The money did arrive, so the customer still hears so; the owner sorts out Pulso.
       const updated = setStatus(o.no, "requiere_atencion", { tx, reason: ATTENTION[result.code] ?? ATTENTION.unavailable });
       await tell({ type: "attention", order: updated });
+      await sendReceipt(updated);
       return updated;
     });
   }
