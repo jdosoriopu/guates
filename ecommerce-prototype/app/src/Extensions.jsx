@@ -270,6 +270,9 @@ function CardGrind({ controller, card }) {
   const panel = React.useRef(null);
   const open = controller.state.grindFor === card.variantId;
   const [leaving, setLeaving] = useState(false);
+  const sizes = card.sizes ?? [];
+  const [sizeId, setSizeId] = useState(card.variantId);
+  const size = sizes.find((z) => z.id === sizeId);
   // Slide back down before unmounting; skip the wait when motion is reduced.
   const close = (then) => {
     const still = window.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
@@ -303,22 +306,40 @@ function CardGrind({ controller, card }) {
     >
       <div className="card-grind-head">
         <span>
-          Elige la molienda
+          {sizes.length > 1 ? "Elige tamaño y molienda" : "Elige la molienda"}
           <small>
-            {card.variantName} · {card.price}
+            {card.variantName} · {size ? `${size.label} · ${size.price}` : card.price}
           </small>
         </span>
         <button type="button" className="card-grind-close" aria-label="Cerrar sin agregar" onClick={() => close()}>
           ×
         </button>
       </div>
+      {sizes.length > 1 && (
+        <div className="card-grind-sizes" role="radiogroup" aria-label="Tamaño de la bolsa">
+          {sizes.map((z, i) => (
+            <button
+              key={z.id}
+              type="button"
+              role="radio"
+              aria-checked={z.id === sizeId}
+              disabled={z.soldOut}
+              ref={i === 0 ? first : undefined}
+              onClick={() => setSizeId(z.id)}
+            >
+              {z.label}
+              <small>{z.soldOut ? "Agotado" : z.price}</small>
+            </button>
+          ))}
+        </div>
+      )}
       <div className="card-grind-options">
         {GRINDS.map((g, i) => (
           <button
             key={g.key}
             type="button"
-            ref={i === 0 ? first : undefined}
-            onClick={() => close(() => controller.addVariant(card.key, card.variantId, g.key, 1))}
+            ref={i === 0 && sizes.length <= 1 ? first : undefined}
+            onClick={() => close(() => controller.addVariant(card.key, sizeId, g.key, 1))}
           >
             <strong>{g.label}</strong>
             <small>{g.hint}</small>

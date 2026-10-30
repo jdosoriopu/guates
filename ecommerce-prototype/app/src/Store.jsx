@@ -627,26 +627,36 @@ export class Store extends CanvasLogic {
           ? [{ ...card, price: "Agotado", weight: "", quick: this.disabled(() => {}) }]
           : [{ ...card, price: NO_PRICE, weight: "", quick: this.buy(card.quick) }];
       // The variant is the title (one coffee can have several cards); the coffee's name moves next to the price.
-      return variants.map((x) => ({
-        ...card,
-        name: variantLabel(x.name),
-        coffee: card.name,
-        process: toProcess(x),
-        weight: [card.name, weightText(x.weightG)].filter(Boolean).join(" · "),
-        quickAria: `Agregar ${card.name} · ${x.name}: elige la molienda`,
-        key: p.key,
-        variantId: x.id,
-        variantName: variantLabel(x.name),
-        price: x.available <= 0 ? "Agotado" : money(x.price),
-        livePrice: x.price,
-        open: () => this.open(p.key, false, x.id),
-        quick:
-          x.available <= 0
+      // Variants that differ only by bag size share one card, and the size is picked with the grind.
+      const groups = new Map();
+      for (const x of variants) {
+        const id = variantLabel(x.name) + "|" + toProcess(x);
+        groups.set(id, [...(groups.get(id) ?? []), x]);
+      }
+      return [...groups.values()].map((group) => {
+        const sizes = [...group].sort((a, b) => (a.weightG ?? 0) - (b.weightG ?? 0));
+        const inStock = sizes.filter((x) => x.available > 0);
+        const x = inStock[0] ?? sizes[0];
+        const several = sizes.length > 1;
+        return {
+          ...card,
+          name: variantLabel(x.name),
+          coffee: card.name,
+          process: toProcess(x),
+          weight: [card.name, sizes.map((z) => weightText(z.weightG)).filter(Boolean).join(" o ")].filter(Boolean).join(" · "),
+          quickAria: `Agregar ${card.name} · ${variantLabel(x.name)}: elige ${several ? "el tamaño y " : ""}la molienda`,
+          key: p.key,
+          variantId: x.id,
+          variantName: variantLabel(x.name),
+          sizes: sizes.map((z) => ({ id: z.id, label: weightText(z.weightG), price: money(z.price), soldOut: z.available <= 0 })),
+          price: !inStock.length ? "Agotado" : (several && inStock.length > 1 ? "Desde " : "") + money(x.price),
+          livePrice: x.price,
+          open: () => this.open(p.key, false, x.id),
+          quick: !inStock.length
             ? this.disabled(() => {})
-            : this.buy(() =>
-                this.setState({ grindFor: this.state.grindFor === x.id ? null : x.id }),
-              ),
-      }));
+            : this.buy(() => this.setState({ grindFor: this.state.grindFor === x.id ? null : x.id })),
+        };
+      });
     });
     if (s.sort === "precio")
       v.cards.sort((a, b) => (a.livePrice ?? Infinity) - (b.livePrice ?? Infinity));

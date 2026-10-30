@@ -594,6 +594,39 @@ article:has(.card-grind) {
   font: 400 28px/1 var(--font-sans);
   cursor: pointer;
 }
+.card-grind-sizes {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+.card-grind-sizes button {
+  flex: 1;
+  display: flex;
+  align-items: baseline;
+  justify-content: center;
+  gap: 6px;
+  min-height: 44px;
+  padding: 6px 12px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-pill);
+  background: var(--surface);
+  color: var(--ink);
+  font: 700 15px/1.2 var(--font-sans);
+  cursor: pointer;
+  transition: background-color 0.15s ease, color 0.15s ease;
+}
+.card-grind-sizes button small {
+  font: 500 13px/1.2 var(--font-sans);
+}
+.card-grind-sizes button[aria-checked="true"] {
+  border-color: var(--cafe-de-origen);
+  background: var(--cafe-de-origen);
+  color: var(--crema-de-papel);
+}
+.card-grind-sizes button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
 .card-grind-options {
   display: grid;
   grid-template-columns: repeat(2, 1fr);

@@ -37,6 +37,31 @@ test("catalog shows one card per variant Pulso has on sale", async ({ page }) =>
   ).toHaveAttribute("aria-pressed", "true");
 });
 
+test("bags of one coffee that differ only in size share a card and the size is picked with the grind", async ({ page }) => {
+  await page.route("**/api/catalog", async (route) => {
+    const res = await route.fetch();
+    const body = await res.json();
+    const nutria = body.categories.find((c) => c.key === "nutria");
+    nutria.variants.push({ ...nutria.variants[0], id: "nutria-500", name: "Caturra Lavado 500 gr", weightG: 500, price: 55000, available: 5 });
+    route.fulfill({ response: res, json: body });
+  });
+  await page.goto("/cafes");
+  await expect(page.locator("main article h2")).toHaveText(["Bourbon Rosado Natural", "Geisha Feria", "Geisha Honey", "Caturra Lavado"]);
+  const caturra = page.locator("main article").filter({ has: page.getByRole("heading", { name: "Caturra Lavado" }) });
+  await expect(caturra).toContainText("Nutria · 250 g o 500 g");
+  await expect(caturra).toContainText("Desde $30.000");
+  await caturra.getByRole("button", { name: /Agregar Nutria · Caturra Lavado: elige el tamaño y la molienda/ }).click();
+  const sizes = caturra.getByRole("radiogroup", { name: "Tamaño de la bolsa" });
+  await expect(sizes.getByRole("radio", { name: /250 g/ })).toHaveAttribute("aria-checked", "true");
+  await sizes.getByRole("radio", { name: /500 g/ }).click();
+  await expect(sizes.getByRole("radio", { name: /500 g/ })).toHaveAttribute("aria-checked", "true");
+  await expect(caturra).toContainText("Caturra Lavado · 500 g · $55.000");
+  await caturra.getByRole("button", { name: /En grano/ }).click();
+  await expect(page.getByRole("button", { name: "Carrito, 1 bolsa" })).toBeVisible();
+  const saved = await page.evaluate((k) => localStorage.getItem(k), STORE_KEY);
+  expect(saved).toContain("nutria-500");
+});
+
 test("El Elegante offers its two Geishas and the journey follows the variant's process", async ({ page }) => {
   await page.goto("/cafes/el-elegante");
   await expect(page.getByRole("heading", { level: 1 })).toHaveText("El Elegante");
