@@ -7,14 +7,23 @@ test.beforeEach(async ({ page }) => {
   await page.emulateMedia({ reducedMotion: "reduce" });
 });
 
-test("catalog shows only what Pulso has on sale", async ({ page }) => {
+test("catalog shows one card per variant Pulso has on sale", async ({ page }) => {
   await page.goto("/cafes");
   const cards = page.locator("main article h2");
-  await expect(cards).toHaveText(["Colibrí", "El Elegante", "Nutria"]);
-  await expect(page.locator("main")).toContainText("3 cafés");
+  await expect(cards).toHaveText(["Colibrí", "El Elegante", "El Elegante", "Nutria"]);
+  await expect(page.locator("main")).toContainText("4 cafés");
   await expect(cards.filter({ hasText: "Chigüiro" })).toHaveCount(0);
   await expect(cards.filter({ hasText: "Perezoso" })).toHaveCount(0);
-  await expect(page.locator("main article").filter({ hasText: "El Elegante" })).toContainText("Desde $52.500");
+  const feria = page.locator("main article").filter({ hasText: "Geisha Feria · 250 g" });
+  const honey = page.locator("main article").filter({ hasText: "Geisha Honey · 250 g" });
+  await expect(feria).toContainText("$65.000");
+  await expect(honey).toContainText("$52.500");
+  await honey.getByRole("button", { name: /Agregar El Elegante · Geisha Honey/ }).click();
+  await expect(page.getByRole("button", { name: "Carrito, 1 bolsa" })).toBeVisible();
+  await feria.getByRole("button", { name: "Ver su recorrido" }).click();
+  await expect(
+    page.getByRole("group", { name: "Presentación", exact: true }).getByRole("button", { name: /GEISHA FERIA 250 GR/ }),
+  ).toHaveAttribute("aria-pressed", "true");
 });
 
 test("El Elegante offers its two Geishas and the journey follows the variant's process", async ({ page }) => {
@@ -240,7 +249,8 @@ test("prices sit next to the real bag weight, not a sample label", async ({ page
 
 test("the process filter matches any live variant's process", async ({ page }) => {
   await page.goto("/cafes?proceso=Honey");
-  await expect(page.getByRole("heading", { name: "El Elegante", exact: true })).toBeVisible();
+  await expect(page.locator("main article")).toHaveCount(1);
+  await expect(page.locator("main article")).toContainText("Geisha Honey · 250 g");
   await expect(page.locator("main")).toContainText("1 café");
 });
 

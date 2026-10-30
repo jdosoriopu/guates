@@ -57,14 +57,20 @@ function addedText(name, grind, qty) {
   const what = `${name}${how ? `, ${how}` : ""}`;
   return qty === 1 ? `Listo: ${what} va en tu carrito.` : `Listo: ${qty} bolsas de ${what} van en tu carrito.`;
 }
+const countText = (n) => (n === 1 ? "1 café" : n + " cafés");
+// Pulso names carry the bag size and sometimes shout ("GEISHA FERIA 250 GR"); the card shows the weight apart.
+function variantLabel(name) {
+  const bare = name.replace(/\s*\d+\s*(g|gr|grs|gramos)\.?$/i, "").trim();
+  return bare === bare.toUpperCase()
+    ? bare.toLowerCase().replace(/(^|\s)\p{L}/gu, (c) => c.toUpperCase())
+    : bare;
+}
 export const CATALOG_ERROR =
   "No pudimos consultar la disponibilidad. Intenta de nuevo en un momento.";
 const CATALOG_REFRESH_MS = 60000;
 const NO_PRICE = "precio por confirmar";
 const weightText = (g) =>
   !g ? "" : g >= 1000 && g % 1000 === 0 ? g / 1000 + " kg" : g + " g";
-const weightsOf = (variants) =>
-  [...new Set(variants.map((x) => weightText(x.weightG)).filter(Boolean))].join(" · ");
 export class Store extends CanvasLogic {
   constructor(props) {
     super(props);
@@ -606,28 +612,36 @@ export class Store extends CanvasLogic {
     }
     v.addCurrent = this.buy(v.addCurrent);
   }
+  // One card per live variant, so a customer can add that exact coffee from the shop.
   liveCards(v) {
-    v.cards = v.cards.map((card) => {
+    const s = this.state;
+    v.cards = v.cards.flatMap((card) => {
       const p = ALL_PRODUCTS.find((x) => x.name === card.name);
-      const variants = p && liveFor(p.key)?.variants;
+      const variants = (p && liveFor(p.key)?.variants)?.filter(
+        (x) => s.filter === "todos" || toProcess(x) === s.filter,
+      );
       if (!variants?.length)
         return catalogApplied()
-          ? { ...card, price: "Agotado", weight: "", quick: this.disabled(() => {}) }
-          : { ...card, price: NO_PRICE, weight: "", quick: this.buy(card.quick) };
-      const first = defaultVariant(p.key);
-      const prices = variants.map((x) => x.price),
-        out = variants.every((x) => x.available <= 0);
-      return {
+          ? [{ ...card, price: "Agotado", weight: "", quick: this.disabled(() => {}) }]
+          : [{ ...card, price: NO_PRICE, weight: "", quick: this.buy(card.quick) }];
+      return variants.map((x) => ({
         ...card,
-        process: [...new Set(variants.map((x) => x.process))].join(" · "),
-        weight: weightsOf(variants),
-        quickAria: `Agregar ${card.name} · ${first.name} en grano al carrito`,
-        price: out
-          ? "Agotado"
-          : (new Set(prices).size > 1 ? "Desde " : "") + money(Math.min(...prices)),
-        quick: out ? this.disabled(() => {}) : this.buy(card.quick),
-      };
+        process: toProcess(x),
+        weight: [variantLabel(x.name), weightText(x.weightG)].filter(Boolean).join(" · "),
+        quickAria: `Agregar ${card.name} · ${x.name} en grano al carrito`,
+        price: x.available <= 0 ? "Agotado" : money(x.price),
+        livePrice: x.price,
+        open: () => this.open(p.key, false, x.id),
+        quick:
+          x.available <= 0
+            ? this.disabled(() => {})
+            : this.buy(() => this.addVariant(p.key, x.id, "grano", 1)),
+      }));
     });
+    if (s.sort === "precio")
+      v.cards.sort((a, b) => (a.livePrice ?? Infinity) - (b.livePrice ?? Infinity));
+    v.cardsEmpty = !v.cards.length;
+    v.cardsCount = countText(v.cards.length);
   }
   liveMood(v) {
     const s = this.state,
@@ -762,7 +776,7 @@ export class Store extends CanvasLogic {
         return p?.traits.includes(s.feeling);
       });
       v.cardsEmpty = !v.cards.length;
-      v.cardsCount = v.cards.length + " cafés";
+      v.cardsCount = countText(v.cards.length);
     }
     v.is.checkout = false;
     v.is.confirmacion = false;

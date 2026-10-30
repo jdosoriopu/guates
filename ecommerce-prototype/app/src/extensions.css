@@ -529,3 +529,8 @@ body:has(.purchase-dock) .store-toast {
     transform: translateY(8px);
   }
 }
+/* Shop card: the variant you are buying sits next to its price. */
+article div[style*="space-between"] > span:first-child {
+  font: 600 15px/20px var(--font-sans) !important;
+  color: var(--ink) !important;
+}
