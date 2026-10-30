@@ -33,6 +33,12 @@ export function whatsappNumber() {
   return typeof n === "string" && /^\d{8,15}$/.test(n) ? n : null;
 }
 
+// Set by the owner in the dashboard; null until the catalog arrives.
+export function freeShippingFrom() {
+  const n = current?.shipping?.freeFrom;
+  return Number.isInteger(n) && n > 0 ? n : null;
+}
+
 export const whatsappUrl = () => (whatsappNumber() ? `https://wa.me/${whatsappNumber()}` : null);
 
 // Before any catalog arrives every known product is assumed on sale, so content still renders.

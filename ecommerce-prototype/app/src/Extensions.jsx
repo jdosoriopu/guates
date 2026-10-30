@@ -10,6 +10,7 @@ import {
 import { paths, dateText, advanceDate, STORE_KEY } from "./state.js";
 import {
   defaultVariant,
+  freeShippingFrom,
   isOnSale,
   liveFor,
   plainCategories,
@@ -980,6 +981,40 @@ const info = {
     pending: true,
   },
 };
+function FreeShippingStrip() {
+  const from = freeShippingFrom();
+  if (!from) return null;
+  return (
+    <p className="free-shipping-strip">
+      <strong>Envío gratis</strong> a todo Colombia desde {money(from)}
+    </p>
+  );
+}
+
+function FreeShippingMeter({ controller }) {
+  const from = freeShippingFrom();
+  if (!from) return null;
+  const sub = controller.totals().sub;
+  const missing = Math.max(0, from - sub);
+  return (
+    <div className="free-shipping-meter">
+      <p role="status">
+        {missing ? (
+          <>
+            Te faltan <strong>{money(missing)}</strong> para el envío gratis
+          </>
+        ) : (
+          <strong>Tu pedido tiene envío gratis</strong>
+        )}
+      </p>
+      <div className="free-shipping-track" aria-hidden="true">
+        <span style={{ width: `${Math.min(100, (sub / from) * 100)}%` }} />
+      </div>
+      {missing > 0 && <small>Envío gratis desde {money(from)}</small>}
+    </div>
+  );
+}
+
 export function Extension({ controller, values, placement, item }) {
   const s = controller.state;
   // The canvas Carrito button already opens the bag; only accounts add a header link.
@@ -994,6 +1029,7 @@ export function Extension({ controller, values, placement, item }) {
   if (placement === "catalog-end") return <PlainCards controller={controller} />;
   if (placement === "card")
     return item?.variantId ? <CardGrind controller={controller} card={item} /> : null;
+  if (placement === "cart-ship") return <FreeShippingMeter controller={controller} />;
   if (placement === "footer-contact")
     return (
       <p className="footer-contact">
@@ -1031,6 +1067,7 @@ export function Extension({ controller, values, placement, item }) {
     );
   return (
     <>
+      {["home", "catalogo", "producto", "recorrido"].includes(s.screen) && <FreeShippingStrip />}
       {s.catalogError && !s.catalog && (
         <p className="extension-wrap extension-banner" role="alert">
           No pudimos consultar la disponibilidad. Intenta de nuevo en un

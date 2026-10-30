@@ -62,6 +62,22 @@ test("bags of one coffee that differ only in size share a card and the size is p
   expect(saved).toContain("nutria-500");
 });
 
+test("free shipping from $90.000 is advertised in the store and tracked in the cart", async ({ page }) => {
+  await page.goto("/cafes");
+  await expect(page.locator(".free-shipping-strip")).toHaveText("Envío gratis a todo Colombia desde $90.000");
+  const bourbon = page.locator("main article").filter({ has: page.getByRole("heading", { name: "Bourbon Rosado Natural" }) });
+  await bourbon.getByRole("button", { name: /Agregar/ }).click();
+  await bourbon.getByRole("button", { name: /En grano/ }).click();
+  await page.getByRole("button", { name: "Carrito, 1 bolsa" }).click();
+  const meter = page.locator(".free-shipping-meter");
+  await expect(meter.getByRole("status")).toHaveText("Te faltan $42.500 para el envío gratis");
+  await expect(page.locator(".free-shipping-strip")).toHaveCount(0);
+  await expect(page.getByText("Lo calculamos al elegir el municipio")).toBeVisible();
+  await page.getByRole("button", { name: "Agregar una" }).click();
+  await expect(meter.getByRole("status")).toHaveText("Tu pedido tiene envío gratis");
+  await expect(page.locator("main aside")).toContainText(/EnvíoGratis/);
+});
+
 test("El Elegante offers its two Geishas and the journey follows the variant's process", async ({ page }) => {
   await page.goto("/cafes/el-elegante");
   await expect(page.getByRole("heading", { level: 1 })).toHaveText("El Elegante");

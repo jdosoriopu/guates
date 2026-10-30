@@ -15,6 +15,7 @@ import {
   applyCatalog,
   defaultVariant,
   catalogApplied,
+  freeShippingFrom,
   isListed,
   isOnSale,
   liveFor,
@@ -761,7 +762,8 @@ export class Store extends CanvasLogic {
     v.cart.has = s.cart.length > 0;
     v.cart.subtotal = money(t.sub);
     v.cart.total = money(t.total);
-    v.cart.ship = "Lo calculamos al elegir el municipio";
+    const freeFrom = freeShippingFrom();
+    v.cart.ship = freeFrom && t.sub >= freeFrom ? "Gratis" : "Lo calculamos al elegir el municipio";
     v.cart.shipLabel = "Envío";
   }
   renderVals() {

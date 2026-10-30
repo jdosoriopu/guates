@@ -44,8 +44,8 @@ TEXT={
  'Pedido simulado {{order.no}}. Prototipo: no se generó ningún pedido real.':['Pedido {{order.no}}.'],
 }
 GATES=[('passport',lambda n:lead(n,'span')=='Tu pasaporte cafetero'),('passport',lambda n:lead(n,'div','h2')=='Tu pasaporte cafetero')]
-# Extension slots inside the shop: compact tools in the filter bar, extra cards after the grid.
-SLOTS=[('card',lambda n:any(isinstance(k,dict) and k['attrs'].get('on-click')=='{{c.quick}}' for k in n['children'])),('filters',lambda n:n['attrs'].get('aria-label')=='Ordenar'),('filters-after',lambda n:any(isinstance(k,dict) and k['attrs'].get('aria-label')=='Ordenar' for k in n['children'])),('catalog-end',lambda n:lead(n,'sc-for')=='' and elems(n)[0]['attrs'].get('list')=='{{cards}}')]
+# Extension slots inside the shop: compact tools in the filter bar, extra cards after the grid, the free-shipping meter in the cart.
+SLOTS=[('card',lambda n:any(isinstance(k,dict) and k['attrs'].get('on-click')=='{{c.quick}}' for k in n['children'])),('filters',lambda n:n['attrs'].get('aria-label')=='Ordenar'),('filters-after',lambda n:any(isinstance(k,dict) and k['attrs'].get('aria-label')=='Ordenar' for k in n['children'])),('catalog-end',lambda n:lead(n,'sc-for')=='' and elems(n)[0]['attrs'].get('list')=='{{cards}}'),('cart-ship',lambda n:lead(n,'span')=='{{cart.shipLabel}}' and 'gap: 16px' in n['attrs'].get('style',''))]
 # Canvas placeholders swapped for an extension slot that renders the live version.
 SWAPS=[('footer-contact',lambda n:own(n).startswith('Instagram · WhatsApp · correo'))]
 used={'omit':0,'gate':0,'slot':0}
@@ -66,7 +66,7 @@ def launch(n):
    if f(c):kept.append({'tag':'x-slot','attrs':{'placement':placement,**({'item':'c'} if placement=='card' else {})},'children':[]});used['slot']+=1
  n['children']=kept
 launch(p.root)
-if used!={'omit':4,'gate':2,'slot':5} or any(TEXT.values()):raise SystemExit('Launch edits no longer match the canvas: '+json.dumps({**used,'text':TEXT},ensure_ascii=False))
+if used!={'omit':4,'gate':2,'slot':6} or any(TEXT.values()):raise SystemExit('Launch edits no longer match the canvas: '+json.dumps({**used,'text':TEXT},ensure_ascii=False))
 renames={'class':'className','for':'htmlFor','tabindex':'tabIndex','patternunits':'patternUnits','viewbox':'viewBox','clippathunits':'clipPathUnits','preserveaspectratio':'preserveAspectRatio','pathlength':'pathLength','basefrequency':'baseFrequency','numoctaves':'numOctaves','xchannelselector':'xChannelSelector','ychannelselector':'yChannelSelector','stddeviation':'stdDeviation','filterunits':'filterUnits','color-interpolation-filters':'colorInterpolationFilters','autocomplete':'autoComplete','on-click':'onClick','onclick':'onClick','onchange':'onChange','onmouseenter':'onMouseEnter','onmouseleave':'onMouseLeave','onfocus':'onFocus','onblur':'onBlur','onkeydown':'onKeyDown','onpointerenter':'onPointerEnter','onpointerleave':'onPointerLeave'}
 tags={'clippath':'clipPath','feturbulence':'feTurbulence','fedisplacementmap':'feDisplacementMap','fecolormatrix':'feColorMatrix','fecomposite':'feComposite'}
 seq=0

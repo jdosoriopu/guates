@@ -55,10 +55,14 @@ export function buildApp(deps) {
 
   app.get("/api/health", async () => ({ ok: true }));
 
-  // The store reads the contact channel from here, so it needs no build-time setting.
+  // The store reads the contact channel and the free-shipping threshold from here, so it needs no build-time setting.
   app.get("/api/catalog", async (_req, reply) => {
     try {
-      return { ...(await deps.catalog.get()), contact: { whatsapp: deps.config.contactWhatsapp || null } };
+      return {
+        ...(await deps.catalog.get()),
+        contact: { whatsapp: deps.config.contactWhatsapp || null },
+        shipping: { freeFrom: freeShippingFrom(deps.db) },
+      };
     } catch (err) {
       if (!(err instanceof CatalogUnavailable)) throw err;
       return reply.code(503).send({ error: "No pudimos consultar la disponibilidad. Intenta de nuevo en un momento." });

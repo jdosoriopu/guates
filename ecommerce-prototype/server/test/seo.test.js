@@ -242,6 +242,14 @@ test("help and shipping pages link to WhatsApp only when CONTACT_WHATSAPP is set
   await app.close();
 });
 
+test("the catalog response carries the free-shipping threshold the owner set", async () => {
+  const { app, deps } = setup();
+  assert.deepEqual((await app.inject("/api/catalog")).json().shipping, { freeFrom: 90000 });
+  deps.db.prepare("UPDATE settings SET value = '120000' WHERE key = 'free_shipping_from'").run();
+  assert.deepEqual((await app.inject("/api/catalog")).json().shipping, { freeFrom: 120000 });
+  await app.close();
+});
+
 test("the catalog response says no WhatsApp when none is set", async () => {
   const { app } = setup();
   assert.deepEqual((await app.inject("/api/catalog")).json().contact, { whatsapp: null });

@@ -753,3 +753,47 @@ body:has(.store-toast) .whatsapp-float {
   font-weight: 600;
   text-underline-offset: 3px;
 }
+.free-shipping-strip {
+  margin: 0;
+  padding: 8px 16px;
+  background: var(--luz-de-manana);
+  color: var(--cafe-de-origen);
+  font: 400 14px/20px var(--font-sans);
+  text-align: center;
+}
+.free-shipping-strip strong {
+  font-weight: 700;
+}
+.free-shipping-meter {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 12px 16px;
+  border-radius: var(--radius-md);
+  background: var(--luz-de-manana);
+  color: var(--cafe-de-origen);
+}
+.free-shipping-meter p {
+  margin: 0;
+  font: 400 15px/22px var(--font-sans);
+}
+.free-shipping-meter small {
+  font: 400 13px/18px var(--font-sans);
+}
+.free-shipping-track {
+  height: 8px;
+  border-radius: var(--radius-pill);
+  background: var(--crema-de-papel);
+  overflow: hidden;
+}
+.free-shipping-track span {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: var(--cafe-de-origen);
+}
+@media (prefers-reduced-motion: no-preference) {
+  .free-shipping-track span {
+    transition: width 0.3s ease;
+  }
+}
