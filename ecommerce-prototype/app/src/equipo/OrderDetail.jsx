@@ -142,6 +142,7 @@ export function OrderDetail({ no }) {
           {order.municipio}, {order.departamento}
         </p>
         <dl className="eq-dl">
+          <Row label="Documento">{order.document}</Row>
           <Row label="Celular">{order.phone}</Row>
           <Row label="Correo">{order.email}</Row>
           <Row label="Guía">{order.tracking}</Row>

@@ -10,6 +10,8 @@ const EMAIL = /^[^@\s]+@[^@\s]+\.[^@\s]+$/;
 const MAX_LINES = 50;
 // Same limits as the checkout form's maxLength.
 const MAX = { name: 120, email: 160, address: 200 };
+// Cédula, cédula de extranjería or passport: the carrier asks for it to deliver.
+const DOCUMENT = /^[A-Z0-9]{5,15}$/;
 const FIRST_SEQ = 1001;
 
 const STATUS = { invalid: 422, stock: 409, unavailable: 409, not_covered: 422, catalog_down: 503, conflict: 409, not_found: 404, pulso: 502 };
@@ -53,6 +55,8 @@ function validate(input) {
   if (!/^3\d{9}$/.test(phone)) throw invalid("Escribe un celular colombiano de 10 dígitos, por ejemplo 300 123 4567.");
   const email = text(customer.email);
   if (!EMAIL.test(email) || email.length > MAX.email) throw invalid("Escribe un correo válido, por ejemplo nombre@correo.com.");
+  const document = text(customer.document).replace(/[\s.\-]/g, "").toUpperCase();
+  if (!DOCUMENT.test(document)) throw invalid("Escribe tu número de documento, por ejemplo 1020304050.");
 
   const place = placeByCode(destination.dane);
   if (!place) throw invalid("Elige un municipio de la lista.");
@@ -64,7 +68,7 @@ function validate(input) {
   const attr = attribution && typeof attribution === "object" ? attribution : {};
   return {
     lines: mergedLines,
-    customer: { name, phone, email },
+    customer: { name, phone, email, document },
     place,
     address,
     notes: text(destination.notes).slice(0, 500) || null,
@@ -152,11 +156,11 @@ export function createOrders({ db, catalog, pulso, wompi, notify, mailer, config
     try {
       no = nextNo();
       db.prepare(
-        `INSERT INTO orders (no, token, status, customer_name, customer_phone, customer_email, dane_code, municipio, departamento, address, notes,
+        `INSERT INTO orders (no, token, status, customer_name, customer_phone, customer_email, customer_document, dane_code, municipio, departamento, address, notes,
           subtotal, shipping, total, utm_source, utm_medium, utm_campaign, utm_content, landing, privacy_accepted_at, created_at, updated_at)
-         VALUES (?, ?, 'pendiente_pago', ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+         VALUES (?, ?, 'pendiente_pago', ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       ).run(
-        no, token, data.customer.name, data.customer.phone, data.customer.email, data.place.code, data.place.municipio, data.place.departamento,
+        no, token, data.customer.name, data.customer.phone, data.customer.email, data.customer.document, data.place.code, data.place.municipio, data.place.departamento,
         data.address, data.notes, subtotal, ship.price, total,
         data.attr.utm_source, data.attr.utm_medium, data.attr.utm_campaign, data.attr.utm_content, data.attr.landing, ts, ts, ts,
       );
@@ -345,7 +349,7 @@ export function createOrders({ db, catalog, pulso, wompi, notify, mailer, config
       .map((r) => ({ category: r.category_name, variant: r.variant_name, grind: r.grind, qty: r.qty, unitPrice: r.unit_price }));
     return {
       no: o.no, created: o.created_at, updated: o.updated_at, status: o.status, attention_reason: o.attention_reason,
-      name: o.customer_name, phone: o.customer_phone, email: o.customer_email,
+      name: o.customer_name, phone: o.customer_phone, email: o.customer_email, document: o.customer_document,
       municipio: o.municipio, departamento: o.departamento, address: o.address, notes: o.notes,
       items, bags: items.reduce((n, i) => n + i.qty, 0), subtotal: o.subtotal, shipping: o.shipping, total: o.total,
       wompi_tx: o.wompi_tx, pulso_sale_id: o.pulso_sale_id, tracking: o.tracking,

@@ -136,7 +136,7 @@ function staticPages(settings) {
       title: "Política de privacidad",
       description: "Cómo tratamos tus datos cuando compras en Guates.",
       h1: "Política de privacidad",
-      body: para("Usamos tus datos solo para procesar y entregar tu pedido. No los vendemos. El texto legal completo está por confirmar."),
+      body: para("Usamos tus datos solo para procesar y entregar tu pedido. Tu documento de identidad solo va en la guía de envío. No los vendemos. El texto legal completo está por confirmar."),
     },
     "/terminos": {
       title: "Términos y condiciones",

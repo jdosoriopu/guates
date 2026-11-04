@@ -78,7 +78,7 @@ test("unpaid and declined orders wait under Sin pagar, and the header shows the 
   const created = await page.request.post("/api/orders", {
     data: {
       lines: [{ variantId: FERIA_ID, grind: "grano", qty: 1 }],
-      customer: { name: "Pedro Sinpago", phone: "3201234567", email: "pedro@correo.com" },
+      customer: { name: "Pedro Sinpago", document: "1020304050", phone: "3201234567", email: "pedro@correo.com" },
       destination: { dane: BOGOTA, address: "Calle 9 # 9-9" },
       privacyAccepted: true,
     },

@@ -970,7 +970,7 @@ const info = {
   },
   privacidad: {
     title: "Privacidad",
-    body: ["Usamos tus datos solo para procesar y entregar tu pedido. No los vendemos."],
+    body: ["Usamos tus datos solo para procesar y entregar tu pedido. Tu documento de identidad solo va en la guía de envío. No los vendemos."],
     pending: true,
   },
   terminos: {

@@ -115,6 +115,7 @@ const MIGRATIONS = [
   CREATE INDEX order_items_order ON order_items(order_no);`,
   // When the payment receipt reached the customer's inbox; null means not sent (yet).
   `ALTER TABLE orders ADD COLUMN receipt_sent_at TEXT;`,
+  `ALTER TABLE orders ADD COLUMN customer_document TEXT;`,
 ];
 
 // Seeds run only on empty tables so owner edits are never overwritten.

@@ -11,7 +11,7 @@ const BOGOTA = "11001000";
 
 const input = (over = {}) => ({
   lines: [{ variantId: ELEGANTE, grind: "media", qty: 1 }],
-  customer: { name: "Ana Pérez", phone: "300 123 4567", email: "ana@correo.com" },
+  customer: { name: "Ana Pérez", document: "1020304050", phone: "300 123 4567", email: "ana@correo.com" },
   destination: { dane: BOGOTA, address: "Calle 1 # 2-3", notes: "" },
   privacyAccepted: true,
   attribution: {},
@@ -107,22 +107,35 @@ test("create validates input", async () => {
     input({ lines: [{ variantId: NUTRIA, grind: "turca", qty: 1 }] }),
     input({ lines: [{ variantId: NUTRIA, grind: "grano", qty: 21 }] }),
     input({ lines: [{ variantId: NUTRIA, grind: "grano", qty: 1.5 }] }),
-    input({ customer: { name: "A", phone: "3001234567", email: "ana@correo.com" } }),
-    input({ customer: { name: "Ana", phone: "2001234567", email: "ana@correo.com" } }),
-    input({ customer: { name: "Ana", phone: "3001234567", email: "ana" } }),
+    input({ customer: { name: "A", document: "1020304050", phone: "3001234567", email: "ana@correo.com" } }),
+    input({ customer: { name: "Ana", document: "1020304050", phone: "2001234567", email: "ana@correo.com" } }),
+    input({ customer: { name: "Ana", document: "1020304050", phone: "3001234567", email: "ana" } }),
     input({ destination: { dane: "00000000", address: "Calle 1 # 2-3" } }),
     input({ destination: { dane: BOGOTA, address: "abc" } }),
     input({ privacyAccepted: false }),
-    input({ customer: { name: "A".repeat(121), phone: "3001234567", email: "ana@correo.com" } }),
-    input({ customer: { name: "Ana", phone: "3001234567", email: `${"a".repeat(150)}@correo.com` } }),
+    input({ customer: { name: "A".repeat(121), document: "1020304050", phone: "3001234567", email: "ana@correo.com" } }),
+    input({ customer: { name: "Ana", document: "1020304050", phone: "3001234567", email: `${"a".repeat(150)}@correo.com` } }),
     input({ destination: { dane: BOGOTA, address: "C".repeat(201) } }),
+    input({ customer: { name: "Ana", phone: "3001234567", email: "ana@correo.com" } }),
+    input({ customer: { name: "Ana", document: "123", phone: "3001234567", email: "ana@correo.com" } }),
+    input({ customer: { name: "Ana", document: "1020#304050", phone: "3001234567", email: "ana@correo.com" } }),
   ];
   for (const b of bad) await rejects(orders.create(b), "invalid");
 });
 
+test("the identity document is saved without dots or spaces and shown only to the owner", async () => {
+  const { orders, db } = setup();
+  const { no, token } = await orders.create(input({ customer: { name: "Ana", document: "1.020.304 050", phone: "3001234567", email: "ana@correo.com" } }));
+  assert.equal(db.prepare("SELECT customer_document FROM orders WHERE no = ?").get(no).customer_document, "1020304050");
+  assert.equal(orders.detail(no).document, "1020304050");
+  assert.doesNotMatch(JSON.stringify(await orders.publicView(no, token)), /1020304050/);
+  const passport = await orders.create(input({ customer: { name: "Ana", document: "ab-123456", phone: "3001234567", email: "ana@correo.com" } }));
+  assert.equal(orders.detail(passport.no).document, "AB123456");
+});
+
 test("phone accepts +57 prefix", async () => {
   const { orders, db } = setup();
-  const { no } = await orders.create(input({ customer: { name: "Ana", phone: "+57 300 123 4567", email: "ana@correo.com" } }));
+  const { no } = await orders.create(input({ customer: { name: "Ana", document: "1020304050", phone: "+57 300 123 4567", email: "ana@correo.com" } }));
   assert.equal(db.prepare("SELECT customer_phone FROM orders WHERE no = ?").get(no).customer_phone, "3001234567");
 });
 
@@ -208,7 +221,7 @@ test("test-only order route returns the stored order with attribution, and is 40
 test("create accepts fields at their maximum length", async () => {
   const { orders } = setup();
   await orders.create(input({
-    customer: { name: "A".repeat(120), phone: "3001234567", email: `${"a".repeat(149)}@correo.com` },
+    customer: { name: "A".repeat(120), document: "1020304050", phone: "3001234567", email: `${"a".repeat(149)}@correo.com` },
     destination: { dane: BOGOTA, address: "C".repeat(200) },
   }));
 });

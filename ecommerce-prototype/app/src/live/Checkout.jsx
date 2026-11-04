@@ -7,10 +7,10 @@ import { WhatsApp } from "./WhatsApp.jsx";
 import "./live.css";
 
 export const LAST_ORDER_KEY = "guates.lastOrder.v1";
-export const EMPTY_FORM = { name: "", phone: "", email: "", depto: "", dane: "", address: "", notes: "" };
+export const EMPTY_FORM = { name: "", document: "", phone: "", email: "", depto: "", dane: "", address: "", notes: "" };
 const EMAIL = /^[^@\s]+@[^@\s]+\.[^@\s]+$/;
 const FALLBACK = "No pudimos conectarnos con la tienda. Intenta de nuevo en un momento.";
-const ORDER = ["name", "phone", "email", "depto", "dane", "address", "privacy"];
+const ORDER = ["name", "document", "phone", "email", "depto", "dane", "address", "privacy"];
 
 let placesRequest = null;
 const loadPlaces = () =>
@@ -21,12 +21,15 @@ const loadPlaces = () =>
 
 export const placeName = (municipio) => String(municipio).replace(/\.$/, "");
 const cleanPhone = (v) => v.replace(/\s+/g, "").replace(/^\+57/, "");
+const cleanDocument = (v) => v.replace(/[\s.\-]/g, "").toUpperCase();
 const grindLabel = (key) => GRINDS.find((g) => g.key === key)?.label ?? key;
 const byName = (a, b) => a.localeCompare(b, "es");
 
 function problems(f, accepted) {
   const e = {};
   if (f.name.trim().length < 2) e.name = "Escribe tu nombre.";
+  if (!/^[A-Z0-9]{5,15}$/.test(cleanDocument(f.document)))
+    e.document = "Escribe tu número de documento, por ejemplo 1020304050.";
   if (!/^3\d{9}$/.test(cleanPhone(f.phone)))
     e.phone = "Escribe un celular colombiano de 10 dígitos, por ejemplo 300 123 4567.";
   if (!EMAIL.test(f.email.trim())) e.email = "Escribe un correo válido, por ejemplo nombre@correo.com.";
@@ -182,7 +185,7 @@ export function Checkout({ controller }) {
     try {
       const res = await createOrder({
         lines,
-        customer: { name: form.name.trim(), phone: cleanPhone(form.phone), email: form.email.trim() },
+        customer: { name: form.name.trim(), document: cleanDocument(form.document), phone: cleanPhone(form.phone), email: form.email.trim() },
         destination: { dane: form.dane, address: form.address.trim(), notes: form.notes.trim() },
         privacyAccepted: true,
         attribution: readAttribution(),
@@ -220,6 +223,14 @@ export function Checkout({ controller }) {
           <h2 id={id("datos")}>Tus datos</h2>
           <Field id={id("name")} label="Nombre" error={errors.name}>
             <input data-field="name" autoComplete="name" maxLength="120" {...bind("name")} />
+          </Field>
+          <Field
+            id={id("document")}
+            label="Documento de identidad"
+            hint="Tu cédula, cédula de extranjería o pasaporte. Interrapidísimo lo pide para entregarte el paquete."
+            error={errors.document}
+          >
+            <input data-field="document" autoComplete="off" autoCapitalize="characters" spellCheck="false" placeholder="1020304050" maxLength="20" {...bind("document")} />
           </Field>
           <Field id={id("phone")} label="Celular" hint="Te escribimos por WhatsApp cuando tu café salga." error={errors.phone}>
             <input data-field="phone" type="tel" inputMode="tel" autoComplete="tel-national" placeholder="3001234567" maxLength="20" {...bind("phone")} />

@@ -65,6 +65,6 @@ export function waLink(o) {
 export const mapsLink = (o) => `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`${o.address}, ${o.municipio}`)}`;
 
 export const addressText = (o) =>
-  [o.name, o.phone, o.address, o.notes, `${o.municipio}, ${o.departamento}`].filter(Boolean).join("\n");
+  [o.name, o.document && `Documento ${o.document}`, o.phone, o.address, o.notes, `${o.municipio}, ${o.departamento}`].filter(Boolean).join("\n");
 
 export const GRIND = { grano: "En grano", fina: "Molido fino", media: "Molido medio", gruesa: "Molido grueso" };

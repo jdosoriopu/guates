@@ -532,7 +532,20 @@ test("missing fields are announced before anything is sent", async ({ page }) =>
   await page.getByRole("button", { name: /Pagar/ }).click();
   await expect(page.getByRole("alert").first()).toContainText("Revisa los campos marcados.");
   await expect(page.getByLabel("Celular", { exact: true })).toHaveAttribute("aria-invalid", "true");
+  const doc = page.getByLabel("Documento de identidad", { exact: true });
+  await expect(doc).toHaveAttribute("aria-invalid", "true");
+  await expect(page.getByText("Escribe tu número de documento, por ejemplo 1020304050.")).toBeVisible();
   expect(seen.orderPosts).toBe(0);
+});
+
+test("the identity document the carrier needs travels with the order, without dots", async ({ page }) => {
+  await page.route("https://checkout.wompi.co/**", (route) => route.fulfill({ status: 204 }));
+  const sent = page.waitForRequest((r) => r.url().endsWith("/api/orders") && r.method() === "POST");
+  await addFeria(page, 1);
+  await page.goto("/checkout");
+  await fillCheckout(page);
+  await page.getByRole("button", { name: /Pagar/ }).click();
+  expect((await sent).postDataJSON().customer.document).toBe("1020304050");
 });
 
 test("coming back from Wompi through the back/forward cache lets you pay again", async ({ page }) => {

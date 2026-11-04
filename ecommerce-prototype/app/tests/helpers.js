@@ -30,6 +30,7 @@ export async function addFeria(page, qty = 1) {
 
 export async function fillCheckout(page, { name = "Ana Pérez" } = {}) {
   await page.getByLabel("Nombre", { exact: true }).fill(name);
+  await page.getByLabel("Documento de identidad", { exact: true }).fill("1.020.304.050");
   await page.getByLabel("Celular", { exact: true }).fill("3001234567");
   await page.getByLabel("Correo", { exact: true }).fill("ana@correo.com");
   await page.getByLabel("Departamento", { exact: true }).selectOption({ label: "Bogotá, D.C." });
@@ -68,7 +69,7 @@ export async function paidOrder(request, { name = "Laura Gómez", phone = "31098
   const created = await request.post("/api/orders", {
     data: {
       lines: [{ variantId: FERIA_ID, grind: "grano", qty: 1 }],
-      customer: { name, phone, email: "laura@correo.com" },
+      customer: { name, document: "52123456", phone, email: "laura@correo.com" },
       destination: { dane: BOGOTA, address: "Carrera 7 # 45-10", notes: "Apto 301" },
       privacyAccepted: true,
     },

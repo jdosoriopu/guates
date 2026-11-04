@@ -36,7 +36,7 @@ async function setup({ config, fixture, pulsoOverrides = {} } = {}) {
   async function newOrder({ pay = true, qty = 2, dane = "11001000" } = {}) {
     const { no } = await orders.create({
       lines: [{ variantId: ELEGANTE, grind: "media", qty }],
-      customer: { name: `Cliente ${++n}`, phone: "300 123 4567", email: "ana@correo.com" },
+      customer: { name: `Cliente ${++n}`, document: "1020304050", phone: "300 123 4567", email: "ana@correo.com" },
       destination: { dane, address: "Calle 1 # 2-3", notes: "Portería" },
       privacyAccepted: true,
       attribution: { utm_source: "instagram" },

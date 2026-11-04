@@ -45,7 +45,7 @@ async function setup({ pulsoResult, fetch, mailResult } = {}) {
   const app = buildApp({ ...deps, pulso, orders, wompi });
   const { no } = await orders.create({
     lines: [{ variantId: ELEGANTE, grind: "media", qty: 2 }],
-    customer: { name: "Ana Pérez", phone: "300 123 4567", email: "ana@correo.com" },
+    customer: { name: "Ana Pérez", document: "1020304050", phone: "300 123 4567", email: "ana@correo.com" },
     destination: { dane: "11001000", address: "Calle 1 # 2-3" },
     privacyAccepted: true,
   });
@@ -242,7 +242,7 @@ async function setupLookup(statusFor) {
   const orders = createOrders({ db: base.db, catalog: base.catalog, pulso, wompi, notify, config: base.config, now: base.clock.now, sleep: async () => {} });
   const { no, token } = await orders.create({
     lines: [{ variantId: ELEGANTE, grind: "media", qty: 1 }],
-    customer: { name: "Ana Pérez", phone: "3001234567", email: "ana@correo.com" },
+    customer: { name: "Ana Pérez", document: "1020304050", phone: "3001234567", email: "ana@correo.com" },
     destination: { dane: "11001000", address: "Calle 1 # 2-3" },
     privacyAccepted: true,
   });

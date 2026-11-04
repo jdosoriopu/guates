@@ -5,7 +5,7 @@ import { money, relativeTime, waLink, mapsLink, addressText, bagsLabel, filterOr
 import { pushSupport, keyBytes } from "../src/equipo/push.js";
 
 const order = {
-  no: "WEB-1001", name: "Laura Gómez", phone: "3109876543", address: "Carrera 7 # 45-10", notes: "Apto 301",
+  no: "WEB-1001", name: "Laura Gómez", document: "52123456", phone: "3109876543", address: "Carrera 7 # 45-10", notes: "Apto 301",
   municipio: "Bogotá, D.C.", departamento: "Bogotá, D.C.", tracking: null, status: "pagado",
 };
 
@@ -36,8 +36,8 @@ test("WhatsApp link before and after dispatch", () => {
 
 test("maps link and copied address", () => {
   assert.equal(mapsLink(order), "https://www.google.com/maps/search/?api=1&query=Carrera%207%20%23%2045-10%2C%20Bogot%C3%A1%2C%20D.C.");
-  assert.equal(addressText(order), "Laura Gómez\n3109876543\nCarrera 7 # 45-10\nApto 301\nBogotá, D.C., Bogotá, D.C.");
-  assert.equal(addressText({ ...order, notes: null }), "Laura Gómez\n3109876543\nCarrera 7 # 45-10\nBogotá, D.C., Bogotá, D.C.");
+  assert.equal(addressText(order), "Laura Gómez\nDocumento 52123456\n3109876543\nCarrera 7 # 45-10\nApto 301\nBogotá, D.C., Bogotá, D.C.");
+  assert.equal(addressText({ ...order, notes: null }), "Laura Gómez\nDocumento 52123456\n3109876543\nCarrera 7 # 45-10\nBogotá, D.C., Bogotá, D.C.");
 });
 
 test("bags and filters", () => {
