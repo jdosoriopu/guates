@@ -1171,7 +1171,7 @@ export function Extension({ controller, values, placement, item }) {
           <span>
             {values.p.name} · {values.lineTotal}
             <small>
-              {controller.variantFor(s.product)?.name ?? SIZES[s.size].label} ·{" "}
+              {values.selectionLabel ?? SIZES[s.size].label} ·{" "}
               {GRINDS.find((g) => g.key === s.grind).label}
             </small>
           </span>

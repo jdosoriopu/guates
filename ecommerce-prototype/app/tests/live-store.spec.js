@@ -33,7 +33,7 @@ test("catalog shows one card per variant Pulso has on sale", async ({ page }) =>
   await expect(page.getByRole("button", { name: "Carrito, 1 bolsa" })).toBeVisible();
   await feria.getByRole("button", { name: "Ver su recorrido" }).click();
   await expect(
-    page.getByRole("group", { name: "Presentación", exact: true }).getByRole("button", { name: /GEISHA FERIA 250 GR/ }),
+    page.getByRole("group", { name: "Presentación", exact: true }).getByRole("button", { name: /^Geisha Feria · Natural/ }),
   ).toHaveAttribute("aria-pressed", "true");
 });
 
@@ -78,12 +78,28 @@ test("free shipping from $90.000 is advertised in the store and tracked in the c
   await expect(page.locator("main aside")).toContainText(/EnvíoGratis/);
 });
 
+test("a coffee sold in two bag sizes names each presentation by its weight", async ({ page }) => {
+  await page.route("**/api/catalog", async (route) => {
+    const res = await route.fetch();
+    const body = await res.json();
+    const nutria = body.categories.find((c) => c.key === "nutria");
+    nutria.variants.push({ ...nutria.variants[0], id: "nutria-500", name: "Caturra Lavado", weightG: 500, price: 55000, available: 5 });
+    route.fulfill({ response: res, json: body });
+  });
+  await page.goto("/cafes/nutria");
+  const group = page.getByRole("group", { name: "Presentación", exact: true });
+  await expect(group.getByRole("button")).toHaveText([/^\s*250 g\s*\$30\.000\s*$/, /^\s*500 g\s*\$55\.000\s*$/]);
+  await group.getByRole("button", { name: /500 g/ }).click();
+  await expect(page.locator(".purchase-dock")).toContainText("Nutria · $55.000");
+  await expect(page.locator(".purchase-dock small")).toHaveText("Caturra Lavado · 500 g · En grano");
+});
+
 test("El Elegante offers its two Geishas and the journey follows the variant's process", async ({ page }) => {
   await page.goto("/cafes/el-elegante");
   await expect(page.getByRole("heading", { level: 1 })).toHaveText("El Elegante");
   const group = page.getByRole("group", { name: "Presentación", exact: true });
-  const feria = group.getByRole("button", { name: /GEISHA FERIA 250 GR · Natural/ });
-  const honey = group.getByRole("button", { name: /Geisha Honey · Honey/ });
+  const feria = group.getByRole("button", { name: /^Geisha Feria · Natural · 250 g/ });
+  const honey = group.getByRole("button", { name: /^Geisha Honey · Honey · 250 g/ });
   await expect(feria).toContainText("$65.000");
   await expect(honey).toContainText("$52.500");
   await expect(feria).toHaveAttribute("aria-pressed", "true");

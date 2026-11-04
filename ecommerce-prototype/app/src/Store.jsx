@@ -72,6 +72,16 @@ const CATALOG_REFRESH_MS = 60000;
 const NO_PRICE = "precio por confirmar";
 const weightText = (g) =>
   !g ? "" : g >= 1000 && g % 1000 === 0 ? g / 1000 + " kg" : g + " g";
+// A product's choices name only what tells them apart: the weight, plus name or process when those differ.
+function presentationLabel(x, variants) {
+  const differs = (f) => variants.some((y) => f(y) !== f(x));
+  const parts = [
+    differs((y) => variantLabel(y.name)) && variantLabel(x.name),
+    differs((y) => y.process) && toProcess(x),
+    weightText(x.weightG),
+  ].filter(Boolean);
+  return parts.length ? parts.join(" · ") : variantLabel(x.name);
+}
 export class Store extends CanvasLogic {
   constructor(props) {
     super(props);
@@ -593,7 +603,7 @@ export class Store extends CanvasLogic {
         const on = x.id === sel.id,
           out = x.available <= 0;
         return {
-          label: `${x.name} · ${x.process}` + (out ? " · agotado" : ""),
+          label: presentationLabel(x, variants) + (out ? " · agotado" : ""),
           price: money(x.price),
           on,
           pick: out ? this.disabled(() => {}) : () => this.setState({ variant: x.id }),
@@ -602,6 +612,7 @@ export class Store extends CanvasLogic {
         };
       });
       v.lineTotal = money(sel.price * s.qty);
+      v.selectionLabel = [variantLabel(sel.name), weightText(sel.weightG)].filter(Boolean).join(" · ");
       v.p = {
         ...v.p,
         process: sel.process,
@@ -708,12 +719,12 @@ export class Store extends CanvasLogic {
       this.setState({ quickVariant: null });
     };
     v.emo.sizes = variants.map((x) => ({
-      label: `${x.name} · ${x.process}` + (x.available <= 0 ? " · agotado" : ""),
+      label: presentationLabel(x, variants) + (x.available <= 0 ? " · agotado" : ""),
       on: x.id === chosen.id,
       pick: () => this.setState({ quickVariant: x.id }),
     }));
     v.emo.selectedPrice = money(chosen.price);
-    if (grind) v.emo.selection = `${v.emo.name} · ${chosen.name} · ${grind.label}`;
+    if (grind) v.emo.selection = [v.emo.name, variantLabel(chosen.name), weightText(chosen.weightG), grind.label].filter(Boolean).join(" · ");
     v.emo.addSelected = this.buy(() => {
       if (s.quickProduct !== target.key || !grind) return;
       this.addVariant(target.key, chosen.id, grind.key, 1);

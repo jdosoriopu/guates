@@ -3,7 +3,7 @@ import { createHash } from "node:crypto";
 import { expect } from "@playwright/test";
 
 export const EVENTS_SECRET = "test_events_x"; // the Playwright server's WOMPI_EVENTS
-export const FERIA = /GEISHA FERIA 250 GR · Natural/;
+export const FERIA = /^Geisha Feria · Natural · 250 g/;
 export const FERIA_ID = "a305c9a3-d55b-48ee-b741-4f6f2f9e8d32";
 export const BOGOTA = "11001000";
 
