@@ -94,6 +94,7 @@ export function loadConfig(env = process.env) {
       brevoKey: env.BREVO_API_KEY || "",
       from: env.MAIL_FROM || "pedidos@guatescoffeeroasters.co",
       fromName: env.MAIL_FROM_NAME || "Guates Coffee Roasters",
+      notifyTo: (env.ORDER_NOTIFY_EMAIL || "").split(",").map((s) => s.trim()).filter(Boolean),
     },
     vapid: {
       publicKey: env.VAPID_PUBLIC_KEY || "",

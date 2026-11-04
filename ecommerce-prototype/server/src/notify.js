@@ -1,3 +1,5 @@
+import { ownerOrderEmail } from "./mail.js";
+
 export const money = (n) => "$" + Math.round(n).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".");
 
 const bagsOf = (order) => order.bags ?? (order.items ?? []).reduce((sum, i) => sum + i.qty, 0);
@@ -66,6 +68,23 @@ export function pushChannel({ db, vapid, webpush, logger = console }) {
           }
         }),
       );
+    },
+  };
+}
+
+// Emails the owner about paid orders and orders that need attention, to ORDER_NOTIFY_EMAIL or the dashboard owner's address.
+export function emailChannel({ db, mailer, config }) {
+  return {
+    name: "email",
+    async send(event) {
+      if (!mailer?.enabled) return;
+      const to = config.mail.notifyTo.length ? config.mail.notifyTo : [db.prepare("SELECT email FROM owner WHERE id = 1").get()?.email].filter(Boolean);
+      if (!to.length) return;
+      const order = db.prepare("SELECT * FROM orders WHERE no = ?").get(event.order.no);
+      const items = db.prepare("SELECT category_name, variant_name, grind, qty FROM order_items WHERE order_no = ? ORDER BY id").all(order.no);
+      const mail = ownerOrderEmail({ type: event.type, order, items, config });
+      const results = await Promise.all(to.map((email) => mailer.send({ to: email, name: "Guates", ...mail })));
+      if (results.some((r) => !r.ok)) throw new Error(`owner email for ${order.no} not sent`);
     },
   };
 }

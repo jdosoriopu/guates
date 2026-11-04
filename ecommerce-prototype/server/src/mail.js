@@ -21,10 +21,10 @@ export function createMailer({ config, fetch, logger = console }) {
           signal: AbortSignal.timeout(10_000),
         });
         if (res.ok) return { ok: true };
-        logger.error?.(`mail to customer failed: Brevo ${res.status} ${(await res.text()).slice(0, 200)}`);
+        logger.error?.(`mail "${subject}" failed: Brevo ${res.status} ${(await res.text()).slice(0, 200)}`);
         return { ok: false, code: "rejected" };
       } catch (err) {
-        logger.error?.(`mail to customer failed: ${err?.message ?? err}`);
+        logger.error?.(`mail "${subject}" failed: ${err?.message ?? err}`);
         return { ok: false, code: "unavailable" };
       }
     },
@@ -110,6 +110,74 @@ ${row("Total pagado", money(order.total), true)}
 <tr><td style="border-top:1px solid ${C.line};padding:20px 0 0;font:400 14px/1.6 ${SANS};color:${C.cafe}">
 ${wa ? `¿Dudas con tu pedido? <a href="${esc(wa)}" style="color:${C.cereza}">Escríbenos por WhatsApp</a>.<br>` : ""}Síguenos en Instagram: <a href="${INSTAGRAM}" style="color:${C.cereza}">@guates.coffeeroasters</a><br>
 <span style="font:400 13px/1.6 ${SANS};color:${C.cafe}">Guates Coffee Roasters · Tostado en Villavicencio. Referencia de pago Wompi: ${esc(order.wompi_tx ?? "")}</span>
+</td></tr>
+</table></td></tr></table></body></html>`;
+
+  return { subject, html, text };
+}
+
+// The owner's alert for a paid order or one that needs attention: everything needed to pack and ship it.
+export function ownerOrderEmail({ type, order, items, config }) {
+  const prueba = config.mode !== "live";
+  const attention = type === "attention";
+  const bags = items.reduce((n, i) => n + i.qty, 0);
+  const subject =
+    (prueba ? "[Prueba] " : "") +
+    (attention ? `Pedido ${order.no} requiere atención` : `Nuevo pedido ${order.no} · ${money(order.total)} · ${order.municipio}`);
+  const panelUrl = `${config.publicUrl}/equipo/pedidos/${encodeURIComponent(order.no)}`;
+  const wa = `https://wa.me/57${order.customer_phone}`;
+  const lineText = (i) => `${i.qty} × ${i.category_name}, ${i.variant_name} · ${GRIND[i.grind] ?? i.grind}`;
+  const shipping = order.shipping === 0 ? "Gratis" : money(order.shipping);
+  const lead = attention
+    ? order.attention_reason ?? "Revisa el pedido en el panel."
+    : `${money(order.total)} pagados · ${bags} ${bags === 1 ? "bolsa" : "bolsas"} para ${order.municipio}.`;
+
+  const text = [
+    attention ? `Pedido ${order.no} requiere atención` : `Nuevo pedido ${order.no}`,
+    lead,
+    "",
+    ...items.map(lineText),
+    `Envío: ${shipping} · Total: ${money(order.total)}`,
+    "",
+    order.customer_name,
+    order.customer_document ? `Documento: ${order.customer_document}` : null,
+    `Celular: ${order.customer_phone}`,
+    `Correo: ${order.customer_email}`,
+    `${order.address}${order.notes ? `, ${order.notes}` : ""}`,
+    `${order.municipio}, ${order.departamento}`,
+    "",
+    `Abrir en el panel: ${panelUrl}`,
+  ]
+    .filter((l) => l !== null)
+    .join("\n");
+
+  const p = (body, extra = "") => `<p style="margin:0 0 6px;font:400 15px/1.5 ${SANS};color:${C.cafe}${extra}">${body}</p>`;
+  const itemRows = items
+    .map(
+      (i) =>
+        `<tr><td style="padding:10px 0;border-bottom:1px solid ${C.line};font:400 15px/1.4 ${SANS};color:${C.cafe}">` +
+        `<strong>${i.qty} × ${esc(i.variant_name)}</strong><br>${esc(i.category_name)} · ${esc(GRIND[i.grind] ?? i.grind)}</td></tr>`,
+    )
+    .join("");
+  const html = `<!doctype html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="color-scheme" content="light"><title>${esc(subject)}</title></head>
+<body style="margin:0;padding:0;background:${C.crema}">
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:${C.crema}"><tr><td align="center" style="padding:24px 16px">
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:560px">
+${prueba ? `<tr><td style="padding:0 0 12px"><span style="display:inline-block;padding:6px 14px;border-radius:999px;background:${C.luz};font:700 13px/1 ${SANS};color:${C.cafe}">Pedido de prueba</span></td></tr>` : ""}
+<tr><td style="font:700 26px/1.2 ${SLAB};color:${attention ? C.cereza : C.cafe};padding:0 0 8px">${attention ? `Pedido ${esc(order.no)} requiere atención` : `Nuevo pedido ${esc(order.no)}`}</td></tr>
+<tr><td style="font:400 17px/1.5 ${SANS};color:${C.cafe};padding:0 0 20px">${esc(lead)}</td></tr>
+<tr><td style="background:#ffffff;border:1px solid ${C.line};border-radius:20px;padding:20px 24px">
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0">${itemRows}</table>
+${p(`Envío: ${shipping} · <strong>Total: ${money(order.total)}</strong>`, ";margin-top:12px")}
+</td></tr>
+<tr><td style="padding:20px 0 0">
+${p(`<strong>${esc(order.customer_name)}</strong>`)}
+${order.customer_document ? p(`Documento: ${esc(order.customer_document)}`) : ""}
+${p(`Celular: <a href="${esc(wa)}" style="color:${C.cereza}">${esc(order.customer_phone)}</a> · ${esc(order.customer_email)}`)}
+${p(`${esc(order.address)}${order.notes ? `, ${esc(order.notes)}` : ""}<br>${esc(order.municipio)}, ${esc(order.departamento)}`)}
+</td></tr>
+<tr><td style="padding:24px 0 0">
+<a href="${esc(panelUrl)}" style="display:inline-block;padding:14px 28px;border-radius:999px;background:${C.cereza};color:${C.crema};font:700 16px/1 ${SANS};text-decoration:none">Abrir en el panel</a>
 </td></tr>
 </table></td></tr></table></body></html>`;
 

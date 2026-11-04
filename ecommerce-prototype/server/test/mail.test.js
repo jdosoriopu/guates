@@ -1,7 +1,9 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { createMailer, receiptEmail } from "../src/mail.js";
-import { makeDeps } from "./helpers.js";
+import { createMailer, receiptEmail, ownerOrderEmail } from "../src/mail.js";
+import { emailChannel } from "../src/notify.js";
+import { loadConfig } from "../src/config.js";
+import { makeDeps, baseEnv } from "./helpers.js";
 
 const order = {
   no: "WEB-1001", token: "tok", customer_name: "Ana <b>Pérez</b>", customer_email: "ana@correo.com",
@@ -57,4 +59,65 @@ test("a Brevo error or a network failure is reported, never thrown", async () =>
   assert.deepEqual(await rejected.send({ to: "a@b.co", subject: "s" }), { ok: false, code: "rejected" });
   const down = createMailer({ config, fetch: async () => { throw new Error("down"); }, logger: {} });
   assert.deepEqual(await down.send({ to: "a@b.co", subject: "s" }), { ok: false, code: "unavailable" });
+});
+
+const paid = {
+  ...order, customer_name: "Ana Pérez", customer_phone: "3001234567", customer_document: "1020304050",
+  notes: "Apto 301", status: "pagado",
+};
+
+test("the owner's new-order email has what is needed to pack and ship", () => {
+  const { config } = makeDeps({ config: { mode: "live", publicUrl: "https://guatescoffeeroasters.co" } });
+  const { subject, html, text } = ownerOrderEmail({ type: "paid", order: paid, items, config });
+  assert.equal(subject, "Nuevo pedido WEB-1001 · $130.000 · Bogotá");
+  assert.match(text, /\$130\.000 pagados · 2 bolsas para Bogotá\./);
+  assert.match(text, /2 × El Elegante, Geisha Honey · Molido medio/);
+  assert.match(text, /Documento: 1020304050/);
+  assert.match(text, /Calle 1 # 2-3, Apto 301/);
+  assert.ok(html.includes("https://guatescoffeeroasters.co/equipo/pedidos/WEB-1001"));
+  assert.ok(html.includes("https://wa.me/573001234567"));
+  assert.doesNotMatch(html, /prueba/i);
+});
+
+test("an order that needs attention says why in the owner's email", () => {
+  const { config } = makeDeps();
+  const { subject, text } = ownerOrderEmail({ type: "attention", order: { ...paid, attention_reason: "Pulso no respondió." }, items, config });
+  assert.equal(subject, "[Prueba] Pedido WEB-1001 requiere atención");
+  assert.match(text, /Pulso no respondió\./);
+});
+
+async function channelSetup(configOverrides = {}) {
+  const deps = makeDeps({ config: configOverrides });
+  const { db } = deps;
+  db.prepare("INSERT INTO orders (no, token, status, customer_name, customer_phone, customer_email, customer_document, dane_code, municipio, departamento, address, subtotal, shipping, total, privacy_accepted_at, created_at, updated_at) VALUES ('WEB-1001','tok','pagado','Ana Pérez','3001234567','ana@correo.com','1020304050','11001000','Bogotá','Bogotá D.C.','Calle 1 # 2-3',130000,0,130000,'t','t','t')").run();
+  db.prepare("INSERT INTO order_items (order_no, variant_id, category_key, category_name, variant_name, grind, qty, unit_price) VALUES ('WEB-1001','v','el_elegante','El Elegante','Geisha Honey','media',2,65000)").run();
+  const sent = [];
+  const mailer = { enabled: true, send: async (m) => (sent.push(m), { ok: true }) };
+  return { ...deps, sent, mailer };
+}
+
+test("the email channel writes to the dashboard owner, or to ORDER_NOTIFY_EMAIL when set", async () => {
+  const a = await channelSetup();
+  a.db.prepare("INSERT INTO owner (id, email, password_hash) VALUES (1, 'dueno@correo.com', 'x')").run();
+  await emailChannel({ db: a.db, mailer: a.mailer, config: a.config }).send({ type: "paid", order: { no: "WEB-1001" } });
+  assert.deepEqual(a.sent.map((m) => m.to), ["dueno@correo.com"]);
+  assert.match(a.sent[0].subject, /Nuevo pedido WEB-1001/);
+
+  const b = await channelSetup();
+  const config = { ...b.config, mail: { ...b.config.mail, notifyTo: ["uno@correo.com", "dos@correo.com"] } };
+  await emailChannel({ db: b.db, mailer: b.mailer, config }).send({ type: "paid", order: { no: "WEB-1001" } });
+  assert.deepEqual(b.sent.map((m) => m.to), ["uno@correo.com", "dos@correo.com"]);
+});
+
+test("the email channel stays quiet without a mailer key and reports a failed send", async () => {
+  const s = await channelSetup();
+  s.db.prepare("INSERT INTO owner (id, email, password_hash) VALUES (1, 'dueno@correo.com', 'x')").run();
+  await emailChannel({ db: s.db, mailer: { enabled: false, send: async () => assert.fail("sent") }, config: s.config }).send({ type: "paid", order: { no: "WEB-1001" } });
+  const failing = { enabled: true, send: async () => ({ ok: false, code: "rejected" }) };
+  await assert.rejects(emailChannel({ db: s.db, mailer: failing, config: s.config }).send({ type: "paid", order: { no: "WEB-1001" } }), /not sent/);
+});
+
+test("ORDER_NOTIFY_EMAIL accepts a comma-separated list", () => {
+  assert.deepEqual(loadConfig({ ...baseEnv, ORDER_NOTIFY_EMAIL: " a@x.co, b@y.co ," }).mail.notifyTo, ["a@x.co", "b@y.co"]);
+  assert.deepEqual(loadConfig(baseEnv).mail.notifyTo, []);
 });
