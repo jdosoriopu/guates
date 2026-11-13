@@ -3,6 +3,9 @@ import { createRoot } from "react-dom/client";
 import "../../../guates-design-system/components/bundle.css";
 import "../generated/canvas.css";
 import "./extensions.css";
+import { captureAttribution } from "./live/attribution.js";
+// Captured before the store loads, so leaving the landing page early keeps the utm_*.
+captureAttribution(location);
 window.React = React;
 async function start() {
   await import("../../../guates-design-system/components/bundle.js");

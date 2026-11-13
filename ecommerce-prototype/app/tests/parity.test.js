@@ -47,8 +47,8 @@ test("generated provenance matches the current working canvas, including pre-exi
     manifest.sha256,
     crypto.createHash("sha256").update(source).digest("hex"),
   );
-  assert.equal(manifest.nodes["sc-for"], 44);
-  assert.equal(manifest.nodes["sc-if"], 38);
+  assert.equal(manifest.nodes["sc-for"], 45);
+  assert.equal(manifest.nodes["sc-if"], 39);
   assert.equal(manifest.nodes["canvas"], 7);
   assert.equal(manifest.nodes["x-import"], 37);
   const generated = fs.readFileSync(
@@ -133,6 +133,7 @@ test("route parameters preserve catalog and stage state and unknown URLs fail cl
   const s = {
     screen: "catalogo",
     city: "cali",
+    category: "perezoso",
     filter: "Honey",
     sort: "precio",
     feeling: "Suave",
@@ -163,18 +164,10 @@ test("storage corruption fails safely, with original variants validated", () => 
     }),
     {},
   );
-  assert.equal(
-    validLine({ key: "regional", size: 2, grind: "grano", qty: 1 }),
-    true,
-  );
-  assert.equal(
-    validLine({ key: "regional", size: 9, grind: "grano", qty: 1 }),
-    false,
-  );
-  assert.equal(
-    validLine({ key: "regional", size: 2, grind: "grano", qty: -1 }),
-    false,
-  );
+  const line = { id: "v1|grano", key: "regional", variantId: "v1", size: 0, grind: "grano" };
+  assert.equal(validLine({ ...line, qty: 1 }), true);
+  assert.equal(validLine({ ...line, size: 9, qty: 1 }), false);
+  assert.equal(validLine({ ...line, qty: -1 }), false);
   assert.equal(
     advanceDate(2, "2026-12-25T12:00:00Z"),
     "2027-01-08T12:00:00.000Z",

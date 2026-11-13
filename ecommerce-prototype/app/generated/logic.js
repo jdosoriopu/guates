@@ -4,27 +4,27 @@ import React from "react";
 var C = { cafe: '#624532', crema: '#F6F3ED', cereza: '#81164B', moriche: '#364831', brote: '#91AD80', azul: '#4E71F0', cielo: '#9DB5EC', sol: '#F2D139', luz: '#F5E380', naranja: '#CD591C', atardecer: '#D6855A', rosa: '#DB92BA', muted: '#7A6555' };
 
 var PRODUCTS = [
-  { key: 'regional', name: 'Regional', idea: 'El café de la casa', scene: 'Una mañana sin afán, la greca en la estufa y alguien que pregunta si queda más.', sceneShort: 'Mañana sin afán, con leche', personality: 'Como el chigüiro: tranquilo y de confianza', emotion: 'Se siente como llegar a casa', traits: ['Tranquilo', 'Generoso', 'De confianza'], milk: true, code: 'REG', producer: 'Tatiana Rincón', place: 'Cubarral, Meta', farm: 'Llanogrande', farmId: 'llanogrande', variety: 'Blend', process: 'Lavado',
+  { key: 'regional', category: 'chiguiro', name: 'Chigüiro', idea: 'El café de la casa', scene: 'Una mañana sin afán, la greca en la estufa y alguien que pregunta si queda más.', sceneShort: 'Mañana sin afán, con leche', personality: 'Como el chigüiro: tranquilo y de confianza', emotion: 'Se siente como llegar a casa', traits: ['Tranquilo', 'Generoso', 'De confianza'], milk: true, code: 'REG', producer: 'Tatiana Rincón', place: 'Cubarral, Meta', farm: 'Llanogrande', farmId: 'llanogrande', variety: 'Blend', process: 'Regional',
     bag: C.crema, label: C.cafe, artToken: 'cafe-de-origen', art: 'mono', bagArt: 'chiguiro', accent: C.naranja,
     alt: 1350, lat: 3.86, lng: -73.98, minAlt: 500, maxAlt: 2300, seed: 11, harvest: 'Mayo de 2026',
     notes: ['Panela', 'Cacao', 'Naranja dulce'], feel: 'Redondo y dulce, para todos los días. Con leche se vuelve postre.',
     trilla: 'Granada, Meta', trillaLat: 3.546, trillaLng: -73.706, trillaKm: 48, roastKm: 87, ferment: '24 h', dry: 9, total: 11, price: 36000 },
-  { key: 'lavado', name: 'Lavado', idea: 'Claridad en la taza', scene: 'La primera taza del día, negro, junto a la ventana mientras la ciudad arranca.', sceneShort: 'Primera taza, negro', personality: 'Como la nutria: juguetona y precisa', emotion: 'Despierta sin empujar', traits: ['Claro', 'Brillante', 'Curioso'], milk: false, code: 'LAV', producer: 'Benedicto Puentes', place: 'China Alta, Tolima', farm: 'Palma Roja', farmId: 'palma', variety: 'Castillo', process: 'Lavado',
+  { key: 'lavado', category: 'nutria', name: 'Nutria', idea: 'Claridad en la taza', scene: 'La primera taza del día, negro, junto a la ventana mientras la ciudad arranca.', sceneShort: 'Primera taza, negro', personality: 'Como la nutria: juguetona y precisa', emotion: 'Despierta sin empujar', traits: ['Claro', 'Brillante', 'Curioso'], milk: false, code: 'LAV', producer: 'Benedicto Puentes', place: 'China Alta, Tolima', farm: 'Palma Roja', farmId: 'palma', variety: 'Castillo', process: 'Lavado',
     bag: C.cielo, label: C.azul, artToken: 'azul-exploracion', art: 'pajaro', bagArt: 'nutria', accent: C.azul,
     alt: 1850, lat: 4.58, lng: -75.16, minAlt: 1000, maxAlt: 2800, seed: 23, harvest: 'Junio de 2026',
     notes: ['Mandarina', 'Caramelo', 'Flor blanca'], feel: 'Limpio y brillante, con algo de mandarina al final. Se luce si lo tomas negro.',
     trilla: 'Ibagué, Tolima', trillaLat: 4.4389, trillaLng: -75.2322, trillaKm: 38, roastKm: 315, ferment: '36 h', dry: 9.5, total: 12, price: 42000 },
-  { key: 'natural', name: 'Natural', idea: 'Fruta que se toma despacio', scene: 'Una tarde con tiempo, un filtrado y alguien con quien comparar qué fruta encuentra cada uno.', sceneShort: 'Tarde larga, filtrado', personality: 'Como el colibrí: inquieto, de flor en flor', emotion: 'Sorpresa en cada sorbo', traits: ['Frutal', 'Vivo', 'Explorador'], milk: false, code: 'NAT', producer: 'Benedicto Puentes', place: 'China Alta, Tolima', farm: 'Palma Roja', farmId: 'palma', variety: 'Bourbon Rosado', process: 'Natural',
+  { key: 'natural', category: 'colibri', name: 'Colibrí', idea: 'Fruta que se toma despacio', scene: 'Una tarde con tiempo, un filtrado y alguien con quien comparar qué fruta encuentra cada uno.', sceneShort: 'Tarde larga, filtrado', personality: 'Como el colibrí: inquieto, de flor en flor', emotion: 'Sorpresa en cada sorbo', traits: ['Frutal', 'Vivo', 'Explorador'], milk: false, code: 'NAT', producer: 'Benedicto Puentes', place: 'China Alta, Tolima', farm: 'Palma Roja', farmId: 'palma', variety: 'Bourbon Rosado', process: 'Natural',
     bag: C.brote, label: C.moriche, artToken: 'verde-moriche', art: 'erizo', bagArt: 'colibri', accent: C.sol,
     alt: 1850, lat: 4.58, lng: -75.16, minAlt: 1000, maxAlt: 2800, seed: 23, harvest: 'Junio de 2026',
     notes: ['Fresa', 'Guayaba', 'Chocolate'], feel: 'Frutal y jugoso, como mermelada de fresa con chocolate. Para descubrir sin afán.',
     trilla: 'Ibagué, Tolima', trillaLat: 4.4389, trillaLng: -75.2322, trillaKm: 38, roastKm: 315, ferment: '3 días', dry: 22, total: 23, price: 48000 },
-  { key: 'honey', name: 'Honey', idea: 'Dulzura sin prisa', scene: 'Media tarde, una prensa francesa y nada urgente en la agenda.', sceneShort: 'Media tarde, prensa', personality: 'Como el perezoso: sin afán, abrazado al grano', emotion: 'Como un abrazo tibio', traits: ['Dulce', 'Suave', 'Paciente'], milk: false, code: 'HON', producer: 'Juan Rengifo', place: 'Pitalito, Huila', farm: 'Rengijo', farmId: 'rengijo', variety: 'Papayo', process: 'Honey',
+  { key: 'honey', category: 'perezoso', name: 'Perezoso', idea: 'Dulzura sin prisa', scene: 'Media tarde, una prensa francesa y nada urgente en la agenda.', sceneShort: 'Media tarde, prensa', personality: 'Como el perezoso: sin afán, abrazado al grano', emotion: 'Como un abrazo tibio', traits: ['Dulce', 'Suave', 'Paciente'], milk: false, code: 'HON', producer: 'Juan Rengifo', place: 'Pitalito, Huila', farm: 'Rengijo', farmId: 'rengijo', variety: 'Papayo', process: 'Honey',
     bag: C.luz, label: C.sol, artToken: 'cafe-de-origen', art: 'perezoso', bagArt: 'perezoso', accent: C.naranja,
     alt: 1780, lat: 1.86, lng: -76.07, minAlt: 1000, maxAlt: 2700, seed: 41, harvest: 'Mayo de 2026',
     notes: ['Miel de caña', 'Durazno', 'Flor de azahar'], feel: 'Dulce y suave, con cuerpo de miel de caña. Que diga honey no significa que tenga miel.',
     trilla: 'Neiva, Huila', trillaLat: 2.9386, trillaLng: -75.2673, trillaKm: 191, roastKm: 425, ferment: '24 h', dry: 15, total: 17, price: 50000 },
-  { key: 'platea', name: 'Platea', idea: 'Una taza para mirar de cerca', scene: 'Después de cenar, en la mejor taza de la casa, para una conversación larga.', sceneShort: 'Sobremesa larga', personality: 'Como la garza: elegante y paciente', emotion: 'Calma con carácter', traits: ['Intenso', 'Profundo', 'Elegante'], milk: false, code: 'PLA', producer: 'Benedicto Puentes', place: 'China Alta, Tolima', farm: 'Palma Roja', farmId: 'palma', variety: 'Moka', process: 'Natural',
+  { key: 'platea', category: 'el_elegante', name: 'El Elegante', idea: 'Una taza para mirar de cerca', scene: 'Después de cenar, en la mejor taza de la casa, para una conversación larga.', sceneShort: 'Sobremesa larga', personality: 'Como la garza: elegante y paciente', emotion: 'Calma con carácter', traits: ['Intenso', 'Profundo', 'Elegante'], milk: false, code: 'PLA', producer: 'Benedicto Puentes', place: 'China Alta, Tolima', farm: 'Palma Roja', farmId: 'palma', variety: 'Moka', process: 'Natural',
     bag: C.rosa, label: C.cereza, artToken: 'cereza-profunda', art: 'garza', bagArt: 'garza', accent: C.cereza,
     alt: 1850, lat: 4.58, lng: -75.16, minAlt: 1000, maxAlt: 2800, seed: 23, harvest: 'Junio de 2026',
     notes: ['Ciruela', 'Cacao', 'Uva morada'], feel: 'Intenso y profundo, de fruta oscura y cacao. Para una taza que se toma despacio.',
@@ -121,7 +121,7 @@ export class CanvasLogic extends React.Component {
     this.state = {
       screen: props.startScreen || 'home', product: props.startProduct || 'lavado', size: 0, grind: 'grano', qty: 1,
       cart: [], city: 'bogota', stage: 0, playing: false, roast: 3, hoverAlt: null, highlight: true,
-      filter: 'todos', sort: 'altura', taste: null, moodMode: 'animo', moodAnimo: 'despertar', moodCostumbre: 'leche', walkProg: 0, carPlaying: true, carHold: false, mapFarm: null, slide: 0, trail: 0, trailOn: false, method: 'filtrado', cups: 1,
+      category: 'todos', filter: 'todos', sort: 'altura', taste: null, moodMode: 'animo', moodAnimo: 'despertar', moodCostumbre: 'leche', walkProg: 0, carPlaying: true, carHold: false, mapFarm: null, slide: 0, trail: 0, trailOn: false, method: 'filtrado', cups: 1,
       sub: { mode: 'fijo', product: 'lavado', freq: 2, size: 0, grind: 'media' },
       form: { name: '', email: '', phone: '', address: '', detail: '' }, delivery: 'envio', pay: 'pse', tried: false,
       order: null, orderStage: 0, stamps: {}, toast: null,
@@ -391,6 +391,7 @@ export class CanvasLogic extends React.Component {
     const emoList = emoIsAnimo ? MOODS : TASTES;
     const emoSel = emoList.find((m) => m.key === (emoIsAnimo ? s.moodAnimo : s.moodCostumbre)) || emoList[0];
     const ep = BY[emoSel.product], eper = PERSONA[ep.key] || { title: '', animal: '', line: '' };
+    const emoChosen = emoIsAnimo ? s.chosenAnimo === emoSel.key : s.chosenCostumbre === emoSel.key;
     const WLINE = { regional: [C.cafe, C.crema], lavado: [C.azul, '#000'], natural: [C.moriche, C.crema], honey: [C.naranja, '#000'], platea: [C.cereza, C.crema] };
     const [wLine, wOn] = WLINE[ep.key] || [C.cafe, C.crema];
     const wc = this.city(), wNat = ep.process === 'Natural', wHoney = ep.process === 'Honey', wDry = String(ep.dry).replace('.', ',');
@@ -433,15 +434,27 @@ export class CanvasLogic extends React.Component {
       band: ep.bag,
       modes: [['animo', 'Por ánimo'], ['costumbre', 'Por costumbre']].map(([k, label]) => { const on = (k === 'animo') === emoIsAnimo; return { label, sel: on ? 'true' : 'false', bg: on ? C.cafe : C.crema, fg: on ? C.crema : C.cafe, pick: () => this.setState({ moodMode: k }) }; }),
       groupLabel: emoIsAnimo ? 'Cómo te sientes' : 'Tu costumbre',
-      options: emoList.map((m) => { const on = m === emoSel, x = BY[m.product]; return { label: m.label, coffee: x.name, dot: x.bag, sel: on ? 'true' : 'false', bg: on ? C.cafe : C.crema, fg: on ? C.crema : C.cafe, pick: () => this.setState(emoIsAnimo ? { moodAnimo: m.key } : { moodCostumbre: m.key }) }; }),
-      over: 'Elegiste «' + emoSel.label.toLowerCase() + '»',
-      name: ep.name, idea: ep.idea, why: emoSel.why, bag: ep.bag, art: ep.bagArt, artToken: ep.artToken,
+      options: emoList.map((m) => { const on = m === emoSel, x = BY[m.product]; return { label: m.label, coffee: x.name, dot: x.bag, sel: on ? 'true' : 'false', bg: on ? C.cafe : C.crema, fg: on ? C.crema : C.cafe, pick: () => this.setState(emoIsAnimo ? { moodAnimo: m.key, chosenAnimo: m.key } : { moodCostumbre: m.key, chosenCostumbre: m.key }) }; }),
+      over: emoChosen ? 'Elegiste «' + emoSel.label.toLowerCase() + '»' : 'Una taza para empezar',
+      name: ep.name, process: ep.process, idea: ep.idea, why: emoChosen ? emoSel.why : ep.feel, bag: ep.bag, art: ep.bagArt, artToken: ep.artToken,
       persona: eper.title, animal: eper.animal, line: eper.line, personality: ep.personality,
       traits: ep.traits.map((label, i) => ({ label, tone: TONES[i][0], ink: TONES[i][1], tilt: TONES[i][2] })),
       feel: ep.feel, notes: ep.notes.map((n) => ({ n, dot: ep.label })),
       facts: [{ k: 'Origen', v: ep.place }, { k: 'Finca', v: ep.farm }, { k: 'Productor', v: ep.producer }, { k: 'Variedad', v: ep.variety }, { k: 'Proceso', v: ep.process }, { k: 'Altitud', v: dots(ep.alt) + ' m' }, { k: 'Cosecha', v: ep.harvest }],
       curious: CURIOUS[ep.key], price: money(priceOf(ep.key, 0)),
-      open: () => this.open(ep.key), quick: () => this.addProduct(ep.key, 0, 'grano', 1),
+      open: () => this.open(ep.key),
+      customizing: s.quickProduct === ep.key,
+      quick: () => this.setState({ quickProduct: s.quickProduct === ep.key ? null : ep.key, quickSize: 0, quickGrind: null }),
+      sizes: SIZES.map((x, i) => ({ label: x.label, on: (s.quickSize || 0) === i, pick: () => this.setState({ quickSize: i }) })),
+      grinds: GRINDS.map((g) => ({ ...g, on: s.quickGrind === g.key, pick: () => this.setState({ quickGrind: g.key }) })),
+      needsGrind: !GRINDS.some((g) => g.key === s.quickGrind),
+      selectedPrice: money(priceOf(ep.key, s.quickSize || 0)),
+      selection: GRINDS.some((g) => g.key === s.quickGrind) ? ep.name + ' · ' + SIZES[s.quickSize || 0].label + ' · ' + GRINDS.find((g) => g.key === s.quickGrind).label : 'Elige si lo quieres en grano o molido antes de agregarlo.',
+      addSelected: () => {
+        if (s.quickProduct !== ep.key || !GRINDS.some((g) => g.key === s.quickGrind)) return;
+        this.addProduct(ep.key, s.quickSize || 0, s.quickGrind, 1);
+        this.setState({ quickProduct: null });
+      },
     };
     const moodTabs = [['animo', 'Por ánimo'], ['costumbre', 'Por costumbre']].map(([k, label]) => {
       const sel = (k === 'animo') === isAnimo;
@@ -518,26 +531,29 @@ export class CanvasLogic extends React.Component {
 
     const stepsPreview = this.stageList(BY.lavado).map((x, i) => ({ num: String(i + 1).padStart(2, '0'), title: x.title }));
 
-    const filterDefs = [['todos', 'Todos'], ['Lavado', 'Lavado'], ['Natural', 'Natural'], ['Honey', 'Honey']];
+    const categoryDefs = [['todos', 'Todas'], ...Array.from(new Map(PRODUCTS.map((p) => [p.category, p.name])).entries())];
+    const categories = categoryDefs.map(([k, label]) => Object.assign({ label, on: s.category === k, pick: () => this.setState({ category: k }) }, pill(s.category === k)));
+    const filterDefs = [['todos', 'Todos'], ['Regional', 'Regional'], ['Lavado', 'Lavado'], ['Natural', 'Natural'], ['Honey', 'Honey']];
     const filters = filterDefs.map(([k, label]) => Object.assign({ label, on: s.filter === k, pick: () => this.setState({ filter: k }) }, pill(s.filter === k)));
     const sorts = [['altura', 'Altura'], ['precio', 'Precio']].map(([k, label]) => Object.assign({ label, on: s.sort === k, pick: () => this.setState({ sort: k }) }, pill(s.sort === k)));
-    const list = PRODUCTS.filter((x) => s.filter === 'todos' || x.process === s.filter).sort((a, b) => (s.sort === 'precio' ? a.price - b.price : b.alt - a.alt));
+    const list = PRODUCTS.filter((x) => (s.category === 'todos' || x.category === s.category) && (s.filter === 'todos' || x.process === s.filter)).sort((a, b) => (s.sort === 'precio' ? a.price - b.price : b.alt - a.alt));
     const cards = list.map((x) => ({
       name: x.name, producer: x.producer, place: x.place, altLabel: dots(x.alt) + ' m s. n. m.', feel: x.feel, notes: x.notes,
       process: x.process, bag: x.bag, bagArt: x.bagArt, artToken: x.artToken, price: money(x.price),
       open: () => this.open(x.key), quick: () => this.addProduct(x.key, 0, 'grano', 1), quickAria: 'Agregar ' + x.name + ' de 250 g en grano al carrito',
     }));
     const help = {
-      todos: 'Lavado, natural y honey son formas de quitarle la fruta al grano. Cambian mucho lo que sientes en la taza.',
+      Regional: 'Regional es la clasificación de proceso de este café en el catálogo. Los detalles del beneficio están por confirmar.',
+      todos: 'La categoría identifica el café; el proceso describe cómo se prepara el grano después de cosecharlo. Lavado, natural y honey son formas de quitarle la fruta al grano. Cambian mucho lo que sientes en la taza.',
       Lavado: 'Lavado: se quita la pulpa, se fermenta y se lava con agua antes de secar. Suele dar tazas limpias y brillantes.',
       Natural: 'Natural: la cereza se seca entera, con la fruta puesta. Por eso suele saber más a fruta.',
       Honey: 'Honey: se quita la piel pero se seca con parte del mucílago, la capa dulce que rodea el grano. No lleva miel.',
     };
 
-    const helpFor = { Lavado: help.Lavado, Natural: help.Natural, Honey: help.Honey };
+    const helpFor = { Regional: help.Regional, Lavado: help.Lavado, Natural: help.Natural, Honey: help.Honey };
     const siblings = PRODUCTS.filter((x) => x.farmId === p.farmId && x.key !== p.key).map((x) => ({ name: x.name, open: () => this.open(x.key) }));
     const pv = {
-      key: p.key, name: p.name, producer: p.producer, farm: p.farm, feel: p.feel, notes: p.notes, bag: p.bag, art: p.art, artToken: p.artToken,
+      key: p.key, name: p.name, process: p.process, producer: p.producer, farm: p.farm, feel: p.feel, notes: p.notes, bag: p.bag, art: p.art, artToken: p.artToken,
       overline: p.idea, processHelp: helpFor[p.process],
       idea: p.idea, scene: p.scene, sceneShort: p.sceneShort, personality: p.personality, emotion: p.emotion, bagArt: p.bagArt,
       traits: p.traits.map((label, i) => ({ label, tone: TONES[i][0], ink: TONES[i][1], tilt: TONES[i][2] })),
@@ -661,7 +677,7 @@ export class CanvasLogic extends React.Component {
     return {
       is, nav, cities: CITIES, city: c, cartCount, cartAria: 'Carrito, ' + cartCount + (cartCount === 1 ? ' bolsa' : ' bolsas'), toast: s.toast,
       heroKm: dots(straight), emo, walk, brand, car, trailPts, trailSel, trailCls, replayTrail, heroFarm, farms, tastes, rec, moodTabs, moodOpts, mood, profile, stepsPreview,
-      filters, sorts, cards, cardsEmpty: cards.length === 0, cardsCount: cards.length === 1 ? '1 café' : cards.length + ' cafés', filterHelp: help[s.filter],
+      categories, filters, sorts, cards, cardsEmpty: cards.length === 0, cardsCount: cards.length === 1 ? '1 café' : cards.length + ' cafés', filterHelp: help[s.filter],
       p: pv, sizes, grinds, qty: s.qty, lineTotal: money(priceOf(p.key, s.size) * s.qty), legend,
       hoverLine: s.hoverAlt == null ? dots(p.alt) + ' m' : dots(s.hoverAlt) + ' m s. n. m.',
       hoverHint: s.hoverAlt == null ? 'Es la altura de la finca. Pasa el cursor o el dedo por el relieve para medir otros puntos.' : (s.hoverAlt > p.alt ? dots(s.hoverAlt - p.alt) + ' m por encima de la finca.' : s.hoverAlt < p.alt ? dots(p.alt - s.hoverAlt) + ' m por debajo de la finca.' : 'Justo a la altura de la finca.'),
@@ -674,7 +690,7 @@ export class CanvasLogic extends React.Component {
       cart, fields, deliveries, pays, formError, hasFormError: !!formError, hasToast: !!s.toast,
       order, sub: subView,
       refs: { top: this.setTop, car: this.setCar, journey: this.setJourney, walk: this.setWalk, trail: this.setTrail, trailCanvas: this.sceneRef('trailCanvas', 'trail'), hero: this.sceneRef('hero', 'route'), cupIdea: this.sceneRef('cupIdea', 'cup'), terrain: this.sceneRef('terrain', 'terrain'), route: this.sceneRef('route', 'route'), bean: this.sceneRef('bean', 'bean'), cup: this.sceneRef('cup', 'cup'), cartMap: this.sceneRef('cartMap', 'route'), orderRoute: this.sceneRef('orderRoute', 'route') },
-      sz: { cupArt: 220, moodArt2: 220, moodArt: 200, portrait: 240, heroArt: 240, logo: 48, footerLogo: 56, tilt: -3, recArt: 140, cardArt: 168, label: 360, marker: 88, bean: 20, disc: 150, cartArt: 80, stamp: 96, subArt: 72, seal: 96, pattern: 56 },
+      sz: { cupArt: 220, wallpaperArt: 120, moodArt2: 220, moodArt: 200, portrait: 240, heroArt: 240, logo: 48, footerLogo: 56, tilt: -3, recArt: 140, cardArt: 168, label: 360, marker: 88, bean: 20, disc: 150, cartArt: 80, stamp: 96, subArt: 72, seal: 96, pattern: 56 },
       goHome: () => this.go('home'), goCatalog: () => this.go('catalogo'), goCart: () => this.go('carrito'), goCheckout: () => this.go('checkout'), goSub: () => this.go('suscripcion'),
       followCup: () => this.open('lavado', true),
       onCity: (e) => this.setState({ city: e.target.value }),

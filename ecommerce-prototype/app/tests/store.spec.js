@@ -2,26 +2,6 @@ import { test, expect } from "@playwright/test";
 test.beforeEach(async ({ page }) => {
   await page.emulateMedia({ reducedMotion: "reduce" });
 });
-async function add(page, key = "lavado") {
-  await page.goto("/cafes/" + key);
-  await page
-    .getByRole("button", { name: "Agregar este café", exact: true })
-    .click();
-}
-async function checkout(page) {
-  await page.goto("/checkout");
-  await page
-    .getByRole("textbox", { name: "Nombre", exact: true })
-    .fill("Cliente de prueba");
-  await page.getByRole("textbox", { name: /Correo/ }).fill("demo@example.test");
-  await page
-    .getByRole("textbox", { name: /Dirección/ })
-    .fill("Dirección ficticia 123");
-  await page.getByRole("checkbox", { name: /Revisé/ }).check();
-}
-async function confirm(page) {
-  await page.getByRole("button", { name: /Confirmar pedido simulado/ }).click();
-}
 test("original home and recommendation flows survive, including illustrated steps", async ({
   page,
 }) => {
@@ -36,11 +16,11 @@ test("original home and recommendation flows survive, including illustrated step
   ).toBeVisible();
   await page.getByRole("tab", { name: "Voy sin afán", exact: false }).click();
   await expect(
-    page.getByRole("heading", { name: "Honey", exact: true }),
+    page.getByRole("heading", { name: "El Elegante", exact: true }).first(),
   ).toBeVisible();
   await page.getByRole("tab", { name: "Por costumbre", exact: true }).click();
   await expect(
-    page.getByRole("heading", { name: "Regional", exact: true }).first(),
+    page.getByRole("heading", { name: "Colibrí", exact: true }).first(),
   ).toBeVisible();
   await expect(
     page.getByRole("heading", { name: "Sigue el hilo hasta tu taza" }),
@@ -52,12 +32,12 @@ test("product keeps nine-stage map, terrain, recipe, city and variant selection"
 }) => {
   const errors = [];
   page.on("pageerror", (e) => errors.push(e.message));
-  await page.goto("/cafes/honey?etapa=8");
-  await expect(page.getByRole("heading", { level: 1 })).toHaveText("Honey");
+  await page.goto("/cafes/el-elegante?etapa=8");
+  await expect(page.getByRole("heading", { level: 1 })).toHaveText("El Elegante");
   await expect(page.locator("canvas")).toHaveCount(4);
   await page.getByRole("combobox").selectOption("medellin");
   await expect(page).toHaveURL(/ciudad=medellin/);
-  await page.getByRole("button", { name: /500 g/ }).click();
+  await page.getByRole("button", { name: /Geisha Honey/ }).click();
   await page.getByRole("button", { name: /Gruesa/ }).click();
   await page
     .getByRole("button", { name: "Prensa francesa", exact: true })
@@ -67,7 +47,7 @@ test("product keeps nine-stage map, terrain, recipe, city and variant selection"
   await page.getByRole("button", { name: /01\s*Tu taza/ }).click();
   await expect(page).toHaveURL(/etapa=0/);
   await page.reload();
-  await expect(page.locator(".purchase-dock")).toContainText("500 g");
+  await expect(page.locator(".purchase-dock")).toContainText("Geisha Honey");
   await expect(page.locator(".purchase-dock")).toContainText("Gruesa");
   expect(errors).toEqual([]);
 });
@@ -77,141 +57,16 @@ test("catalog filters, comparison and empty state are URL-addressable", async ({
   await page.goto("/cafes?proceso=Honey&sensacion=Claro");
   await expect(page.locator("main")).toContainText("0 cafés");
   await page.getByRole("button", { name: "Limpiar filtros" }).click();
-  await page.getByRole("checkbox", { name: "Lavado", exact: true }).check();
-  await page.getByRole("checkbox", { name: "Honey", exact: true }).check();
+  await expect(page.getByRole("button", { name: "Limpiar filtros" })).toHaveCount(0);
+  await page.getByRole("button", { name: "Comparar", exact: true }).click();
+  await page.getByRole("checkbox", { name: "Nutria", exact: true }).check();
+  await page.getByRole("checkbox", { name: "Colibrí", exact: true }).check();
   await expect(page.getByRole("table")).toBeVisible();
-  await expect(page).toHaveURL(/comparar=lavado%2Choney/);
+  await expect(page).toHaveURL(/comparar=lavado%2Cnatural/);
   await page.reload();
   await expect(
-    page.getByRole("checkbox", { name: "Lavado", exact: true }),
+    page.getByRole("checkbox", { name: "Nutria", exact: true }),
   ).toBeChecked();
-});
-test("guest checkout preserves original delivery costs and recovers from simulated failures", async ({
-  page,
-}) => {
-  await add(page);
-  await checkout(page);
-  await page.getByText("Escenarios de prueba", { exact: true }).click();
-  await page
-    .getByRole("combobox", { name: "Disponibilidad de prueba" })
-    .selectOption("coverage");
-  await confirm(page);
-  await expect(page.getByRole("alert")).toContainText("sin cobertura");
-  await page
-    .getByRole("combobox", { name: "Disponibilidad de prueba" })
-    .selectOption("soldout");
-  await confirm(page);
-  await expect(page.getByRole("alert")).toContainText("agotado");
-  await page
-    .getByRole("combobox", { name: "Disponibilidad de prueba" })
-    .selectOption("normal");
-  await page
-    .getByRole("combobox", { name: "Resultado del pago simulado" })
-    .selectOption("failed");
-  await confirm(page);
-  await expect(page.getByRole("alert")).toContainText("falló");
-  await page.reload();
-  await expect(page.getByRole("textbox", { name: /Dirección/ })).toHaveValue(
-    "Dirección ficticia 123",
-  );
-  await page.getByRole("checkbox", { name: /Revisé/ }).check();
-  await confirm(page);
-  await expect(page).toHaveURL(/pedido\/confirmacion/);
-  const s = await page.evaluate(() =>
-    JSON.parse(localStorage.getItem("guates.canvas-store.v1")),
-  );
-  expect(s.orders[0].total).toBe(51000);
-  expect(s.orders[0].items[0].unitPrice).toBe(42000);
-  expect(s.cart).toHaveLength(0);
-  expect(s.stamps).toEqual({});
-  expect(s.profile).toBeNull();
-});
-test("original subscription selection supports mixed checkout and management", async ({
-  page,
-}) => {
-  await add(page);
-  await page.goto("/suscripcion");
-  await page
-    .getByRole("button", { name: /Explorador: un origen distinto/ })
-    .click();
-  await page
-    .getByRole("button", { name: "Agregar suscripción al carrito" })
-    .click();
-  await checkout(page);
-  await page
-    .getByRole("textbox", { name: "Nombre para tu perfil" })
-    .fill("Explorador");
-  await page.getByRole("button", { name: "Crear perfil de prueba" }).click();
-  await confirm(page);
-  await expect(page).toHaveURL(/confirmacion/);
-  await page.goto("/cuenta/suscripciones");
-  await page.getByRole("button", { name: "Pausar", exact: true }).click();
-  await expect(page.locator("main")).toContainText("pausada");
-  await page.getByRole("button", { name: "Reanudar", exact: true }).click();
-  await page.getByRole("button", { name: "Saltar entrega" }).click();
-  await page.getByRole("button", { name: "Cambiar configuración" }).click();
-  await page
-    .getByRole("combobox", { name: "Frecuencia", exact: true })
-    .selectOption("4");
-  await page.getByRole("button", { name: "Guardar configuración" }).click();
-  await expect(page.locator("main")).toContainText("cada 4 semanas");
-  await page
-    .getByRole("button", { name: "Cancelar suscripción", exact: true })
-    .click();
-  await page.getByRole("button", { name: "Sí, cancelar" }).click();
-  await expect(page.locator("main")).toContainText("cancelada");
-});
-test("pending payment never activates subscriptions", async ({ page }) => {
-  await page.goto("/suscripcion");
-  await page
-    .getByRole("button", { name: "Agregar suscripción al carrito" })
-    .click();
-  await checkout(page);
-  await page
-    .getByRole("textbox", { name: "Nombre para tu perfil" })
-    .fill("Demo");
-  await page.getByRole("button", { name: "Crear perfil de prueba" }).click();
-  await page.getByText("Escenarios de prueba", { exact: true }).click();
-  await page
-    .getByRole("combobox", { name: "Resultado del pago simulado" })
-    .selectOption("pending");
-  await confirm(page);
-  await expect(page.getByRole("heading", { level: 1 })).toHaveText(
-    "Pago simulado pendiente",
-  );
-  await page.goto("/cuenta/suscripciones");
-  await expect(page.locator("main")).toContainText(
-    "Todavía no tienes suscripciones",
-  );
-});
-test("passport stores externally tried coffees, edits and removes notes", async ({
-  page,
-}) => {
-  await page.goto("/cuenta/pasaporte");
-  await page
-    .getByRole("textbox", { name: "Nombre para tu perfil" })
-    .fill("Demo");
-  await page.getByRole("button", { name: "Crear perfil de prueba" }).click();
-  await page
-    .getByRole("combobox", { name: "Café que probaste" })
-    .selectOption("honey");
-  await page
-    .getByRole("textbox", { name: "Tu nota personal" })
-    .fill("Una taza con amigos.");
-  await page.getByRole("button", { name: "Ya lo probé", exact: true }).click();
-  await page.reload();
-  await expect(page.locator(".personal-note")).toHaveText(
-    "Una taza con amigos.",
-  );
-  await page.getByRole("button", { name: "Editar Honey" }).click();
-  await page
-    .getByRole("textbox", { name: "Tu nota personal" })
-    .fill("Para repetir.");
-  await page.getByRole("button", { name: "Guardar nota" }).click();
-  await expect(page.locator(".personal-note")).toHaveText("Para repetir.");
-  await page.getByRole("button", { name: "Quitar Honey" }).click();
-  await page.getByRole("button", { name: "Sí, quitar registro" }).click();
-  await expect(page.locator(".personal-note")).toHaveCount(0);
 });
 test("routes work directly with reduced motion and no horizontal overflow", async ({
   page,
@@ -223,10 +78,8 @@ test("routes work directly with reduced motion and no horizontal overflow", asyn
     "/cafes",
     "/cafes/regional",
     "/recorrido",
-    "/suscripcion",
     "/bolsa",
     "/checkout",
-    "/cuenta",
     "/sobre-guates",
     "/ayuda",
     "/envios-y-devoluciones",
@@ -266,7 +119,7 @@ test("scenes degrade to text when Canvas is unavailable", async ({ page }) => {
   await page
     .getByRole("button", { name: "Agregar este café", exact: true })
     .click();
-  await expect(page.getByRole("link", { name: "Tu bolsa (1)" })).toBeVisible();
+  await expect(page.getByRole("button", { name: "Carrito, 1 bolsa" })).toBeVisible();
 });
 
 test("scene instances are destroyed on navigation and recommendation tabs work with arrows", async ({
@@ -302,7 +155,7 @@ test("scene instances are destroyed on navigation and recommendation tabs work w
       };
     }
   });
-  for (const key of ["lavado", "honey", "natural"]) {
+  for (const key of ["lavado", "platea", "natural"]) {
     await page.evaluate((key) => {
       history.pushState({}, "", "/cafes/" + key + "?etapa=2.5");
       dispatchEvent(new PopStateEvent("popstate"));
@@ -315,4 +168,20 @@ test("scene instances are destroyed on navigation and recommendation tabs work w
   }
   const counts = await page.evaluate(() => window.__sceneCounts);
   expect(counts.mounted).toBe(counts.destroyed);
+});
+test("page colour and active link follow the coffee on screen, not the home mood", async ({ page }) => {
+  await page.goto("/");
+  const stripe = page.locator("header > div[aria-hidden]").first();
+  const nav = page.getByRole("navigation", { name: "Principal" });
+  await page.goto("/cafes/el-elegante");
+  await expect(stripe).toHaveCSS("background-color", "rgb(129, 22, 75)");
+  await expect(nav.getByRole("button", { name: "Cafés" })).toHaveAttribute("aria-current", "page");
+  await expect(nav.getByRole("button", { name: "El recorrido" })).not.toHaveAttribute("aria-current", "page");
+  await page.goto("/cafes/nutria");
+  await expect(stripe).toHaveCSS("background-color", "rgb(78, 113, 240)");
+  await page.goto("/cafes");
+  await expect(stripe).toHaveCSS("background-color", "rgb(98, 69, 50)");
+  const cafes = nav.getByRole("button", { name: "Cafés" });
+  await expect(cafes).toHaveCSS("background-color", "rgba(0, 0, 0, 0)");
+  await expect(cafes).toHaveCSS("outline-color", "rgb(98, 69, 50)");
 });

@@ -5,7 +5,7 @@
   "scripts": {
     "generate": "python3 scripts/migrate.py",
     "dev": "npm run generate && vite --host 127.0.0.1",
-    "build": "npm run generate && vite build",
+    "build": "npm run generate && vite build && node scripts/export-content.mjs && node scripts/og-images.mjs && node scripts/equipo-icons.mjs",
     "preview": "vite preview --host 127.0.0.1",
     "test": "node --test tests/*.test.js",
     "test:e2e": "playwright test"
@@ -15,7 +15,8 @@
     "react-dom": "18.3.1"
   },
   "devDependencies": {
-    "vite": "6.4.5",
-    "@playwright/test": "1.56.1"
+    "@playwright/test": "1.56.1",
+    "@resvg/resvg-js": "^2.6.2",
+    "vite": "6.4.5"
   }
 }

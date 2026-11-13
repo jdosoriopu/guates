@@ -5,10 +5,27 @@ import {
   CITIES,
   SIZES,
   GRINDS,
-  priceOf,
   money,
 } from "../generated/logic.js";
 import { paths, dateText, advanceDate, STORE_KEY } from "./state.js";
+import {
+  defaultVariant,
+  freeShippingFrom,
+  isOnSale,
+  liveFor,
+  plainCategories,
+  plainCategory,
+  whatsappNumber,
+  whatsappUrl,
+} from "./live/catalog.js";
+import { WhatsApp, WhatsAppFloat, Instagram, INSTAGRAM_URL } from "./live/WhatsApp.jsx";
+import { FEATURES } from "./live/features.js";
+import { Checkout } from "./live/Checkout.jsx";
+import { Confirmation } from "./live/Confirmation.jsx";
+const fromPrice = (variants) => {
+  const prices = variants.map((x) => x.price);
+  return (new Set(prices).size > 1 ? "Desde " : "") + money(Math.min(...prices));
+};
 const G = window.Guates;
 const Link = ({ to, children, ...props }) => (
   <a data-route href={to} {...props}>
@@ -108,99 +125,338 @@ function Recurring({ controller }) {
     </Panel>
   );
 }
-function Catalog({ controller }) {
+function CatalogTools({ controller }) {
   const s = controller.state;
+  const showCompare = s.comparing || s.compare.length > 0;
+  const active =
+    s.filter !== "todos" ||
+    s.category !== "todos" ||
+    s.feeling ||
+    s.sort !== "altura" ||
+    s.compare.length > 0;
   return (
-    <div className="extension-wrap">
-      <Panel>
-        <div className="extension-row">
-          <Field label="Sensación · perfiles de muestra">
-            <select
-              value={s.feeling}
-              onChange={(e) => controller.setState({ feeling: e.target.value })}
+    <>
+      <label className="catalog-tool">
+        <span>Sensación</span>
+        <select
+          value={s.feeling}
+          onChange={(e) => controller.setState({ feeling: e.target.value })}
+        >
+          <option value="">Todas</option>
+          {[...new Set(PRODUCTS.flatMap((p) => p.traits))].map((t) => (
+            <option key={t}>{t}</option>
+          ))}
+        </select>
+      </label>
+      <button
+        type="button"
+        className="catalog-tool-button"
+        aria-expanded={showCompare}
+        aria-controls="catalog-compare"
+        onClick={() => {
+          controller.setState({ comparing: !showCompare, ...(showCompare && { compare: [] }) });
+        }}
+      >
+        Comparar
+      </button>
+      {active && (
+        <button
+          type="button"
+          className="catalog-clear"
+          onClick={() =>
+            controller.setState({
+              filter: "todos",
+              category: "todos",
+              feeling: "",
+              sort: "altura",
+              compare: [],
+              comparing: false,
+            })
+          }
+        >
+          Limpiar filtros
+        </button>
+      )}
+    </>
+  );
+}
+// Compare picks and table sit under the filter bar so the bar can stay one swipeable row on phones.
+function CatalogCompare({ controller }) {
+  const s = controller.state;
+  if (!s.comparing && !s.compare.length) return null;
+  return (
+    <>
+      <div
+        id="catalog-compare"
+        className="catalog-compare"
+        role="group"
+        aria-label="Elige dos cafés para comparar"
+      >
+        {PRODUCTS.map((p) => (
+          <label className="extension-check" key={p.key}>
+            <input
+              type="checkbox"
+              checked={s.compare.includes(p.key)}
+              disabled={s.compare.length === 2 && !s.compare.includes(p.key)}
+              onChange={() =>
+                controller.setState({
+                  compare: s.compare.includes(p.key)
+                    ? s.compare.filter((k) => k !== p.key)
+                    : [...s.compare, p.key],
+                })
+              }
+            />
+            {p.name}
+          </label>
+        ))}
+      </div>
+      {s.compare.length === 2 && (
+        <div className="table-scroll catalog-table">
+          <table>
+            <caption>Sensaciones: datos de muestra</caption>
+            <thead>
+              <tr>
+                <th>Tu café</th>
+                {s.compare.map((k) => (
+                  <th key={k}>
+                    <Link to={"/cafes/" + k}>{BY[k].name}</Link>
+                  </th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {[
+                ["Sensación", "feel"],
+                ["Productor", "producer"],
+                ["Origen", "place"],
+                ["Variedad o mezcla", "variety"],
+              ].map(([label, key]) => (
+                <tr key={key}>
+                  <th>{label}</th>
+                  {s.compare.map((k) => (
+                    <td key={k}>{BY[k][key]}</td>
+                  ))}
+                </tr>
+              ))}
+              <tr>
+                <th>Proceso</th>
+                {s.compare.map((k) => (
+                  <td key={k}>
+                    {liveFor(k)
+                      ? [...new Set(liveFor(k).variants.map((x) => x.process))].join(" · ")
+                      : BY[k].process}
+                  </td>
+                ))}
+              </tr>
+              <tr>
+                <th>Precio</th>
+                {s.compare.map((k) => (
+                  <td key={k}>
+                    {liveFor(k)?.variants.length
+                      ? fromPrice(liveFor(k).variants)
+                      : "No disponible"}
+                  </td>
+                ))}
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      )}
+    </>
+  );
+}
+// The grind is always the customer's choice: Agregar on a shop card slides this picker up inside the card.
+function CardGrind({ controller, card }) {
+  const first = React.useRef(null);
+  const panel = React.useRef(null);
+  const open = controller.state.grindFor === card.variantId;
+  const [leaving, setLeaving] = useState(false);
+  const sizes = card.sizes ?? [];
+  const [sizeId, setSizeId] = useState(card.variantId);
+  const size = sizes.find((z) => z.id === sizeId);
+  // Radio-group keys: arrows move the selection and the focus together, skipping sold-out sizes.
+  const moveSize = (e) => {
+    const step = { ArrowRight: 1, ArrowDown: 1, ArrowLeft: -1, ArrowUp: -1 }[e.key];
+    if (!step) return;
+    e.preventDefault();
+    const open = sizes.filter((z) => !z.soldOut);
+    const next = open[(open.findIndex((z) => z.id === sizeId) + step + open.length) % open.length];
+    if (!next) return;
+    setSizeId(next.id);
+    e.currentTarget.querySelector(`[data-size="${next.id}"]`)?.focus();
+  };
+  // Slide back down before unmounting; skip the wait when motion is reduced.
+  const close = (then) => {
+    const still = window.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
+    const done = () => {
+      setLeaving(false);
+      controller.setState({ grindFor: null });
+      then?.();
+    };
+    if (still) return done();
+    setLeaving(true);
+    setTimeout(done, 200);
+  };
+  React.useEffect(() => {
+    if (!open) return;
+    // preventScroll: focusing a panel mid-slide would otherwise jump the page.
+    first.current?.focus({ preventScroll: true });
+    const opener = panel.current?.closest("article")?.querySelector("button[aria-expanded]");
+    return () => {
+      if (opener?.isConnected) opener.focus({ preventScroll: true });
+    };
+  }, [open]);
+  if (!open) return null;
+  return (
+    <div
+      ref={panel}
+      className={"card-grind" + (leaving ? " is-leaving" : "")}
+      role="group"
+      aria-label={`Molienda para ${card.coffee} · ${card.variantName}`}
+      onKeyDown={(e) => e.key === "Escape" && close()}
+      inert={leaving || undefined}
+    >
+      <div className="card-grind-head">
+        <span>
+          {sizes.length > 1 ? "Elige tamaño y molienda" : "Elige la molienda"}
+          <small>
+            {card.variantName} · {size ? `${size.label} · ${size.price}` : card.price}
+          </small>
+        </span>
+        <button type="button" className="card-grind-close" aria-label="Cerrar sin agregar" onClick={() => close()}>
+          ×
+        </button>
+      </div>
+      {sizes.length > 1 && (
+        <div className="card-grind-sizes" role="radiogroup" aria-label="Tamaño de la bolsa" onKeyDown={moveSize}>
+          {sizes.map((z) => (
+            <button
+              key={z.id}
+              type="button"
+              role="radio"
+              data-size={z.id}
+              aria-checked={z.id === sizeId}
+              tabIndex={z.id === sizeId ? 0 : -1}
+              disabled={z.soldOut}
+              ref={z.id === sizeId ? first : undefined}
+              onClick={() => setSizeId(z.id)}
             >
-              <option value="">Todas las sensaciones</option>
-              {[...new Set(PRODUCTS.flatMap((p) => p.traits))].map((t) => (
-                <option key={t}>{t}</option>
+              <strong>{z.label}</strong>
+              <small>{z.soldOut ? "Agotado" : z.price}</small>
+            </button>
+          ))}
+        </div>
+      )}
+      <div className="card-grind-options">
+        {GRINDS.map((g, i) => (
+          <button
+            key={g.key}
+            type="button"
+            ref={i === 0 && sizes.length <= 1 ? first : undefined}
+            onClick={() => close(() => controller.addVariant(card.key, sizeId, g.key, 1))}
+          >
+            <strong>{g.label}</strong>
+            <small>{g.hint}</small>
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+}
+function PlainCards({ controller }) {
+  const s = controller.state;
+  const list =
+    s.category !== "todos" || s.feeling
+      ? []
+      : plainCategories().filter(
+          (c) => s.filter === "todos" || c.variants.some((x) => x.process === s.filter),
+        );
+  if (!list.length) return null;
+  return (
+    <div className="extension-grid">
+      {list.map((c) => (
+        <Panel key={c.key}>
+          <G.Pattern name="formas" width="100%" height={120} />
+          <h2>
+            <Link to={"/cafes/" + c.slug}>{c.name}</Link>
+          </h2>
+          <p>
+            {c.variants.every((x) => x.available <= 0)
+              ? "Agotado"
+              : fromPrice(c.variants)}
+          </p>
+        </Panel>
+      ))}
+    </div>
+  );
+}
+function PlainCategory({ controller, category }) {
+  const first = defaultVariant(category.key);
+  const [variantId, setVariant] = useState(first?.id);
+  const [grind, setGrind] = useState("grano");
+  const [qty, setQty] = useState(1);
+  const variant =
+    category.variants.find((x) => x.id === variantId) || first;
+  const out = !variant || variant.available <= 0;
+  return (
+    <>
+      <Intro title={category.name} />
+      <Panel>
+        <G.Pattern name="formas" width="100%" height={160} />
+        <div
+          className="extension-row extension-choices"
+          role="group"
+          aria-label="Presentación"
+        >
+          {category.variants.map((x) => (
+            <button
+              type="button"
+              key={x.id}
+              className="extension-choice"
+              aria-pressed={x.id === variant?.id}
+              disabled={x.available <= 0}
+              onClick={() => setVariant(x.id)}
+            >
+              <strong>
+                {x.name} · {x.process}
+              </strong>
+              <span>
+                {money(x.price)} ·{" "}
+                {x.available > 0 ? x.available + " disponibles" : "agotado"}
+              </span>
+            </button>
+          ))}
+        </div>
+        <div className="extension-row">
+          <Field label="Molienda">
+            <select value={grind} onChange={(e) => setGrind(e.target.value)}>
+              {GRINDS.map((g) => (
+                <option key={g.key} value={g.key}>
+                  {g.label} · {g.hint}
+                </option>
               ))}
             </select>
           </Field>
-          <Button
-            onClick={() =>
-              controller.setState({
-                filter: "todos",
-                feeling: "",
-                sort: "altura",
-                compare: [],
-              })
-            }
-          >
-            Limpiar filtros
-          </Button>
+          <Field label="Cantidad">
+            <input
+              type="number"
+              min="1"
+              max="20"
+              value={qty}
+              onChange={(e) =>
+                setQty(Math.min(20, Math.max(1, Math.floor(Number(e.target.value)) || 1)))
+              }
+            />
+          </Field>
         </div>
-        <h2>Compara dos cafés</h2>
-        <div className="extension-row">
-          {PRODUCTS.map((p) => (
-            <label className="extension-check" key={p.key}>
-              <input
-                type="checkbox"
-                checked={s.compare.includes(p.key)}
-                disabled={s.compare.length === 2 && !s.compare.includes(p.key)}
-                onChange={() =>
-                  controller.setState({
-                    compare: s.compare.includes(p.key)
-                      ? s.compare.filter((k) => k !== p.key)
-                      : [...s.compare, p.key],
-                  })
-                }
-              />
-              {p.name}
-            </label>
-          ))}
-        </div>
-        {s.compare.length === 2 && (
-          <div className="table-scroll">
-            <table>
-              <caption>
-                Sensaciones, altitudes y precios: datos de muestra
-              </caption>
-              <thead>
-                <tr>
-                  <th>Tu café</th>
-                  {s.compare.map((k) => (
-                    <th key={k}>
-                      <Link to={"/cafes/" + k}>{BY[k].name}</Link>
-                    </th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody>
-                {[
-                  ["Sensación", "feel"],
-                  ["Productor", "producer"],
-                  ["Origen", "place"],
-                  ["Proceso", "process"],
-                  ["Variedad o mezcla", "variety"],
-                ].map(([label, key]) => (
-                  <tr key={key}>
-                    <th>{label}</th>
-                    {s.compare.map((k) => (
-                      <td key={k}>{BY[k][key]}</td>
-                    ))}
-                  </tr>
-                ))}
-                <tr>
-                  <th>250 g · precio de muestra</th>
-                  {s.compare.map((k) => (
-                    <td key={k}>{money(BY[k].price)}</td>
-                  ))}
-                </tr>
-              </tbody>
-            </table>
-          </div>
-        )}
+        <Button
+          disabled={out || !controller.canBuy()}
+          onClick={() => controller.addVariant(category.key, variant.id, grind, qty)}
+        >
+          Agregar a tu bolsa
+        </Button>
       </Panel>
-    </div>
+    </>
   );
 }
 function Passport({ controller }) {
@@ -664,56 +920,166 @@ function Account({ controller }) {
     </>
   );
 }
+const PENDING = "Texto por confirmar con Guates.";
+// 573114478632 -> 311 447 8632; other countries keep their digits.
+const localPhone = (n) => (/^57\d{10}$/.test(n) ? n.slice(2).replace(/(\d{3})(\d{3})(\d{4})/, "$1 $2 $3") : "+" + n);
 const info = {
-  nosotros: [
-    "Sobre Guates",
-    "Guates nace en los Llanos y mira otros orígenes con curiosidad. Donde empieza otro mapa del café.",
-  ],
-  ayuda: [
-    "Ayuda y contacto",
-    "Instagram, WhatsApp, correo y horarios: por confirmar. Este prototipo no envía mensajes.",
-  ],
-  envios: [
-    "Envíos y devoluciones",
-    "Las ciudades, tarifas y plazos del prototipo son datos de muestra. La cobertura y las condiciones comerciales de envíos y devoluciones están por confirmar.",
-  ],
-  privacidad: [
-    "Privacidad",
-    "Este prototipo guarda datos de prueba en este navegador. No hay autenticación ni sincronización. Las notas no se publican; cualquier persona con acceso al navegador puede consultarlas. Usa datos ficticios. Puedes borrarlos desde Mi cuenta. Política de la tienda real: por confirmar.",
-  ],
-  terminos: [
-    "Términos",
-    "No se realizan pagos, reservas, envíos ni cobros recurrentes. Precios, fechas y condiciones son datos de muestra. Los términos comerciales de la tienda real están por confirmar.",
-  ],
+  nosotros: {
+    title: "Sobre Guates",
+    body: [
+      "Guates nace en los Llanos y mira otros orígenes con curiosidad. Donde empieza otro mapa del café.",
+    ],
+  },
+  // Contact copy is read at render time: the WhatsApp number arrives with the catalog.
+  ayuda: {
+    title: "Ayuda y contacto",
+    get body() {
+      const paid = "Pagas en línea con Wompi y recibes la confirmación de tu pedido apenas se aprueba el pago.";
+      const instagram = (
+        <p key="instagram">
+          Síguenos en Instagram: <Instagram />.
+        </p>
+      );
+      if (!whatsappUrl()) return [paid, instagram, "WhatsApp, correo y horarios: por confirmar."];
+      return [
+        paid,
+        <p key="whatsapp">
+          ¿Dudas con tu pedido? Escríbenos por <WhatsApp />.
+        </p>,
+        instagram,
+        "Correo y horarios: por confirmar.",
+      ];
+    },
+  },
+  envios: {
+    title: "Envíos y devoluciones",
+    get body() {
+      return [
+        "Enviamos con Interrapidísimo. El costo del envío lo calculamos según tu municipio al finalizar tu compra, antes de que pagues, y es gratis desde $90.000.",
+        "Tiempos de entrega: por confirmar.",
+        whatsappUrl() ? (
+          <p key="problema">
+            Si tu café llega con algún problema, escríbenos por <WhatsApp /> y lo resolvemos. Las condiciones de
+            devolución están por confirmar.
+          </p>
+        ) : (
+          "Si tu café llega con algún problema, escríbenos y lo resolvemos. Las condiciones de devolución están por confirmar."
+        ),
+      ];
+    },
+  },
+  privacidad: {
+    title: "Privacidad",
+    body: ["Usamos tus datos solo para procesar y entregar tu pedido. Tu documento de identidad solo va en la guía de envío. No los vendemos."],
+    pending: true,
+  },
+  terminos: {
+    title: "Términos",
+    body: [
+      "Los precios están en pesos colombianos y la disponibilidad se consulta en vivo.",
+    ],
+    pending: true,
+  },
 };
-export function Extension({ controller, values, placement }) {
+function FreeShippingStrip() {
+  const from = freeShippingFrom();
+  if (!from) return null;
+  return (
+    <p className="free-shipping-strip">
+      <strong>Envío gratis</strong> a todo Colombia desde {money(from)}
+    </p>
+  );
+}
+
+function FreeShippingMeter({ controller }) {
+  const from = freeShippingFrom();
+  if (!from) return null;
+  const sub = controller.totals().sub;
+  const missing = Math.max(0, from - sub);
+  return (
+    <div className="free-shipping-meter">
+      <p role="status">
+        {missing ? (
+          <>
+            Te faltan <strong>{money(missing)}</strong> para el envío gratis
+          </>
+        ) : (
+          <strong>Tu pedido tiene envío gratis</strong>
+        )}
+      </p>
+      <div className="free-shipping-track" aria-hidden="true">
+        <span style={{ width: `${Math.min(100, (sub / from) * 100)}%` }} />
+      </div>
+      {missing > 0 && <small>Envío gratis desde {money(from)}</small>}
+    </div>
+  );
+}
+
+export function Extension({ controller, values, placement, item }) {
   const s = controller.state;
+  // The canvas Carrito button already opens the bag; only accounts add a header link.
   if (placement === "header")
-    return (
+    return FEATURES.accounts ? (
       <nav className="extension-utility" aria-label="Tu espacio">
         <Link to="/cuenta">Mi cuenta</Link>
-        <Link to="/bolsa">Tu bolsa ({values.cartCount})</Link>
       </nav>
+    ) : null;
+  if (placement === "filters") return <CatalogTools controller={controller} />;
+  if (placement === "filters-after") return <CatalogCompare controller={controller} />;
+  if (placement === "catalog-end") return <PlainCards controller={controller} />;
+  if (placement === "card")
+    return item?.variantId ? <CardGrind controller={controller} card={item} /> : null;
+  if (placement === "cart-ship") return <FreeShippingMeter controller={controller} />;
+  if (placement === "footer-contact")
+    return (
+      <p className="footer-contact">
+        Instagram{" "}
+        <a href={INSTAGRAM_URL} target="_blank" rel="noopener noreferrer">
+          @guates.coffeeroasters
+        </a>
+        {whatsappUrl() && (
+          <>
+            {" · WhatsApp "}
+            <a href={whatsappUrl()} target="_blank" rel="noopener noreferrer">
+              {localPhone(whatsappNumber())}
+            </a>
+          </>
+        )}
+      </p>
     );
   if (placement === "footer")
     return (
       <nav className="extension-footer" aria-label="Información">
         {Object.keys(info).map((k) => (
           <Link key={k} to={paths[k]}>
-            {info[k][0]}
+            {info[k].title}
           </Link>
         ))}
+        {whatsappUrl() && (
+          <a href={whatsappUrl()} target="_blank" rel="noopener noreferrer">
+            WhatsApp
+          </a>
+        )}
+        <a href={INSTAGRAM_URL} target="_blank" rel="noopener noreferrer">
+          Instagram
+        </a>
       </nav>
     );
   return (
     <>
+      {["home", "catalogo", "producto", "recorrido"].includes(s.screen) && <FreeShippingStrip />}
+      {s.catalogError && !s.catalog && (
+        <p className="extension-wrap extension-banner" role="alert">
+          No pudimos consultar la disponibilidad. Intenta de nuevo en un
+          momento.
+        </p>
+      )}
       {s.storageError && (
         <p className="extension-wrap" role="alert">
           No pudimos guardar tus cambios. Se conservarán solo durante esta
           visita.
         </p>
       )}
-      {s.screen === "catalogo" && <Catalog controller={controller} />}
       <div className="extension-wrap">
         {["cuenta", "pedidos", "suscripciones", "pasaporte"].includes(
           s.screen,
@@ -725,7 +1091,7 @@ export function Extension({ controller, values, placement }) {
               mapas, receta y transformaciones.
             </Intro>
             <div className="extension-grid journey-grid">
-              {PRODUCTS.map((p) => (
+              {PRODUCTS.filter((p) => isOnSale(p.key)).map((p) => (
                 <Panel key={p.key}>
                   <G.Illustration
                     name={p.bagArt}
@@ -747,9 +1113,16 @@ export function Extension({ controller, values, placement }) {
         )}
         {info[s.screen] && (
           <>
-            <Intro title={info[s.screen][0]} />
+            <Intro title={info[s.screen].title} />
             <Panel>
-              <p>{info[s.screen][1]}</p>
+              {info[s.screen].body.map((text) =>
+                typeof text === "string" ? <p key={text}>{text}</p> : text,
+              )}
+              {info[s.screen].pending && (
+                <p className="extension-pending" role="note">
+                  {PENDING}
+                </p>
+              )}
               {s.screen === "ayuda" && (
                 <>
                   <h2>Elige tu molienda</h2>
@@ -758,17 +1131,19 @@ export function Extension({ controller, values, placement }) {
                     media para filtrado; gruesa para prensa francesa. Son puntos
                     de partida: ajusta a tu método.
                   </p>
-                  <h2>Tu suscripción</h2>
-                  <p>
-                    Elige café fijo o explorador. Pausa, salta o cancela desde
-                    Mi cuenta. Todas las entregas son simuladas.
-                  </p>
                 </>
               )}
             </Panel>
           </>
         )}
-        {s.screen === "notfound" && (
+        {s.screen === "categoria" && plainCategory(s.plain) && (
+          <PlainCategory
+            key={s.plain}
+            controller={controller}
+            category={plainCategory(s.plain)}
+          />
+        )}
+        {s.screen === "notfound" && (s.catalog || s.catalogError) && (
           <>
             <Intro title="Este camino aún no está en el mapa." />
             <Link to="/cafes">Volver a los cafés</Link>
@@ -777,70 +1152,17 @@ export function Extension({ controller, values, placement }) {
         {["carrito", "checkout"].includes(s.screen) && (
           <Recurring controller={controller} />
         )}{" "}
-        {s.screen === "checkout" && (
-          <Panel>
-            <h2>Antes de confirmar</h2>
-            <p>
-              Compra única como invitado. Usa datos ficticios; no se enviarán
-              correos ni productos.
-            </p>
-            {s.cart.some((x) => x.sub) && !s.profile ? (
-              <Profile controller={controller} />
-            ) : (
-              s.profile && <p>Perfil de prueba: {s.profile.name}</p>
-            )}
-            <label className="extension-check">
-              <input
-                type="checkbox"
-                checked={s.accepted}
-                onChange={(e) =>
-                  controller.setState({ accepted: e.target.checked })
-                }
-              />
-              Revisé el total de hoy y, si aplica, las condiciones y próximos
-              cobros de muestra.
-            </label>
-            <details>
-              <summary>Escenarios de prueba</summary>
-              <Field label="Resultado del pago simulado">
-                <select
-                  value={s.paymentResult}
-                  onChange={(e) =>
-                    controller.setState({ paymentResult: e.target.value })
-                  }
-                >
-                  <option value="approved">Aprobado</option>
-                  <option value="pending">Pendiente</option>
-                  <option value="failed">Fallido</option>
-                </select>
-              </Field>
-              <Field label="Disponibilidad de prueba">
-                <select
-                  value={s.scenario}
-                  onChange={(e) =>
-                    controller.setState({ scenario: e.target.value })
-                  }
-                >
-                  <option value="normal">Normal</option>
-                  <option value="soldout">Café agotado</option>
-                  <option value="coverage">Destino sin cobertura</option>
-                </select>
-              </Field>
-            </details>
-          </Panel>
-        )}
+        {s.screen === "checkout" && <Checkout controller={controller} />}
         {s.screen === "confirmacion" && (
-          <Panel>
-            <h1>
-              {s.order?.status === "pending"
-                ? "Pago simulado pendiente"
-                : "Tu pedido de prueba"}
-            </h1>
-            <Link to="/cuenta/pedidos">Tus pedidos</Link> ·{" "}
-            <Link to="/cuenta/pasaporte">Tu pasaporte</Link>
-          </Panel>
+          <Confirmation
+            key={s.orderRef?.no + "|" + s.orderRef?.token}
+            controller={controller}
+          />
         )}
       </div>
+      {s.screen !== "checkout" && (
+        <WhatsAppFloat coffee={s.screen === "producto" ? values.p?.name : null} />
+      )}
       {s.screen === "producto" && (
         <aside
           className="purchase-dock"
@@ -849,14 +1171,13 @@ export function Extension({ controller, values, placement }) {
           <span>
             {values.p.name} · {values.lineTotal}
             <small>
-              {SIZES[s.size].label} ·{" "}
-              {GRINDS.find((g) => g.key === s.grind).label} · dato de muestra
+              {values.selectionLabel ?? SIZES[s.size].label} ·{" "}
+              {GRINDS.find((g) => g.key === s.grind).label}
             </small>
           </span>
           <Button
-            onClick={() =>
-              controller.addProduct(s.product, s.size, s.grind, s.qty)
-            }
+            disabled={!controller.canBuy() || !liveFor(s.product)}
+            onClick={values.addCurrent}
           >
             Agregar este café
           </Button>

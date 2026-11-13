@@ -42,40 +42,13 @@
       "h": 1900,
       "title": "Recorrido · nueve etapas y sus datos",
       "expand": "fill"
-    },
-    "Moderna.dc.html": {
-      "x": 2040,
-      "y": 0,
-      "w": 1440,
-      "h": 3400,
-      "title": "Versión moderna · inicio y ficha",
-      "expand": "fill",
-      "is_interactive": true
-    },
-    "ModernaMovil.dc.html": {
-      "x": 3560,
-      "y": 0,
-      "w": 390,
-      "h": 844,
-      "title": "Versión moderna · móvil",
-      "is_interactive": true
-    },
-    "Bolsa.dc.html": {
-      "x": 3560,
-      "y": 964,
-      "w": 420,
-      "h": 600,
-      "title": "Componente · bolsa"
     }
   },
   "order": [
     "Main.dc.html",
     "Movil.dc.html",
     "Propuesta.dc.html",
-    "Recorrido.dc.html",
-    "Moderna.dc.html",
-    "ModernaMovil.dc.html",
-    "Bolsa.dc.html"
+    "Recorrido.dc.html"
   ],
   "notes": {
     "t1": {
@@ -98,20 +71,6 @@
       "text": "Propuesta · direcciones y recorrido",
       "kind": "title1",
       "maxW": 2960
-    },
-    "t3": {
-      "x": 2040,
-      "y": -300,
-      "text": "Versión moderna (para comparar)",
-      "kind": "title1",
-      "maxW": 1940
-    },
-    "s2": {
-      "x": 3560,
-      "y": 1660,
-      "w": 420,
-      "text": "Versión moderna: más aire, líneas finas en vez de cajas, titulares grandes, un solo color por café, la bolsa como imagen principal y espacios marcados para fotografía real. En la ficha, el mapa queda fijo mientras bajas por las nueve etapas.",
-      "fill": "teal"
     }
   },
   "designSystems": [

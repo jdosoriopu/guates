@@ -1,0 +1,14 @@
+{
+  "name": "Guates · Pedidos",
+  "short_name": "Pedidos",
+  "lang": "es-CO",
+  "start_url": "/equipo",
+  "scope": "/equipo",
+  "display": "standalone",
+  "background_color": "#f6f3ed",
+  "theme_color": "#f6f3ed",
+  "icons": [
+    { "src": "/equipo-icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "/equipo-icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" }
+  ]
+}

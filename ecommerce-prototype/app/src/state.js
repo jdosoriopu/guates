@@ -1,4 +1,6 @@
-import { BY, CITIES, SIZES, GRINDS } from "../generated/logic.js";
+import { BY, PRODUCTS, CITIES, SIZES, GRINDS } from "../generated/logic.js";
+import { FEATURES } from "./live/features.js";
+import { isListed, keyForSlug, slugFor, plainCategories } from "./live/catalog.js";
 export const STORE_KEY = "guates.canvas-store.v1";
 export const paths = {
   home: "/",
@@ -18,6 +20,16 @@ export const paths = {
   privacidad: "/privacidad",
   terminos: "/terminos",
 };
+// Screens that stay off the map while any feature they need is off.
+const SCREEN_FEATURES = {
+  suscripcion: ["subscriptions"],
+  cuenta: ["accounts"],
+  pedidos: ["accounts"],
+  suscripciones: ["accounts", "subscriptions"],
+  pasaporte: ["accounts", "passport"],
+};
+export const screenOn = (screen) =>
+  (SCREEN_FEATURES[screen] ?? []).every((f) => FEATURES[f]);
 export const dateText = (d) =>
   new Date(d).toLocaleDateString("es-CO", {
     day: "numeric",
@@ -38,25 +50,32 @@ export function validSelection(x) {
   );
 }
 export function validLine(x) {
+  if (!x || !Number.isInteger(x.qty) || x.qty <= 0 || x.qty > 20) return false;
+  if (x.sub)
+    return (
+      FEATURES.subscriptions &&
+      validSelection(x.sub) &&
+      ["fijo", "explora"].includes(x.sub.mode) &&
+      [2, 4].includes(x.sub.freq) &&
+      !!BY[x.sub.product]
+    );
   return (
-    x &&
-    Number.isInteger(x.qty) &&
-    x.qty > 0 &&
-    x.qty <= 20 &&
-    (x.sub
-      ? validSelection(x.sub) &&
-        ["fijo", "explora"].includes(x.sub.mode) &&
-        [2, 4].includes(x.sub.freq) &&
-        !!BY[x.sub.product]
-      : validSelection(x) && !!BY[x.key])
+    typeof x.key === "string" &&
+    typeof x.variantId === "string" &&
+    x.variantId !== "" &&
+    x.size === 0 &&
+    validSelection(x) &&
+    x.id === x.variantId + "|" + x.grind
   );
 }
 export function restore(storage) {
   try {
     const s = JSON.parse(storage.getItem(STORE_KEY));
-    if (!s || !Array.isArray(s.cart) || !s.cart.every(validLine)) return {};
+    if (!s || !Array.isArray(s.cart)) return {};
+    const cart = s.cart.filter(validLine);
     return {
-      cart: s.cart,
+      cart,
+      staleLines: s.cart.length - cart.length,
       city: CITIES.some((c) => c.key === s.city) ? s.city : "bogota",
       stamps: s.stamps || {},
       orders: Array.isArray(s.orders) ? s.orders : [],
@@ -73,14 +92,18 @@ export function restore(storage) {
     return {};
   }
 }
-export function parseRoute(url, state = {}) {
+export function parseRoute(url) {
   const u = new URL(url, "http://local"),
     q = u.searchParams;
   let screen =
     Object.keys(paths).find((k) => paths[k] === u.pathname) || "notfound";
+  if (!screenOn(screen)) screen = "notfound";
   const result = { screen };
-  const product = u.pathname.match(/^\/cafes\/([^/]+)$/)?.[1];
-  if (product && BY[product])
+  const slug = u.pathname.match(/^\/cafes\/([^/]+)$/)?.[1];
+  const product = slug && keyForSlug(slug);
+  const plain = slug && plainCategories().find((c) => c.slug === slug);
+  if (plain) Object.assign(result, { screen: "categoria", plain: plain.key });
+  if (product && isListed(product))
     Object.assign(result, {
       screen: "producto",
       product,
@@ -88,7 +111,8 @@ export function parseRoute(url, state = {}) {
     });
   if (screen === "catalogo")
     Object.assign(result, {
-      filter: ["Lavado", "Natural", "Honey"].includes(q.get("proceso"))
+      category: PRODUCTS.some((p) => p.category === q.get("categoria")) ? q.get("categoria") : "todos",
+      filter: ["Regional", "Lavado", "Natural", "Honey"].includes(q.get("proceso"))
         ? q.get("proceso")
         : "todos",
       sort: q.get("orden") === "precio" ? "precio" : "altura",
@@ -102,24 +126,34 @@ export function parseRoute(url, state = {}) {
   if (q.has("ciudad") && CITIES.some((c) => c.key === q.get("ciudad")))
     result.city = q.get("ciudad");
   if (screen === "confirmacion") {
-    result.order =
-      (state.orders || []).find((o) => o.no === q.get("pedido")) || null;
-    if (!result.order) result.screen = "notfound";
+    const no = q.get("pedido"),
+      token = q.get("t");
+    if (no && token) result.orderRef = { no, token };
+    else result.screen = "notfound";
   }
   return result;
 }
 export function routeFor(s) {
-  let path = s.screen === "producto" ? "/cafes/" + s.product : paths[s.screen];
+  let path =
+    s.screen === "producto"
+      ? "/cafes/" + slugFor(s.product)
+      : s.screen === "categoria"
+        ? "/cafes/" + slugFor(s.plain)
+        : paths[s.screen];
   if (!path) return null;
   const q = new URLSearchParams();
   if (s.screen === "producto") q.set("etapa", s.stage);
   if (s.screen === "catalogo") {
+    if (s.category && s.category !== "todos") q.set("categoria", s.category);
     if (s.filter !== "todos") q.set("proceso", s.filter);
     if (s.sort !== "altura") q.set("orden", s.sort);
     if (s.feeling) q.set("sensacion", s.feeling);
     if (s.compare?.length) q.set("comparar", s.compare.join(","));
   }
-  if (s.screen === "confirmacion" && s.order) q.set("pedido", s.order.no);
+  if (s.screen === "confirmacion" && s.orderRef) {
+    q.set("pedido", s.orderRef.no);
+    q.set("t", s.orderRef.token);
+  }
   if (s.city !== "bogota") q.set("ciudad", s.city);
   return path + (q.size ? "?" + q : "");
 }
